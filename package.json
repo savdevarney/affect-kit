@@ -1,0 +1,34 @@
+{
+  "name": "affect-kit-monorepo",
+  "private": true,
+  "version": "0.0.0",
+  "description": "Monorepo for affect-kit — web components for dimensional emotion rating.",
+  "license": "MIT",
+  "author": "Savannah DeVarney <savannah.devarney@gmail.com>",
+  "homepage": "https://affectkit.com",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/savdevarney/affect-kit.git"
+  },
+  "packageManager": "pnpm@10.28.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "test": "turbo run test",
+    "test:visual": "turbo run test:visual",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "clean": "turbo run clean && rm -rf node_modules .turbo",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "turbo run build --filter=affect-kit && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.0",
+    "turbo": "^2.5.0",
+    "typescript": "^5.7.0"
+  }
+}

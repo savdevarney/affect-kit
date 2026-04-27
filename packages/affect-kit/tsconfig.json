@@ -1,0 +1,9 @@
+{
+  "extends": "@affect-kit/tsconfig/lib.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"]
+  },
+  "include": ["src/**/*", "test/**/*"]
+}
