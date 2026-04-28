@@ -162,6 +162,18 @@ export class AffectKitResult extends LitElement {
      * it cares about.
      */
 
+    /*
+     * face-only: when showLabels is off (or no labels were provided),
+     * the face is the only content item. Force column flow with the
+     * face horizontally centered, regardless of row/column rules below
+     * — there's no second item to lay out beside it.
+     */
+    .content.has-face.face-only {
+      flex-direction: column !important;
+      align-items: center;
+      justify-content: center;
+    }
+
     /* Standalone narrow defaults — face on top, vertical stack. */
     .content.has-face {
       flex-direction: var(--_face-dir, column);
@@ -275,13 +287,16 @@ export class AffectKitResult extends LitElement {
       ? `background: rgb(${cr},${cg},${cb})`
       : '';
 
+    const wordsVisible = this.showLabels && r.labels.length > 0;
+    const faceOnly = this.showFace && !wordsVisible;
+
     return html`
       <div class="panel${this.variant === 'compact' ? ' compact' : ''}${this.showFace ? ' with-face' : ''}">
         <div
           class="glow${this.colorMode ? ' on' : ''}"
           style="${glowStyle}"
         ></div>
-        <div class="content align-${this.align}${this.showFace ? ' has-face' : ''}">
+        <div class="content align-${this.align}${this.showFace ? ' has-face' : ''}${faceOnly ? ' face-only' : ''}">
 
           ${this.showFace ? html`
             <div class="face-zone">
