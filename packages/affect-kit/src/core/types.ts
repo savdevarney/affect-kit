@@ -1,13 +1,21 @@
 // Public type surface — anything not exported here stays internal to the package.
 
+export type { EmotionName } from '../vocabulary/en';
+
 /**
- * A single emotion label attached to a rating, with intensity level 1–3.
+ * A single emotion label attached to a rating, with intensity level in [1, 3].
+ * `name` must be a valid {@link EmotionName} from the English vocabulary.
+ *
+ * `<affect-kit-rater>` always emits integer levels 1, 2, or 3. The type is
+ * widened to `number` so longitudinal aggregations (e.g. an average level
+ * across many sessions) can be passed straight to `<affect-kit-result>` for
+ * rendering — the display interpolates size, weight, and opacity continuously.
  *
  * Level 0 means "not selected" and is never present in `Rating.labels`.
  */
 export interface EmotionLabel {
-  name: string;
-  level: 1 | 2 | 3;
+  name: string; // kept as string so callers with string sources don't need a cast
+  level: number;
 }
 
 /**

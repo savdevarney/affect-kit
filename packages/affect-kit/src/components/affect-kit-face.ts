@@ -46,10 +46,10 @@ export class AffectKitFace extends LitElement {
     .brow {
       fill: none;
       stroke: currentColor;
-      stroke-width: 5;
+      stroke-width: 3;
       stroke-linecap: round;
-      stroke-linejoin: round;
     }
+    /* Eyes: outlined shape so whites show through at higher arousal (wider open). */
     .eye {
       fill: none;
       stroke: currentColor;
@@ -60,18 +60,22 @@ export class AffectKitFace extends LitElement {
     .nose {
       fill: none;
       stroke: currentColor;
-      stroke-width: 3;
+      stroke-width: 2.8;
       stroke-linecap: round;
-      stroke-linejoin: round;
     }
+    /* Mouth uses fill + stroke so closed lips read at full weight even
+       with zero-area path geometry, and corners stay soft and rounded. */
     .mouth {
       fill: currentColor;
-      stroke: none;
+      stroke: currentColor;
+      stroke-width: 4.5;
+      stroke-linejoin: round;
+      stroke-linecap: round;
     }
     .crows-feet-line {
       fill: none;
       stroke: currentColor;
-      stroke-width: 2;
+      stroke-width: 1.8;
       stroke-linecap: round;
     }
   `;

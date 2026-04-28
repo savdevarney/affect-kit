@@ -19,9 +19,13 @@ const animateConverter = {
  * </script>
  * ```
  *
- * Emotion words are sized by intensity level: level-3 is the headline word
- * in a display serif; level-1 is a quiet supporting word in body weight.
- * Color glow matches the V/A quadrant (pink/gold/green/blue) when `show-color`.
+ * Emotion words are sized by intensity level — size, weight, and opacity
+ * interpolate continuously across [1, 3]. The display serif kicks in at
+ * level ≥ 2.5. This makes the panel a drop-in word-cloud renderer when
+ * fed averaged longitudinal data (e.g. an average level of 2.3 for "joy"
+ * across many sessions).
+ *
+ * Color glow matches the V/A quadrant (pink/gold/green/blue) when `color-mode`.
  */
 @customElement('affect-kit-result')
 export class AffectKitResult extends LitElement {
@@ -40,6 +44,7 @@ export class AffectKitResult extends LitElement {
       box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
     }
     .panel.compact { padding: 1.4em 1.75em; }
+    .panel.with-face { padding: 1.6em 2em; }
 
     .glow {
       position: absolute;
@@ -60,10 +65,10 @@ export class AffectKitResult extends LitElement {
 
     .face-zone {
       flex: 0 0 auto;
-      width: 9em;
+      width: 7em;
       aspect-ratio: 1;
       align-self: center;
-      margin-bottom: 0.6em;
+      margin-bottom: 0.5em;
       position: relative;
     }
     affect-kit-face {
@@ -83,17 +88,23 @@ export class AffectKitResult extends LitElement {
       align-items: baseline;
       line-height: 1.15;
       min-height: 2.5em;
+      min-width: 0;
       color: var(--affect-kit-ink, #1a1a1a);
     }
 
-    .word.level-1 { font-size: 1em;     font-weight: 400; opacity: 0.55; }
-    .word.level-2 { font-size: 1.625em; font-weight: 500; opacity: 0.82; }
-    .word.level-3 {
+    /*
+     * Continuous level scaling. --_level is set inline per-word and clamped
+     * into [1, 3]. --_level-step controls the size growth per integer step
+     * (the row-with-face layout below shrinks it so level 3 caps at 2em).
+     */
+    .word {
+      --_lv: clamp(1, var(--_level, 1), 3);
+      font-size: calc(1em + (var(--_lv) - 1) * var(--_level-step, 0.75em));
+      opacity:   calc(0.55 + (var(--_lv) - 1) * 0.225);
+    }
+    .word.display {
       font-family: var(--affect-kit-font-display, 'DM Serif Display', Georgia, serif);
-      font-size: 2.5em;
-      font-weight: 400;
       letter-spacing: -0.01em;
-      opacity: 1;
     }
 
     .align-center .words { justify-content: center; }
@@ -114,15 +125,16 @@ export class AffectKitResult extends LitElement {
     .align-center .vad { justify-content: center; }
     .align-right  .vad { justify-content: flex-end; }
 
-    /* Wide panels: face left, words right */
+    /* Wide panels: face left, words right. Smaller step caps level 3 at 2em. */
     @container (min-width: 360px) {
       .content.has-face {
         flex-direction: row;
         align-items: center;
         gap: 2em;
+        --_level-step: 0.5em;
       }
       .content.has-face .face-zone { margin-bottom: 0; }
-      .content.has-face .words     { flex: 1 1 auto; }
+      .content.has-face .words     { flex: 1 1 auto; min-width: 0; }
     }
   `;
 
@@ -139,8 +151,8 @@ export class AffectKitResult extends LitElement {
   showLabels = true;
 
   /** Apply a color tint matching the rating's V/A position. */
-  @property({ type: Boolean, attribute: 'show-color' })
-  showColor = false;
+  @property({ type: Boolean, attribute: 'color-mode', reflect: true })
+  colorMode = false;
 
   /** Show the raw V/A/D readout (debug). */
   @property({ type: Boolean, attribute: 'show-vad' })
@@ -165,15 +177,20 @@ export class AffectKitResult extends LitElement {
     const r = this.rating;
     if (!r) return nothing;
 
-    const [cr, cg, cb] = colorForVA(r.v, r.a);
-    const glowStyle = this.showColor
+    // Face shape and color always follow the raw pad gesture, not the
+    // label-aggregated v/a — the visual represents WHERE the user placed
+    // their feeling, not what words they chose afterward.
+    const padV = r.pad.v;
+    const padA = r.pad.a;
+    const [cr, cg, cb] = colorForVA(padV, padA);
+    const glowStyle = this.colorMode
       ? `background: rgb(${cr},${cg},${cb})`
       : '';
 
     return html`
-      <div class="panel${this.variant === 'compact' ? ' compact' : ''}">
+      <div class="panel${this.variant === 'compact' ? ' compact' : ''}${this.showFace ? ' with-face' : ''}">
         <div
-          class="glow${this.showColor ? ' on' : ''}"
+          class="glow${this.colorMode ? ' on' : ''}"
           style="${glowStyle}"
         ></div>
         <div class="content align-${this.align}${this.showFace ? ' has-face' : ''}">
@@ -181,8 +198,8 @@ export class AffectKitResult extends LitElement {
           ${this.showFace ? html`
             <div class="face-zone">
               <affect-kit-face
-                .v=${r.v}
-                .a=${r.a}
+                .v=${padV}
+                .a=${padA}
                 .animated=${this.animated}
               ></affect-kit-face>
             </div>
@@ -190,9 +207,20 @@ export class AffectKitResult extends LitElement {
 
           ${this.showLabels && r.labels.length > 0 ? html`
             <div class="words">
-              ${r.labels.map(l => html`
-                <span class="word level-${l.level}">${l.name}</span>
-              `)}
+              ${r.labels.map(l => {
+                const lv = Math.max(1, Math.min(3, l.level));
+                // Triangle weight: peaks at lv=2 (500), drops to 400 at lv=1 and lv=3.
+                // The display serif at high levels carries weight on its own; the
+                // body sans needs the boost in the middle.
+                const weight = Math.round(400 + 100 * (1 - Math.abs(lv - 2)));
+                const isDisplay = lv >= 2.5;
+                return html`
+                  <span
+                    class="word${isDisplay ? ' display' : ''}"
+                    style="--_level:${lv};font-weight:${weight}"
+                  >${l.name}</span>
+                `;
+              })}
             </div>
           ` : nothing}
 

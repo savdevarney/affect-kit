@@ -14,8 +14,9 @@ import './components/affect-kit-rater';
 import './components/affect-kit-result';
 import './components/affect-kit-face';
 
-export { AffectKitRater } from './components/affect-kit-rater';
+export { AffectKitRater }  from './components/affect-kit-rater';
 export { AffectKitResult } from './components/affect-kit-result';
-export { AffectKitFace } from './components/affect-kit-face';
+export { AffectKitFace }   from './components/affect-kit-face';
 
-export type { Rating, EmotionLabel } from './core/types';
+export type { Rating, EmotionLabel, EmotionName } from './core/types';
+export { createRating, averageRatings } from './core/vad';

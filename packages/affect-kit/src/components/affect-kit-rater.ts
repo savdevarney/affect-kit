@@ -10,6 +10,11 @@ import type { AffectKitFace } from './affect-kit-face';
 const DWELL_MS = 500;
 const HIGH_AROUSAL_THRESH = 0.3;
 
+const animateConverter = {
+  fromAttribute: (value: string | null): boolean => value !== 'false',
+  toAttribute: (value: boolean): string | null => (value ? null : 'false'),
+};
+
 /**
  * `<affect-kit-rater>` — interactive V/A pad + emotion label chips.
  * Emits `change` as `CustomEvent<Rating>` on pointer release and chip
@@ -160,14 +165,14 @@ export class AffectKitRater extends LitElement {
       font-weight: 700; font-size: 14px; padding: 8px 17px;
     }
 
-    /* Color mode: unselected chips become white-tinted on light surfaces */
+    /* Color mode: unselected chips adapt to surface lightness */
     :host([color-mode]) .chip {
-      background: rgba(255,255,255,calc(var(--_surface-is-light) * 0.30));
-      color: rgba(0,0,0,0.55);
+      background: var(--_chip-bg, rgba(0,0,0,0.05));
+      color: var(--_chip-ink, rgba(0,0,0,0.55));
     }
     :host([color-mode]) .chip:hover {
-      background: rgba(255,255,255,calc(var(--_surface-is-light) * 0.50));
-      color: rgba(0,0,0,0.85);
+      background: var(--_chip-hover-bg, rgba(0,0,0,0.10));
+      color: var(--_chip-ink, rgba(0,0,0,0.85));
     }
     /* Color mode: selected chips absorb the current V/A color */
     :host([color-mode]) .chip.level-1 {
@@ -207,7 +212,7 @@ export class AffectKitRater extends LitElement {
     }
 
     /* Wide layout: face left, chips right */
-    @container (min-width: 720px) {
+    @container (min-width: 860px) {
       .surface {
         flex-direction: row;
         align-items: stretch;
@@ -226,6 +231,7 @@ export class AffectKitRater extends LitElement {
         padding: 16px 28px 16px 12px;
         min-height: auto;
         flex: 1 1 auto;
+        min-width: 0;
       }
       .chips-zone.empty { flex: 0 0 0; padding: 0; }
     }
@@ -234,6 +240,13 @@ export class AffectKitRater extends LitElement {
   /** Colored surface tint vs monochrome paper. */
   @property({ type: Boolean, attribute: 'color-mode', reflect: true })
   colorMode = false;
+
+  /**
+   * Breath + tremor animation. Defaults `true`.
+   * Respects `prefers-reduced-motion: reduce` automatically.
+   */
+  @property({ converter: animateConverter, reflect: true })
+  animated = true;
 
   /** Debug VAD readout below chips. */
   @property({ type: Boolean, attribute: 'show-vad' })
@@ -261,13 +274,34 @@ export class AffectKitRater extends LitElement {
     this._padV = rating.pad.v;
     this._padA = rating.pad.a;
     const levels = new Map<string, 0 | 1 | 2 | 3>();
-    for (const l of rating.labels) levels.set(l.name, l.level);
+    // Rating.level is `number` to support averaged longitudinal data, but the
+    // rater itself only renders integer chip levels — round and clamp on prefill.
+    for (const l of rating.labels) {
+      const lv = Math.round(l.level);
+      const chipLv = (lv < 1 ? 1 : lv > 3 ? 3 : lv) as 1 | 2 | 3;
+      levels.set(l.name, chipLv);
+    }
     this._levels = levels;
     this._revealed = true;
     this._ghostX = (rating.pad.v + 1) / 2;
     this._ghostY = (1 - rating.pad.a) / 2;
     this._sortOrder = this._computeSortOrder();
     this._hasFlippedOnce = true;
+    this._updateColorVars();
+  }
+
+  /**
+   * Clear all state back to the initial empty position.
+   */
+  reset(): void {
+    this._padV = 0;
+    this._padA = 0;
+    this._levels = new Map();
+    this._revealed = false;
+    this._hasFlippedOnce = false;
+    this._ghostX = 0.5;
+    this._ghostY = 0.5;
+    this._sortOrder = EMOTIONS.map(e => e.name);
     this._updateColorVars();
   }
 
@@ -406,6 +440,12 @@ export class AffectKitRater extends LitElement {
     this.style.setProperty('--_surface-is-light', isLight.toFixed(4));
     this.style.setProperty('--_text-l3',
       darkerLum > 0.45 ? 'rgba(0,0,0,0.95)' : 'rgba(255,255,255,0.96)');
+    this.style.setProperty('--_chip-ink',
+      isLight ? 'rgba(0,0,0,0.60)' : 'rgba(255,255,255,0.82)');
+    this.style.setProperty('--_chip-bg',
+      isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.16)');
+    this.style.setProperty('--_chip-hover-bg',
+      isLight ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.26)');
   }
 
   // ── Change event ─────────────────────────────────────────────────────────
@@ -463,6 +503,7 @@ export class AffectKitRater extends LitElement {
             id="face-el"
             .v=${this._padV}
             .a=${this._padA}
+            .animated=${this.animated}
             .motionScale=${this._dragging ? 0.2 : 1.0}
           ></affect-kit-face>
           <div

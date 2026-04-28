@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { EMOTIONS, EMOTIONS_BY_NAME } from '../../src/vocabulary/en';
 
 describe('EMOTIONS array', () => {
-  it('has 56 entries', () => {
-    expect(EMOTIONS).toHaveLength(56);
+  it('has 55 entries', () => {
+    expect(EMOTIONS).toHaveLength(55);
   });
 
   it('every entry has a non-empty name', () => {
@@ -73,10 +73,10 @@ describe('EMOTIONS_BY_NAME map', () => {
     expect(EMOTIONS_BY_NAME.get('')).toBeUndefined();
   });
 
-  it('calm lookup matches expected VAD values', () => {
+  it('calm lookup matches NRC VAD values', () => {
     const calm = EMOTIONS_BY_NAME.get('calm');
-    expect(calm?.v).toBeCloseTo(0.46, 5);
-    expect(calm?.a).toBeCloseTo(-0.65, 5);
-    expect(calm?.d).toBeCloseTo(0.25, 5);
+    expect(calm?.v).toBeCloseTo(0.750, 3);
+    expect(calm?.a).toBeCloseTo(-0.900, 3);
+    expect(calm?.d).toBeCloseTo(-0.373, 3);
   });
 });

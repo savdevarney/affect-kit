@@ -11,11 +11,11 @@ describe('computeVAD', () => {
   });
 
   it('returns emotion VAD with fromLabels=true for a single level-3 label', () => {
-    // 'calm': { v: 0.46, a: -0.65, d: 0.25 }
+    // 'calm' from NRC VAD v2.1: { v: 0.75, a: -0.90, d: -0.373 }
     const result = computeVAD(0, 0, [{ name: 'calm', level: 3 }]);
-    expect(result.v).toBeCloseTo(0.46, 5);
-    expect(result.a).toBeCloseTo(-0.65, 5);
-    expect(result.d).toBeCloseTo(0.25, 5);
+    expect(result.v).toBeCloseTo(0.750, 3);
+    expect(result.a).toBeCloseTo(-0.900, 3);
+    expect(result.d).toBeCloseTo(-0.373, 3);
     expect(result.fromLabels).toBe(true);
   });
 
@@ -29,12 +29,12 @@ describe('computeVAD', () => {
   });
 
   it('averages two equal-level labels correctly', () => {
-    // joy: v=0.76, calm: v=0.46 → average v≈0.61
+    // joy: v=0.960, calm: v=0.750 → average v=0.855
     const result = computeVAD(0, 0, [
       { name: 'joy',  level: 3 },
       { name: 'calm', level: 3 },
     ]);
-    expect(result.v).toBeCloseTo((0.76 + 0.46) / 2, 5);
+    expect(result.v).toBeCloseTo((0.960 + 0.750) / 2, 5);
     expect(result.fromLabels).toBe(true);
   });
 
@@ -44,8 +44,8 @@ describe('computeVAD', () => {
       { name: 'joy',  level: 3 },
       { name: 'calm', level: 1 },
     ]);
-    // joy weight=1, calm weight=1/3 → weighted avg: (0.76*1 + 0.46*(1/3)) / (1 + 1/3)
-    const expected = (0.76 * 1 + 0.46 * (1 / 3)) / (1 + 1 / 3);
+    // joy weight=1, calm weight=1/3 → weighted avg: (0.960*1 + 0.750*(1/3)) / (1 + 1/3)
+    const expected = (0.960 * 1 + 0.750 * (1 / 3)) / (1 + 1 / 3);
     expect(result.v).toBeCloseTo(expected, 5);
   });
 
@@ -77,7 +77,7 @@ describe('buildRating', () => {
       now: () => 0,
     });
     expect(rating.pad).toEqual({ v: 0.1, a: 0.1 });
-    expect(rating.v).toBeCloseTo(0.46, 3); // calm's v
+    expect(rating.v).toBeCloseTo(0.750, 3); // calm's v (NRC v2.1)
     expect(rating.fromLabels).toBe(true);
   });
 

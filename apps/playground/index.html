@@ -16,22 +16,12 @@
       padding: 2rem;
     }
 
-    h1 {
-      font-size: 1.1rem;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-      margin: 0 0 0.25rem;
-    }
-
-    .subtitle {
-      font-size: 0.85rem;
-      color: #666;
-      margin: 0 0 2.5rem;
-    }
+    h1 { font-size: 1.1rem; font-weight: 600; letter-spacing: -0.01em; margin: 0 0 0.25rem; }
+    .subtitle { font-size: 0.85rem; color: #666; margin: 0 0 2.5rem; }
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
       gap: 1.5rem;
     }
 
@@ -39,62 +29,79 @@
       background: white;
       border-radius: 12px;
       padding: 1.5rem;
-      border: 1px solid rgba(0, 0, 0, 0.07);
+      border: 1px solid rgba(0,0,0,0.07);
     }
 
+    /* Card header row: label left, toggles right */
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 0 0 1rem;
+    }
     .card-label {
       font-size: 0.72rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: #999;
-      margin: 0 0 1rem;
+      margin: 0;
     }
-
-    .stub-note {
-      font-size: 0.8rem;
+    .toggles {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .toggle-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
       color: #aaa;
-      font-style: italic;
-      margin-top: 0.75rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      cursor: pointer;
+      user-select: none;
     }
-
-    /* Stub placeholders for not-yet-implemented components */
-    affect-kit-rater,
-    affect-kit-result {
-      display: block;
-      min-height: 60px;
-      border: 1.5px dashed #ddd;
-      border-radius: 8px;
-      background: #fafafa;
+    .toggle-switch {
+      width: 32px; height: 18px;
+      border-radius: 9px;
+      background: rgba(0,0,0,0.10);
+      border: none;
+      position: relative;
+      cursor: pointer;
+      padding: 0;
+      transition: background 0.25s ease;
+      flex-shrink: 0;
     }
+    .toggle-switch[aria-pressed="true"] { background: #1a1a1a; }
+    .toggle-thumb {
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: white;
+      transition: transform 0.25s ease;
+    }
+    .toggle-switch[aria-pressed="true"] .toggle-thumb { transform: translateX(14px); }
 
+    /* Face grid */
     .face-row {
       display: flex;
       gap: 1rem;
       align-items: flex-end;
       flex-wrap: wrap;
     }
-
     .face-item {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 0.4rem;
     }
+    .face-label  { font-size: 0.72rem; color: #888; text-align: center; }
+    .face-coords { font-size: 0.65rem; color: #bbb; font-family: 'SF Mono','Fira Code',monospace; }
 
-    .face-label {
-      font-size: 0.72rem;
-      color: #888;
-      text-align: center;
-    }
-
-    .face-coords {
-      font-size: 0.65rem;
-      color: #bbb;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-    }
-
-    /* Interactive face controls */
+    /* Interactive face */
     .face-controls {
       display: grid;
       grid-template-columns: auto 1fr auto;
@@ -103,57 +110,14 @@
       margin-top: 1.25rem;
       font-size: 0.78rem;
     }
-
-    .face-controls label {
-      color: #666;
-      font-weight: 500;
-    }
-
-    .face-controls input[type=range] {
-      width: 100%;
-    }
-
+    .face-controls label { color: #666; font-weight: 500; }
+    .face-controls input[type=range] { width: 100%; }
     .face-controls .val {
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 0.72rem;
-      color: #888;
-      min-width: 3.5ch;
-      text-align: right;
+      font-family: 'SF Mono','Fira Code',monospace;
+      font-size: 0.72rem; color: #888;
+      min-width: 3.5ch; text-align: right;
     }
-
-    .interactive-face-row {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .event-log {
-      font-size: 0.78rem;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      background: #f8f8f8;
-      border: 1px solid #eee;
-      border-radius: 6px;
-      padding: 0.75rem;
-      max-height: 200px;
-      overflow-y: auto;
-      margin-top: 1rem;
-      color: #555;
-    }
-
-    .event-log p {
-      margin: 0 0 0.4rem;
-    }
-
-    .event-log p:last-child {
-      margin: 0;
-    }
-
-    .empty-log {
-      color: #bbb;
-      font-style: italic;
-    }
-
+    .interactive-face-row { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 0.5rem; }
     .shock-btn {
       margin-top: 0.75rem;
       padding: 0.35rem 0.75rem;
@@ -165,6 +129,19 @@
       color: #444;
     }
     .shock-btn:hover { background: #f5f5f3; }
+    .reset-btn {
+      padding: 0.2rem 0.55rem;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      background: white;
+      font-size: 0.68rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: #888;
+    }
+    .reset-btn:hover { background: #f5f5f3; color: #444; }
   </style>
 </head>
 <body>
@@ -173,9 +150,72 @@
 
   <div class="grid">
 
-    <!-- affect-kit-face: four quadrant corners + neutral -->
+    <!-- affect-kit-rater -->
     <div class="card">
-      <p class="card-label">&lt;affect-kit-face&gt; — quadrant corners</p>
+      <div class="card-header">
+        <p class="card-label">&lt;affect-kit-rater&gt;</p>
+        <div class="toggles">
+          <label class="toggle-item">
+            <button class="toggle-switch" id="rater-color-toggle" type="button" aria-pressed="false">
+              <span class="toggle-thumb"></span>
+            </button>
+            color
+          </label>
+          <label class="toggle-item">
+            <button class="toggle-switch" id="rater-animated-toggle" type="button" aria-pressed="true">
+              <span class="toggle-thumb" style="transform:translateX(14px)"></span>
+            </button>
+            animated
+          </label>
+          <label class="toggle-item">
+            <button class="toggle-switch" id="rater-vad-toggle" type="button" aria-pressed="true">
+              <span class="toggle-thumb" style="transform:translateX(14px)"></span>
+            </button>
+            vad
+          </label>
+          <button class="reset-btn" id="reset-btn" type="button">reset</button>
+        </div>
+      </div>
+      <affect-kit-rater id="rater" show-vad></affect-kit-rater>
+    </div>
+
+    <!-- affect-kit-result -->
+    <div class="card">
+      <div class="card-header">
+        <p class="card-label">&lt;affect-kit-result&gt;</p>
+        <div class="toggles">
+          <label class="toggle-item">
+            <button class="toggle-switch" id="result-color-toggle" type="button" aria-pressed="true">
+              <span class="toggle-thumb" style="transform:translateX(14px)"></span>
+            </button>
+            color
+          </label>
+          <label class="toggle-item">
+            <button class="toggle-switch" id="result-face-toggle" type="button" aria-pressed="true">
+              <span class="toggle-thumb" style="transform:translateX(14px)"></span>
+            </button>
+            face
+          </label>
+          <label class="toggle-item">
+            <button class="toggle-switch" id="result-animated-toggle" type="button" aria-pressed="true">
+              <span class="toggle-thumb" style="transform:translateX(14px)"></span>
+            </button>
+            animated
+          </label>
+          <label class="toggle-item">
+            <button class="toggle-switch" id="result-vad-toggle" type="button" aria-pressed="false">
+              <span class="toggle-thumb"></span>
+            </button>
+            vad
+          </label>
+        </div>
+      </div>
+      <affect-kit-result id="result" show-face show-labels color-mode></affect-kit-result>
+    </div>
+
+    <!-- affect-kit-face: quadrant corners -->
+    <div class="card">
+      <p class="card-label" style="margin-bottom:1rem">&lt;affect-kit-face&gt; — quadrant corners</p>
       <div class="face-row">
         <div class="face-item">
           <affect-kit-face v="-0.8" a="0.8" style="width:80px;height:80px"></affect-kit-face>
@@ -205,9 +245,9 @@
       </div>
     </div>
 
-    <!-- affect-kit-face: interactive V/A sliders -->
+    <!-- affect-kit-face: interactive -->
     <div class="card">
-      <p class="card-label">&lt;affect-kit-face&gt; — interactive</p>
+      <p class="card-label" style="margin-bottom:1rem">&lt;affect-kit-face&gt; — interactive</p>
       <div class="interactive-face-row">
         <affect-kit-face id="interactive-face" v="0" a="0" style="width:120px;height:120px"></affect-kit-face>
         <div style="flex:1">
@@ -224,51 +264,20 @@
       </div>
     </div>
 
-    <!-- affect-kit-face: static (animated="false") -->
-    <div class="card">
-      <p class="card-label">&lt;affect-kit-face animated="false"&gt;</p>
-      <div class="face-row">
-        <div class="face-item">
-          <affect-kit-face v="-0.8" a="0.8" animated="false" style="width:80px;height:80px"></affect-kit-face>
-          <span class="face-label">anger (static)</span>
-        </div>
-        <div class="face-item">
-          <affect-kit-face v="0.8" a="0.8" animated="false" style="width:80px;height:80px"></affect-kit-face>
-          <span class="face-label">joy (static)</span>
-        </div>
-        <div class="face-item">
-          <affect-kit-face v="0.8" a="-0.8" animated="false" style="width:80px;height:80px"></affect-kit-face>
-          <span class="face-label">calm (static)</span>
-        </div>
-        <div class="face-item">
-          <affect-kit-face v="-0.8" a="-0.8" animated="false" style="width:80px;height:80px"></affect-kit-face>
-          <span class="face-label">sad (static)</span>
-        </div>
+  </div>
+
+    <!-- Longitudinal insights — recipe code, not part of affect-kit's package surface -->
+    <div class="card" style="grid-column: 1 / -1">
+      <div class="card-header">
+        <p class="card-label">Longitudinal insights — 14-session demo (recipe examples)</p>
       </div>
-    </div>
-
-    <!-- affect-kit-rater -->
-    <div class="card">
-      <p class="card-label">&lt;affect-kit-rater&gt;</p>
-      <affect-kit-rater id="rater" show-vad></affect-kit-rater>
-    </div>
-
-    <!-- affect-kit-rater color mode -->
-    <div class="card">
-      <p class="card-label">&lt;affect-kit-rater color-mode&gt;</p>
-      <affect-kit-rater id="rater-color" color-mode show-vad></affect-kit-rater>
-    </div>
-
-    <!-- affect-kit-result -->
-    <div class="card">
-      <p class="card-label">&lt;affect-kit-result&gt;</p>
-      <affect-kit-result id="result" show-face show-labels show-color show-vad></affect-kit-result>
-    </div>
-
-    <!-- affect-kit-result: variants -->
-    <div class="card">
-      <p class="card-label">&lt;affect-kit-result&gt; — compact, no face, no color</p>
-      <affect-kit-result id="result-plain" show-labels align="left"></affect-kit-result>
+      <div class="grid" style="gap:1rem; margin-top:0.25rem">
+        <!-- Word-cloud view = <affect-kit-result> driven by averageRatings(history). -->
+        <affect-kit-result id="insights-summary" show-face show-labels color-mode></affect-kit-result>
+        <recipe-inertia    id="insights-inertia"></recipe-inertia>
+        <recipe-resilience id="insights-resilience"></recipe-resilience>
+        <recipe-range      id="insights-range"></recipe-range>
+      </div>
     </div>
 
   </div>
