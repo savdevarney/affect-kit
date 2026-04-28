@@ -2,16 +2,15 @@ import 'affect-kit/rater';
 import 'affect-kit/result';
 import 'affect-kit/face';
 import './example-tabs';
-import './recipes/recipe-inertia';
-import './recipes/recipe-resilience';
-import './recipes/recipe-range';
+import './recipes/recipe-sparkline';
+import './recipes/recipe-scatter';
 import type { AffectKitFace }   from 'affect-kit/face';
 import type { AffectKitResult } from 'affect-kit/result';
 import type { AffectKitRater }  from 'affect-kit/rater';
-import type { RecipeInertia }    from './recipes/recipe-inertia';
-import type { RecipeResilience } from './recipes/recipe-resilience';
-import type { RecipeRange }      from './recipes/recipe-range';
+import type { RecipeSparkline } from './recipes/recipe-sparkline';
+import type { RecipeScatter }   from './recipes/recipe-scatter';
 import { createRating, averageRatings } from 'affect-kit';
+import type { Rating, EmotionName } from 'affect-kit';
 
 // ── Element refs ───────────────────────────────────────────────────────────
 const rater      = document.getElementById('rater')      as AffectKitRater  | null;
@@ -54,8 +53,6 @@ function makeToggle(
 }
 
 // ── Code snippets that mirror toggle state ────────────────────────────────
-// Renders the HTML you'd write to get exactly the current widget state.
-// Animated defaults to true, so we only print `animated="false"` when off.
 const codeRater  = document.getElementById('code-rater');
 const codeResult = document.getElementById('code-result');
 
@@ -77,7 +74,7 @@ function renderResultCode() {
   const attrs: string[] = [];
   if (resultState.colorMode) attrs.push('color-mode');
   if (resultState.showFace)  attrs.push('show-face');
-  attrs.push('show-labels'); // always on in this demo
+  attrs.push('show-labels');
   if (!resultState.animated) attrs.push('animated="false"');
   if (resultState.showVad)   attrs.push('show-vad');
   codeResult.textContent =
@@ -150,40 +147,131 @@ document.getElementById('reset-btn')?.addEventListener('click', () => {
   if (resultEl) resultEl.rating = null;
 });
 
-// ── Longitudinal widgets ───────────────────────────────────────────────────
-// Word-cloud view: just an <affect-kit-result> fed an averaged synthetic Rating.
-// Inertia / Resilience / Range: recipe components living in ./recipes/.
-const summaryEl    = document.getElementById('insights-summary')    as AffectKitResult    | null;
-const inertiaEl    = document.getElementById('insights-inertia')    as RecipeInertia    | null;
-const resilienceEl = document.getElementById('insights-resilience') as RecipeResilience | null;
-const rangeEl      = document.getElementById('insights-range')      as RecipeRange      | null;
+// ── Longitudinal demo: three series, same widgets ─────────────────────────
+// Pure data shape — we name what's *visible in the data*, not what it "means."
+// All interpretation is left to the consumer / clinician / researcher.
 
-// Seed demo time-series — a plausible 14-session arc with recovery
-const now = Date.now();
 const DAY = 86_400_000;
-const demoRatings = [
-  createRating({ v:  0.5, a:  0.3, labels: [{ name: 'content',  level: 2 }, { name: 'calm',  level: 1 }], timestamp: now - 13 * DAY }),
-  createRating({ v:  0.3, a:  0.2, labels: [{ name: 'calm',     level: 2 }, { name: 'tired', level: 1 }], timestamp: now - 12 * DAY }),
-  createRating({ v: -0.4, a:  0.4, labels: [{ name: 'anxious',  level: 2 }, { name: 'overwhelmed', level: 1 }], timestamp: now - 11 * DAY }),
-  createRating({ v: -0.6, a:  0.5, labels: [{ name: 'anxious',  level: 3 }, { name: 'frustrated',  level: 2 }], timestamp: now - 10 * DAY }),
-  createRating({ v: -0.5, a:  0.3, labels: [{ name: 'sad',      level: 2 }, { name: 'lonely',      level: 2 }], timestamp: now -  9 * DAY }),
-  createRating({ v: -0.3, a:  0.2, labels: [{ name: 'sad',      level: 1 }, { name: 'tired',       level: 2 }], timestamp: now -  8 * DAY }),
-  createRating({ v:  0.1, a: -0.1, labels: [{ name: 'calm',     level: 1 }], timestamp: now -  7 * DAY }),
-  createRating({ v:  0.4, a:  0.2, labels: [{ name: 'hopeful',  level: 2 }, { name: 'content',     level: 1 }], timestamp: now -  6 * DAY }),
-  createRating({ v:  0.6, a:  0.4, labels: [{ name: 'excited',  level: 2 }, { name: 'hopeful',     level: 2 }], timestamp: now -  5 * DAY }),
-  createRating({ v:  0.7, a:  0.5, labels: [{ name: 'joy',      level: 3 }, { name: 'grateful',    level: 2 }], timestamp: now -  4 * DAY }),
-  createRating({ v:  0.5, a:  0.2, labels: [{ name: 'content',  level: 2 }, { name: 'grateful',    level: 1 }], timestamp: now -  3 * DAY }),
-  createRating({ v: -0.4, a:  0.3, labels: [{ name: 'anxious',  level: 2 }, { name: 'overwhelmed', level: 2 }], timestamp: now -  2 * DAY }),
-  createRating({ v: -0.5, a:  0.4, labels: [{ name: 'anxious',  level: 2 }, { name: 'sad',         level: 1 }], timestamp: now -  1 * DAY }),
-  createRating({ v: -0.4, a:  0.3, labels: [{ name: 'sad',      level: 2 }, { name: 'lonely',      level: 1 }], timestamp: now }),
+const now = Date.now();
+
+type Lbl = { name: EmotionName; level: 1 | 2 | 3 };
+
+function makeSeries(opts: {
+  count: number;
+  vAt: (i: number, n: number) => number;
+  aAt: (i: number, n: number) => number;
+  labelsAt: (i: number, n: number) => Lbl[];
+}): Rating[] {
+  const { count, vAt, aAt, labelsAt } = opts;
+  return Array.from({ length: count }, (_, i) => createRating({
+    v: vAt(i, count),
+    a: aAt(i, count),
+    labels: labelsAt(i, count),
+    timestamp: now - (count - 1 - i) * DAY,
+  }));
+}
+
+// Series 1 — narrow V (V hovers in 0.3..0.7, A near 0)
+const series1 = makeSeries({
+  count: 20,
+  vAt: (i) => 0.5 + 0.18 * Math.sin(i * 0.7),
+  aAt: (i) => 0.05 + 0.2 * Math.cos(i * 0.5),
+  labelsAt: (i) => {
+    const cycle: Lbl[][] = [
+      [{ name: 'content',   level: 2 }, { name: 'calm',     level: 1 }],
+      [{ name: 'peaceful',  level: 2 }],
+      [{ name: 'satisfied', level: 2 }, { name: 'grateful', level: 1 }],
+      [{ name: 'calm',      level: 2 }],
+      [{ name: 'hopeful',   level: 1 }, { name: 'content',  level: 2 }],
+      [{ name: 'serene',    level: 2 }],
+    ];
+    return cycle[i % cycle.length]!;
+  },
+});
+
+// Series 2 — drifting V (slow downward drift +0.5 → −0.5, A relatively stable)
+const series2 = makeSeries({
+  count: 20,
+  vAt: (i, n) => 0.5 - (i / (n - 1)) * 1.0,
+  aAt: (i) => 0.15 + 0.15 * Math.sin(i * 0.6),
+  labelsAt: (i, n) => {
+    // Labels shift from positive → mixed → negative as V drifts.
+    const phase = i / (n - 1); // 0..1
+    if (phase < 0.33) return [{ name: 'content', level: 2 }, { name: 'hopeful', level: 1 }];
+    if (phase < 0.55) return [{ name: 'calm',    level: 1 }, { name: 'tired',   level: 1 }];
+    if (phase < 0.75) return [{ name: 'tired',   level: 2 }, { name: 'sad',     level: 1 }];
+    return                  [{ name: 'sad',     level: 2 }, { name: 'lonely',  level: 1 }];
+  },
+});
+
+// Series 3 — wide range (V from −0.7..+0.7, A from −0.5..+0.7)
+const series3 = makeSeries({
+  count: 20,
+  vAt: (i) => 0.7 * Math.sin(i * 0.55) - 0.05 * Math.cos(i * 0.31),
+  aAt: (i) => 0.4 * Math.cos(i * 0.4) + 0.25 * Math.sin(i * 0.7),
+  labelsAt: (i) => {
+    const cycle: Lbl[][] = [
+      [{ name: 'joy',         level: 3 }, { name: 'excited',     level: 2 }],
+      [{ name: 'frustrated',  level: 2 }, { name: 'overwhelmed', level: 1 }],
+      [{ name: 'curious',     level: 2 }],
+      [{ name: 'sad',         level: 2 }, { name: 'lonely',      level: 1 }],
+      [{ name: 'grateful',    level: 2 }, { name: 'content',     level: 1 }],
+      [{ name: 'anxious',     level: 2 }],
+      [{ name: 'calm',        level: 1 }, { name: 'peaceful',    level: 1 }],
+      [{ name: 'hopeful',     level: 2 }, { name: 'determined',  level: 1 }],
+    ];
+    return cycle[i % cycle.length]!;
+  },
+});
+
+// One widget stack, switchable. Click an Example button → load that series.
+const examples: Array<{ name: string; shape: string; ratings: Rating[] }> = [
+  { name: 'Example 1', shape: 'a steady series',   ratings: series1 },
+  { name: 'Example 2', shape: 'a drifting series', ratings: series2 },
+  { name: 'Example 3', shape: 'a varied series',   ratings: series3 },
 ];
 
-function setInsightsRatings(ratings: typeof demoRatings) {
-  if (summaryEl)    summaryEl.rating     = averageRatings(ratings);
-  if (inertiaEl)    inertiaEl.ratings    = ratings;
-  if (resilienceEl) resilienceEl.ratings = ratings;
-  if (rangeEl)      rangeEl.ratings      = ratings;
+const summaryEl   = document.getElementById('series-summary')   as AffectKitResult | null;
+const sparklineEl = document.getElementById('series-sparkline') as RecipeSparkline | null;
+const scatterEl   = document.getElementById('series-scatter')   as RecipeScatter   | null;
+const statsEl     = document.getElementById('series-stats');
+const captionEl   = document.getElementById('series-caption');
+
+function loadExample(idx: number): void {
+  const ex = examples[idx];
+  if (!ex) return;
+  if (summaryEl)   summaryEl.rating     = averageRatings(ex.ratings);
+  if (sparklineEl) sparklineEl.ratings  = ex.ratings;
+  if (scatterEl)   scatterEl.ratings    = ex.ratings;
+
+  if (captionEl) {
+    captionEl.innerHTML = `<strong>${ex.name}</strong> — ${ex.shape}.`;
+  }
+
+  if (statsEl) {
+    const vs = ex.ratings.map(r => r.v);
+    const as = ex.ratings.map(r => r.a);
+    const labelNames = new Set<string>();
+    for (const r of ex.ratings) for (const l of r.labels) labelNames.add(l.name);
+    const fmt = (x: number) => x.toFixed(2).replace('-', '−');
+    const spanDays = Math.round((ex.ratings[ex.ratings.length - 1]!.timestamp - ex.ratings[0]!.timestamp) / DAY);
+    statsEl.innerHTML = `
+      <span>${ex.ratings.length} sessions over ${spanDays} days</span>
+      <span>V: ${fmt(Math.min(...vs))} to ${fmt(Math.max(...vs))}</span>
+      <span>A: ${fmt(Math.min(...as))} to ${fmt(Math.max(...as))}</span>
+      <span>${labelNames.size} unique labels</span>
+    `;
+  }
+
+  // Update segmented-control selected state
+  for (let i = 0; i < examples.length; i++) {
+    const btn = document.getElementById(`series-btn-${i + 1}`);
+    if (btn) btn.setAttribute('aria-selected', String(i === idx));
+  }
 }
-// Insights are pinned to the demo series — live rater changes drive only
-// the result panel above, not the longitudinal examples below.
-setInsightsRatings(demoRatings);
+
+for (let i = 0; i < examples.length; i++) {
+  document.getElementById(`series-btn-${i + 1}`)?.addEventListener('click', () => loadExample(i));
+}
+
+loadExample(0);
