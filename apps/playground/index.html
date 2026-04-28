@@ -142,6 +142,9 @@
       color: #888;
     }
     .reset-btn:hover { background: #f5f5f3; color: #444; }
+
+    /* Insights sub-tile: each gets its own example-tabs container */
+    .insight-tile { display: block; }
   </style>
 </head>
 <body>
@@ -176,7 +179,12 @@
           <button class="reset-btn" id="reset-btn" type="button">reset</button>
         </div>
       </div>
-      <affect-kit-rater id="rater" show-vad></affect-kit-rater>
+      <example-tabs>
+        <div slot="demo">
+          <affect-kit-rater id="rater" show-vad></affect-kit-rater>
+        </div>
+        <pre slot="code"><code id="code-rater"></code></pre>
+      </example-tabs>
     </div>
 
     <!-- affect-kit-result -->
@@ -210,58 +218,86 @@
           </label>
         </div>
       </div>
-      <affect-kit-result id="result" show-face show-labels color-mode></affect-kit-result>
+      <example-tabs>
+        <div slot="demo">
+          <affect-kit-result id="result" show-face show-labels color-mode></affect-kit-result>
+        </div>
+        <pre slot="code"><code id="code-result"></code></pre>
+      </example-tabs>
     </div>
 
     <!-- affect-kit-face: quadrant corners -->
     <div class="card">
       <p class="card-label" style="margin-bottom:1rem">&lt;affect-kit-face&gt; — quadrant corners</p>
-      <div class="face-row">
-        <div class="face-item">
-          <affect-kit-face v="-0.8" a="0.8" style="width:80px;height:80px"></affect-kit-face>
-          <span class="face-label">anger</span>
-          <span class="face-coords">v=−0.8, a=0.8</span>
+      <example-tabs>
+        <div slot="demo">
+          <div class="face-row">
+            <div class="face-item">
+              <affect-kit-face v="-0.8" a="0.8" style="width:80px;height:80px"></affect-kit-face>
+              <span class="face-label">anger</span>
+              <span class="face-coords">v=−0.8, a=0.8</span>
+            </div>
+            <div class="face-item">
+              <affect-kit-face v="0.8" a="0.8" style="width:80px;height:80px"></affect-kit-face>
+              <span class="face-label">joy</span>
+              <span class="face-coords">v=0.8, a=0.8</span>
+            </div>
+            <div class="face-item">
+              <affect-kit-face v="0.8" a="-0.8" style="width:80px;height:80px"></affect-kit-face>
+              <span class="face-label">calm</span>
+              <span class="face-coords">v=0.8, a=−0.8</span>
+            </div>
+            <div class="face-item">
+              <affect-kit-face v="-0.8" a="-0.8" style="width:80px;height:80px"></affect-kit-face>
+              <span class="face-label">sad</span>
+              <span class="face-coords">v=−0.8, a=−0.8</span>
+            </div>
+            <div class="face-item">
+              <affect-kit-face v="0" a="0" style="width:80px;height:80px"></affect-kit-face>
+              <span class="face-label">neutral</span>
+              <span class="face-coords">v=0, a=0</span>
+            </div>
+          </div>
         </div>
-        <div class="face-item">
-          <affect-kit-face v="0.8" a="0.8" style="width:80px;height:80px"></affect-kit-face>
-          <span class="face-label">joy</span>
-          <span class="face-coords">v=0.8, a=0.8</span>
-        </div>
-        <div class="face-item">
-          <affect-kit-face v="0.8" a="-0.8" style="width:80px;height:80px"></affect-kit-face>
-          <span class="face-label">calm</span>
-          <span class="face-coords">v=0.8, a=−0.8</span>
-        </div>
-        <div class="face-item">
-          <affect-kit-face v="-0.8" a="-0.8" style="width:80px;height:80px"></affect-kit-face>
-          <span class="face-label">sad</span>
-          <span class="face-coords">v=−0.8, a=−0.8</span>
-        </div>
-        <div class="face-item">
-          <affect-kit-face v="0" a="0" style="width:80px;height:80px"></affect-kit-face>
-          <span class="face-label">neutral</span>
-          <span class="face-coords">v=0, a=0</span>
-        </div>
-      </div>
+        <pre slot="code"><code>&lt;affect-kit-face v="-0.8" a="0.8"&gt;&lt;/affect-kit-face&gt;  &lt;!-- anger   --&gt;
+&lt;affect-kit-face v="0.8"  a="0.8"&gt;&lt;/affect-kit-face&gt;  &lt;!-- joy     --&gt;
+&lt;affect-kit-face v="0.8"  a="-0.8"&gt;&lt;/affect-kit-face&gt; &lt;!-- calm    --&gt;
+&lt;affect-kit-face v="-0.8" a="-0.8"&gt;&lt;/affect-kit-face&gt; &lt;!-- sad     --&gt;
+&lt;affect-kit-face v="0"    a="0"&gt;&lt;/affect-kit-face&gt;    &lt;!-- neutral --&gt;</code></pre>
+      </example-tabs>
     </div>
 
     <!-- affect-kit-face: interactive -->
     <div class="card">
       <p class="card-label" style="margin-bottom:1rem">&lt;affect-kit-face&gt; — interactive</p>
-      <div class="interactive-face-row">
-        <affect-kit-face id="interactive-face" v="0" a="0" style="width:120px;height:120px"></affect-kit-face>
-        <div style="flex:1">
-          <div class="face-controls">
-            <label>V</label>
-            <input type="range" id="v-slider" min="-1" max="1" step="0.01" value="0">
-            <span class="val" id="v-val">0.00</span>
-            <label>A</label>
-            <input type="range" id="a-slider" min="-1" max="1" step="0.01" value="0">
-            <span class="val" id="a-val">0.00</span>
+      <example-tabs>
+        <div slot="demo">
+          <div class="interactive-face-row">
+            <affect-kit-face id="interactive-face" v="0" a="0" style="width:120px;height:120px"></affect-kit-face>
+            <div style="flex:1">
+              <div class="face-controls">
+                <label>V</label>
+                <input type="range" id="v-slider" min="-1" max="1" step="0.01" value="0">
+                <span class="val" id="v-val">0.00</span>
+                <label>A</label>
+                <input type="range" id="a-slider" min="-1" max="1" step="0.01" value="0">
+                <span class="val" id="a-val">0.00</span>
+              </div>
+              <button class="shock-btn" id="shock-btn">triggerShock()</button>
+            </div>
           </div>
-          <button class="shock-btn" id="shock-btn">triggerShock()</button>
         </div>
-      </div>
+        <pre slot="code"><code>&lt;affect-kit-face id="face" v="0" a="0"&gt;&lt;/affect-kit-face&gt;
+
+&lt;script type="module"&gt;
+  import 'affect-kit/face';
+
+  const face = document.getElementById('face');
+  face.v = 0.5;          // valence  -1..1
+  face.a = 0.3;          // arousal  -1..1
+  face.triggerShock();   // wide-eye + drop-jaw burst
+&lt;/script&gt;</code></pre>
+      </example-tabs>
     </div>
 
   </div>
@@ -272,11 +308,60 @@
         <p class="card-label">Longitudinal insights — 14-session demo (recipe examples)</p>
       </div>
       <div class="grid" style="gap:1rem; margin-top:0.25rem">
-        <!-- Word-cloud view = <affect-kit-result> driven by averageRatings(history). -->
-        <affect-kit-result id="insights-summary" show-face show-labels color-mode></affect-kit-result>
-        <recipe-inertia    id="insights-inertia"></recipe-inertia>
-        <recipe-resilience id="insights-resilience"></recipe-resilience>
-        <recipe-range      id="insights-range"></recipe-range>
+
+        <div class="insight-tile">
+          <example-tabs>
+            <div slot="demo">
+              <!-- Word-cloud view = <affect-kit-result> driven by averageRatings(history). -->
+              <affect-kit-result id="insights-summary" show-face show-labels color-mode></affect-kit-result>
+            </div>
+            <pre slot="code"><code>import 'affect-kit/result';
+import { averageRatings } from 'affect-kit';
+
+// history: Rating[] — your stored series
+resultEl.rating = averageRatings(history);</code></pre>
+          </example-tabs>
+        </div>
+
+        <div class="insight-tile">
+          <example-tabs>
+            <div slot="demo">
+              <recipe-inertia id="insights-inertia"></recipe-inertia>
+            </div>
+            <pre slot="code"><code>// Recipe — copy ./recipes/recipe-inertia.ts and
+// ./recipes/longitudinal.ts into your own app.
+import './recipes/recipe-inertia';
+
+inertiaEl.ratings = history;  // Rating[]</code></pre>
+          </example-tabs>
+        </div>
+
+        <div class="insight-tile">
+          <example-tabs>
+            <div slot="demo">
+              <recipe-resilience id="insights-resilience"></recipe-resilience>
+            </div>
+            <pre slot="code"><code>// Recipe — copy ./recipes/recipe-resilience.ts and
+// ./recipes/longitudinal.ts into your own app.
+import './recipes/recipe-resilience';
+
+resilienceEl.ratings = history;  // Rating[]</code></pre>
+          </example-tabs>
+        </div>
+
+        <div class="insight-tile">
+          <example-tabs>
+            <div slot="demo">
+              <recipe-range id="insights-range"></recipe-range>
+            </div>
+            <pre slot="code"><code>// Recipe — copy ./recipes/recipe-range.ts and
+// ./recipes/longitudinal.ts into your own app.
+import './recipes/recipe-range';
+
+rangeEl.ratings = history;  // Rating[]</code></pre>
+          </example-tabs>
+        </div>
+
       </div>
     </div>
 

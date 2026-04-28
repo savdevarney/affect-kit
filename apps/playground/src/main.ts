@@ -1,6 +1,7 @@
 import 'affect-kit/rater';
 import 'affect-kit/result';
 import 'affect-kit/face';
+import './example-tabs';
 import './recipes/recipe-inertia';
 import './recipes/recipe-resilience';
 import './recipes/recipe-range';
@@ -52,29 +53,74 @@ function makeToggle(
   });
 }
 
+// ── Code snippets that mirror toggle state ────────────────────────────────
+// Renders the HTML you'd write to get exactly the current widget state.
+// Animated defaults to true, so we only print `animated="false"` when off.
+const codeRater  = document.getElementById('code-rater');
+const codeResult = document.getElementById('code-result');
+
+const raterState  = { colorMode: false, animated: true,  showVad: true };
+const resultState = { colorMode: true,  showFace: true,  animated: true, showVad: false };
+
+function renderRaterCode() {
+  if (!codeRater) return;
+  const attrs: string[] = [];
+  if (raterState.colorMode) attrs.push('color-mode');
+  if (!raterState.animated) attrs.push('animated="false"');
+  if (raterState.showVad)   attrs.push('show-vad');
+  const tag = attrs.length ? `<affect-kit-rater ${attrs.join(' ')}>` : '<affect-kit-rater>';
+  codeRater.textContent = `${tag}</affect-kit-rater>`;
+}
+
+function renderResultCode() {
+  if (!codeResult) return;
+  const attrs: string[] = [];
+  if (resultState.colorMode) attrs.push('color-mode');
+  if (resultState.showFace)  attrs.push('show-face');
+  attrs.push('show-labels'); // always on in this demo
+  if (!resultState.animated) attrs.push('animated="false"');
+  if (resultState.showVad)   attrs.push('show-vad');
+  codeResult.textContent =
+    `<affect-kit-result ${attrs.join(' ')}></affect-kit-result>\n\n` +
+    `<script type="module">\n` +
+    `  import 'affect-kit/result';\n` +
+    `  document.querySelector('affect-kit-result').rating = capturedRating;\n` +
+    `</script>`;
+}
+
+renderRaterCode();
+renderResultCode();
+
 // ── Rater toggles ──────────────────────────────────────────────────────────
 makeToggle('rater-color-toggle', (on) => {
   if (rater) rater.colorMode = on;
+  raterState.colorMode = on; renderRaterCode();
 });
 makeToggle('rater-animated-toggle', (on) => {
   if (rater) rater.animated = on;
+  raterState.animated = on; renderRaterCode();
 });
 makeToggle('rater-vad-toggle', (on) => {
   if (rater) rater.showVad = on;
+  raterState.showVad = on; renderRaterCode();
 });
 
 // ── Result toggles ─────────────────────────────────────────────────────────
 makeToggle('result-color-toggle', (on) => {
   if (resultEl) resultEl.colorMode = on;
+  resultState.colorMode = on; renderResultCode();
 });
 makeToggle('result-face-toggle', (on) => {
   if (resultEl) resultEl.showFace = on;
+  resultState.showFace = on; renderResultCode();
 });
 makeToggle('result-animated-toggle', (on) => {
   if (resultEl) resultEl.animated = on;
+  resultState.animated = on; renderResultCode();
 });
 makeToggle('result-vad-toggle', (on) => {
   if (resultEl) resultEl.showVad = on;
+  resultState.showVad = on; renderResultCode();
 });
 
 // ── Interactive face sliders ───────────────────────────────────────────────
@@ -138,13 +184,6 @@ function setInsightsRatings(ratings: typeof demoRatings) {
   if (resilienceEl) resilienceEl.ratings = ratings;
   if (rangeEl)      rangeEl.ratings      = ratings;
 }
+// Insights are pinned to the demo series — live rater changes drive only
+// the result panel above, not the longitudinal examples below.
 setInsightsRatings(demoRatings);
-
-// Live ratings also flow into insights when the rater emits
-const liveRatings: typeof demoRatings = [];
-rater?.addEventListener('change', (e) => {
-  const rating = (e as CustomEvent).detail;
-  if (resultEl) resultEl.rating = rating;
-  liveRatings.push(rating);
-  setInsightsRatings(liveRatings);
-});
