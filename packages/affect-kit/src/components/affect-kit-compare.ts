@@ -55,6 +55,9 @@ export class AffectKitCompare extends LitElement {
       display: block;
       container-type: inline-size;
       font-size: 1rem;
+      /* Cap so the widget doesn't stretch ugly in wide layouts. Override
+         via the custom property if you need something different. */
+      max-width: var(--affect-kit-compare-max-width, 880px);
     }
     .panel {
       position: relative;

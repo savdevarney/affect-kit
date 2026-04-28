@@ -341,41 +341,60 @@ cmp.afterRating  = lastWeekRatings;   // Rating | Rating[]
 
     <!-- Forward-looking note: how affect-kit could support longitudinal viz. -->
     <div class="card note-card">
-      <p class="card-label">Longitudinal progress visualization — where this could go</p>
-      <p style="font-size:0.85rem; color:#444; line-height:1.55">
-        affect-kit captures and displays single ratings;
-        <code style="font-size:0.78rem">&lt;affect-kit-compare&gt;</code>
-        bridges to paired snapshots. The natural next question is how to
-        support showing <em>change across many sessions</em> — patterns like
-        how much the state moves (inertia), how it recovers from low points
-        (resilience), and how much of the V/A range gets visited (range).
+      <p class="card-label">Visualizations for tracking progress — where this could go</p>
+
+      <p style="font-size:0.85rem; color:#444; line-height:1.6">
+        Most health metrics — heart rate, blood pressure, weight — fold into
+        a single number that simply moves up or down. Emotion doesn't.
+        Reducing a person's affective life to a "happiness score" loses what
+        actually matters: which feelings, how clearly named, how varied, and
+        how they connect to events. Tracking emotional progress is more about
+        pattern, vocabulary, and resonance than measurement.
       </p>
-      <p style="font-size:0.85rem; color:#444; line-height:1.55">
-        The dimension users and researchers most reliably converge on is
-        <strong>valence</strong>. Sustained low V matters, recovery from low V
-        matters, a wide V range matters. Future progress-tracking recipes
-        would likely anchor here. <strong>Arousal</strong> is a candidate
-        secondary axis but its longitudinal interpretation is more contested.
-        <strong>Dominance</strong> has very little longitudinal literature;
-        affect-kit defers showing it until an academic conversation defines
-        what it should claim.
+
+      <p style="font-size:0.85rem; color:#444; line-height:1.6">
+        That said, researchers do generally converge on three patterns that
+        read as "progress" when tracked across many sessions:
       </p>
-      <p style="font-size:0.85rem; color:#444; line-height:1.55">
-        The trap to avoid is naming quadrants of V/A space —
-        calling a region "anxious" or "depressed" imports clinical meaning
-        that the rater UI never asserted. The face / color / quadrants in
-        <code style="font-size:0.78rem">&lt;affect-kit-rater&gt;</code> are
-        affordances for label selection, not semantic claims about the
-        territory itself.
+      <ul style="font-size:0.85rem; color:#444; line-height:1.6; padding-left: 1.2rem; margin: 0.5rem 0 0.75rem">
+        <li style="margin-bottom:0.4rem">
+          <strong>Inertia</strong> — how much the emotional state moves session to
+          session. Low movement combined with sustained negative affect is the
+          clinical signal of "stuck"; healthier patterns show responsiveness to
+          what's actually happening in life.
+        </li>
+        <li style="margin-bottom:0.4rem">
+          <strong>Resilience</strong> — how reliably the state returns toward
+          baseline after a difficult stretch. Faster, more reliable return is
+          generally healthier; chronic non-recovery is a warning sign.
+        </li>
+        <li>
+          <strong>Range</strong> — and this one is widely misread. It's <em>not</em>
+          "feel more emotions at all costs" or chasing variety. It's emotional
+          <em>clarity</em>: the capacity to identify and accurately name a wide
+          spectrum of states, including difficult ones. The opposite is
+          alexithymia or flat affect, not contentment.
+        </li>
+      </ul>
+
+      <p style="font-size:0.85rem; color:#444; line-height:1.6">
+        The harder design question is which axis to anchor on. The dimensional
+        model captures three — <strong>valence</strong> (good/bad),
+        <strong>arousal</strong> (calm/intense), and <strong>dominance</strong>
+        (in-control/overwhelmed) — but only valence is universally understood
+        by both users and researchers today. Sustained low valence matters;
+        genuine valence range matters; recovery in valence matters. Future
+        progress-tracking recipes would anchor here first.
       </p>
-      <p style="font-size:0.85rem; color:#444; line-height:1.55">
-        When these recipes do ship, they'll be parameterised (consumers set
-        thresholds, windows, definitions), cite their literature floor, and
-        live as recipe examples before graduating to package widgets — earning
-        the move with a defended default and a clear story about what they
-        don't claim. See
+
+      <p style="font-size:0.85rem; color:#444; line-height:1.6">
+        Arousal is meaningful but contested in interpretation: the same high
+        reading can be excitement or anxiety depending on context. Dominance
+        has very little longitudinal research behind it. affect-kit captures
+        both, but defers showing them until there's something defensible to
+        claim. See
         <code style="font-size:0.78rem">docs/longitudinal-future.md</code>
-        for the full rationale.
+        for the design thinking in full.
       </p>
     </div>
 

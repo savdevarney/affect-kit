@@ -34,6 +34,9 @@ export class AffectKitResult extends LitElement {
       display: block;
       container-type: inline-size;
       font-size: 1rem;
+      /* Cap so the widget doesn't stretch ugly in wide layouts. Override
+         via the custom property if you need something different. */
+      max-width: var(--affect-kit-result-max-width, 640px);
     }
     .panel {
       position: relative;
@@ -59,6 +62,8 @@ export class AffectKitResult extends LitElement {
       overflow: visible;
     }
     :host([bare]) .glow { display: none; }
+    /* In bare mode the host widget controls sizing — lift our cap. */
+    :host([bare]) { max-width: none; }
 
     .glow {
       position: absolute;

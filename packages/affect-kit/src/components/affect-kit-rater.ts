@@ -34,6 +34,9 @@ export class AffectKitRater extends LitElement {
     :host {
       display: block;
       container-type: inline-size;
+      /* Cap so the widget doesn't stretch ugly in wide layouts. Override
+         via the custom property if you need something different. */
+      max-width: var(--affect-kit-rater-max-width, 640px);
       --_r: 128; --_g: 128; --_b: 128;
       --_l3-r: 80; --_l3-g: 80; --_l3-b: 80;
       --_surface-is-light: 0;
