@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, state } from 'lit/decorators.js';
 import type { Rating } from '../core/types';
 import { averageRatings } from '../core/vad';
 import { colorForVA } from '../core/color';
@@ -12,6 +12,11 @@ import './affect-kit-result'; // ensure result element is registered
  * is on, the card background is a gradient from the left rating's V/A
  * color to the right rating's V/A color — the transition itself becomes
  * part of the visual story.
+ *
+ * Layout responds to host width: side-by-side when wide, stacked when
+ * narrow. Each half's face sits on the *outer* edge so the two faces
+ * frame the gradient — left face on the left in row mode, top face on
+ * the top in stacked mode (and the other half mirrors).
  *
  * Each of `beforeRating` / `afterRating` accepts either a single `Rating`
  * (rendered as-is) or a `Rating[]` (averaged with `averageRatings()` for
@@ -42,10 +47,16 @@ import './affect-kit-result'; // ensure result element is registered
  */
 @customElement('affect-kit-compare')
 export class AffectKitCompare extends LitElement {
+  /**
+   * Below this host width (px), the two halves stack vertically. Picked so
+   * that each half in side-by-side mode is at least ~360px — comfortable
+   * room for face + words side-by-side via the inner result's row layout.
+   */
+  private static readonly STACK_BREAKPOINT = 720;
+
   static override styles = css`
     :host {
       display: block;
-      container-type: inline-size;
       font-size: 1rem;
     }
     .panel {
@@ -60,7 +71,7 @@ export class AffectKitCompare extends LitElement {
      * The gradient layer paints the V/A → color transition from one side
      * to the other. Sits behind content; opacity matches the per-card
      * glow used by <affect-kit-result>. Direction comes from --_dir,
-     * which the container query below flips on narrow viewports.
+     * which we flip when the panel is in stacked mode.
      */
     .gradient {
       --_dir: to right;
@@ -73,6 +84,7 @@ export class AffectKitCompare extends LitElement {
       z-index: 0;
     }
     :host([color-mode]) .gradient { opacity: 0.85; }
+    .panel.stacked .gradient { --_dir: to bottom; }
 
     .row {
       position: relative;
@@ -81,41 +93,47 @@ export class AffectKitCompare extends LitElement {
       grid-template-columns: 1fr 1fr;
       gap: 0;
     }
+    .panel.stacked .row { grid-template-columns: 1fr; }
+
     .side {
       display: flex;
       flex-direction: column;
-      gap: 0.5em;
+      gap: 0.7em;
       padding: 1.6em 1.8em;
       min-width: 0;
     }
     /* Divider between the two halves. Thin, low-contrast, no labels. */
-    .side.left  { border-right:  1px solid rgba(0,0,0,0.08); }
-
-    .caption {
-      font-size: 0.7rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #999;
-      margin: 0;
+    .side.left { border-right: 1px solid rgba(0,0,0,0.08); }
+    .panel.stacked .side.left {
+      border-right: none;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
     }
-    /* Right-align the right caption only when in side-by-side row mode. */
-    .side.right .caption { text-align: right; }
 
     /*
-     * On narrow containers, stack vertically. Divider becomes horizontal,
-     * gradient direction flips top-to-bottom (set inline from JS).
+     * Captions: white pill with dark text so they stay legible against
+     * any V/A gradient color underneath.
      */
-    @container (max-width: 540px) {
-      .row { grid-template-columns: 1fr; }
-      .side.left {
-        border-right: none;
-        border-bottom: 1px solid rgba(0,0,0,0.08);
-      }
-      /* Reset right-caption alignment to left when stacked. */
-      .side.right .caption { text-align: left; }
-      .gradient { --_dir: to bottom; }
+    .caption {
+      display: inline-block;
+      align-self: flex-start;
+      background: white;
+      color: #1a1a1a;
+      font-size: 0.62rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.35em 0.7em;
+      border-radius: 999px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      margin: 0;
     }
+    /* Right caption hugs the right edge in row mode. */
+    .panel:not(.stacked) .side.right .caption { align-self: flex-end; }
+    /*
+     * In stacked mode, the inner result is mirrored to column-reverse
+     * (words above face). The caption stays at the top of the side —
+     * top-to-bottom reads: caption, words, face.
+     */
   `;
 
   /**
@@ -153,6 +171,27 @@ export class AffectKitCompare extends LitElement {
   @property({ type: Boolean, attribute: 'show-labels' })
   showLabels = true;
 
+  /** Internal: true when the host is narrow enough to stack vertically. */
+  @state() private _stacked = false;
+
+  private _ro?: ResizeObserver;
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this._ro = new ResizeObserver(entries => {
+      const w = entries[0]?.contentRect.width ?? this.offsetWidth;
+      const next = w < AffectKitCompare.STACK_BREAKPOINT;
+      if (next !== this._stacked) this._stacked = next;
+    });
+    this._ro.observe(this);
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this._ro?.disconnect();
+    delete this._ro;
+  }
+
   private _resolve(input: Rating | Rating[] | null): Rating | null {
     if (!input) return null;
     if (Array.isArray(input)) return averageRatings(input);
@@ -167,21 +206,24 @@ export class AffectKitCompare extends LitElement {
     // is null so the gradient still produces *something* sensible.
     const lc = left  ? colorForVA(left.pad.v,  left.pad.a)  : [240, 240, 240] as const;
     const rc = right ? colorForVA(right.pad.v, right.pad.a) : [240, 240, 240] as const;
-    // Feed end-stops via custom properties so the gradient direction
-    // (also a custom property, flipped by the container query) and the
-    // colors compose without a conflicting inline `background`.
     const gradientStyle =
       `--_from: rgb(${lc[0]},${lc[1]},${lc[2]});` +
       `--_to: rgb(${rc[0]},${rc[1]},${rc[2]});`;
 
+    // Drive each inner result's layout explicitly from our stacked state,
+    // so the breakpoints stay aligned: side-by-side compare ↔ row results,
+    // stacked compare ↔ column results.
+    const innerLayout: 'row' | 'column' = this._stacked ? 'column' : 'row';
+
     return html`
-      <div class="panel">
+      <div class="panel${this._stacked ? ' stacked' : ''}">
         <div class="gradient" style=${gradientStyle}></div>
         <div class="row">
           <div class="side left">
             <p class="caption">${this.beforeLabel}</p>
             <affect-kit-result
               bare
+              layout=${innerLayout}
               .rating=${left}
               ?show-face=${this.showFace}
               ?show-labels=${this.showLabels}
@@ -192,6 +234,7 @@ export class AffectKitCompare extends LitElement {
             <affect-kit-result
               bare
               mirror
+              layout=${innerLayout}
               .rating=${right}
               ?show-face=${this.showFace}
               ?show-labels=${this.showLabels}
@@ -201,7 +244,6 @@ export class AffectKitCompare extends LitElement {
       </div>
     `;
   }
-
 }
 
 declare global {

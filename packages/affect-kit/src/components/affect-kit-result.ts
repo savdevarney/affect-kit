@@ -139,24 +139,56 @@ export class AffectKitResult extends LitElement {
     .align-center .vad { justify-content: center; }
     .align-right  .vad { justify-content: flex-end; }
 
-    /* Wide panels: face left, words right. Smaller step caps level 3 at 2em. */
+    /*
+     * Default layout follows the host's own container width:
+     *   wide   (>= 360px) → row, face left
+     *   narrow (<  360px) → column, face top
+     *
+     * The 'layout' attribute lets a parent widget (e.g. affect-kit-compare)
+     * override that decision explicitly — useful when the parent's own
+     * breakpoint differs and we want the inner direction to track the
+     * parent's stacked/side-by-side state, not this widget's own width.
+     *
+     * The 'mirror' attribute flips whichever direction is active:
+     *   row    → row-reverse    (face right, words left)
+     *   column → column-reverse (face bottom, words above)
+     */
+
+    /* Auto layout — driven by the host's container width. */
     @container (min-width: 360px) {
-      .content.has-face {
+      :host(:not([layout])) .content.has-face,
+      :host([layout="auto"]) .content.has-face {
         flex-direction: row;
         align-items: center;
         gap: 2em;
         --_level-step: 0.5em;
       }
-      .content.has-face .face-zone { margin-bottom: 0; }
-      .content.has-face .words     { flex: 1 1 auto; min-width: 0; }
+      :host(:not([layout])) .content.has-face .face-zone,
+      :host([layout="auto"]) .content.has-face .face-zone { margin-bottom: 0; }
+      :host(:not([layout])) .content.has-face .words,
+      :host([layout="auto"]) .content.has-face .words { flex: 1 1 auto; min-width: 0; }
 
-      /*
-       * 'mirror' flips the row order — face on the right, words on the left.
-       * Only applies in row mode; stacked layout below 360px keeps face on top.
-       * Useful for paired-comparison hosts (e.g. affect-kit-compare's right
-       * panel) so each face sits on the outer edge of its half.
-       */
-      :host([mirror]) .content.has-face { flex-direction: row-reverse; }
+      :host(:not([layout])[mirror]) .content.has-face,
+      :host([layout="auto"][mirror]) .content.has-face { flex-direction: row-reverse; }
+    }
+
+    /* Explicit row layout. */
+    :host([layout="row"]) .content.has-face {
+      flex-direction: row;
+      align-items: center;
+      gap: 2em;
+      --_level-step: 0.5em;
+    }
+    :host([layout="row"]) .content.has-face .face-zone { margin-bottom: 0; }
+    :host([layout="row"]) .content.has-face .words { flex: 1 1 auto; min-width: 0; }
+    :host([layout="row"][mirror]) .content.has-face { flex-direction: row-reverse; }
+
+    /* Explicit column layout. Mirror flips face to the bottom. */
+    :host([layout="column"]) .content.has-face { flex-direction: column; }
+    :host([layout="column"][mirror]) .content.has-face { flex-direction: column-reverse; }
+    :host([layout="column"][mirror]) .content.has-face .face-zone {
+      margin-bottom: 0;
+      margin-top: 0.5em;
     }
   `;
 
@@ -197,13 +229,22 @@ export class AffectKitResult extends LitElement {
   bare = false;
 
   /**
-   * Flip face / words order in the row layout — face on the right, words
-   * on the left. Only takes effect in the wide row layout; stacked layout
-   * keeps face on top. Useful for paired-comparison hosts so each face
-   * sits on the outer edge of its half.
+   * Flip face / words order. In row mode → face right, words left.
+   * In column mode → face bottom, words above. Useful for paired-comparison
+   * hosts so each face sits on the outer edge of its half.
    */
   @property({ type: Boolean, reflect: true })
   mirror = false;
+
+  /**
+   * Force the face/words direction explicitly. Defaults to `'auto'`, which
+   * lets the host's container width pick row (≥ 360px) or column (< 360px).
+   * Set to `'row'` or `'column'` to override — useful when a parent widget
+   * (e.g. `<affect-kit-compare>`) wants the inner direction to track
+   * something other than this widget's own width.
+   */
+  @property({ type: String, reflect: true })
+  layout: 'auto' | 'row' | 'column' = 'auto';
 
   /**
    * Breath animation on the face glyph. Defaults `true`.
