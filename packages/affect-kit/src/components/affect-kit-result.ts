@@ -140,55 +140,62 @@ export class AffectKitResult extends LitElement {
     .align-right  .vad { justify-content: flex-end; }
 
     /*
-     * Default layout follows the host's own container width:
-     *   wide   (>= 360px) → row, face left
-     *   narrow (<  360px) → column, face top
+     * Layout flow is driven by CSS custom properties so a parent widget
+     * (e.g. affect-kit-compare) can override the direction via container
+     * queries — custom properties pierce the shadow DOM. Standalone, the
+     * widget's own container query at 360px sets sensible defaults.
      *
-     * The 'layout' attribute lets a parent widget (e.g. affect-kit-compare)
-     * override that decision explicitly — useful when the parent's own
-     * breakpoint differs and we want the inner direction to track the
-     * parent's stacked/side-by-side state, not this widget's own width.
+     * --_face-dir   : flex-direction for the .content row
+     * --_face-align : align-items
+     * --_face-gap   : gap between face and words
+     * --_face-step  : value for --_level-step (word size growth per level)
+     * --_face-mb    : face-zone margin-bottom
+     * --_face-mt    : face-zone margin-top
      *
-     * The 'mirror' attribute flips whichever direction is active:
-     *   row    → row-reverse    (face right, words left)
-     *   column → column-reverse (face bottom, words above)
+     * Each var() call has a fallback that reflects the standalone default
+     * for the current rule, so a parent only needs to override the values
+     * it cares about.
      */
 
-    /* Auto layout — driven by the host's container width. */
+    /* Standalone narrow defaults — face on top, vertical stack. */
+    .content.has-face {
+      flex-direction: var(--_face-dir, column);
+      align-items: var(--_face-align, stretch);
+      gap: var(--_face-gap, 0);
+      --_level-step: var(--_face-step, 0.75em);
+    }
+    .content.has-face .face-zone {
+      margin-top: var(--_face-mt, 0);
+      margin-bottom: var(--_face-mb, 0.5em);
+    }
+
+    /* Standalone mirror — flips column to column-reverse and swaps the
+       face margin so the face sits below the words. */
+    :host([mirror]) .content.has-face {
+      flex-direction: var(--_face-dir, column-reverse);
+    }
+    :host([mirror]) .content.has-face .face-zone {
+      margin-top: var(--_face-mt, 0.5em);
+      margin-bottom: var(--_face-mb, 0);
+    }
+
+    /* Standalone wide (host >= 360px) — face left, words right. */
     @container (min-width: 360px) {
-      :host(:not([layout])) .content.has-face,
-      :host([layout="auto"]) .content.has-face {
-        flex-direction: row;
-        align-items: center;
-        gap: 2em;
-        --_level-step: 0.5em;
+      .content.has-face {
+        flex-direction: var(--_face-dir, row);
+        align-items: var(--_face-align, center);
+        gap: var(--_face-gap, 2em);
+        --_level-step: var(--_face-step, 0.5em);
       }
-      :host(:not([layout])) .content.has-face .face-zone,
-      :host([layout="auto"]) .content.has-face .face-zone { margin-bottom: 0; }
-      :host(:not([layout])) .content.has-face .words,
-      :host([layout="auto"]) .content.has-face .words { flex: 1 1 auto; min-width: 0; }
+      .content.has-face .face-zone {
+        margin-top: var(--_face-mt, 0);
+        margin-bottom: var(--_face-mb, 0);
+      }
+      .content.has-face .words { flex: 1 1 auto; min-width: 0; }
 
-      :host(:not([layout])[mirror]) .content.has-face,
-      :host([layout="auto"][mirror]) .content.has-face { flex-direction: row-reverse; }
-    }
-
-    /* Explicit row layout. */
-    :host([layout="row"]) .content.has-face {
-      flex-direction: row;
-      align-items: center;
-      gap: 2em;
-      --_level-step: 0.5em;
-    }
-    :host([layout="row"]) .content.has-face .face-zone { margin-bottom: 0; }
-    :host([layout="row"]) .content.has-face .words { flex: 1 1 auto; min-width: 0; }
-    :host([layout="row"][mirror]) .content.has-face { flex-direction: row-reverse; }
-
-    /* Explicit column layout. Mirror flips face to the bottom. */
-    :host([layout="column"]) .content.has-face { flex-direction: column; }
-    :host([layout="column"][mirror]) .content.has-face { flex-direction: column-reverse; }
-    :host([layout="column"][mirror]) .content.has-face .face-zone {
-      margin-bottom: 0;
-      margin-top: 0.5em;
+      :host([mirror]) .content.has-face {
+        flex-direction: var(--_face-dir, row-reverse);
+      }
     }
   `;
 
@@ -232,19 +239,15 @@ export class AffectKitResult extends LitElement {
    * Flip face / words order. In row mode → face right, words left.
    * In column mode → face bottom, words above. Useful for paired-comparison
    * hosts so each face sits on the outer edge of its half.
+   *
+   * For non-standard layouts a parent can also override the flow via the
+   * `--_face-dir` / `--_face-align` / `--_face-gap` / `--_face-step` /
+   * `--_face-mb` / `--_face-mt` custom properties — these pierce the
+   * shadow DOM and let an outer container query drive the inner layout
+   * without JS.
    */
   @property({ type: Boolean, reflect: true })
   mirror = false;
-
-  /**
-   * Force the face/words direction explicitly. Defaults to `'auto'`, which
-   * lets the host's container width pick row (≥ 360px) or column (< 360px).
-   * Set to `'row'` or `'column'` to override — useful when a parent widget
-   * (e.g. `<affect-kit-compare>`) wants the inner direction to track
-   * something other than this widget's own width.
-   */
-  @property({ type: String, reflect: true })
-  layout: 'auto' | 'row' | 'column' = 'auto';
 
   /**
    * Breath animation on the face glyph. Defaults `true`.

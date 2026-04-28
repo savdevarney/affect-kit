@@ -1,5 +1,5 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import type { Rating } from '../core/types';
 import { averageRatings } from '../core/vad';
 import { colorForVA } from '../core/color';
@@ -13,10 +13,13 @@ import './affect-kit-result'; // ensure result element is registered
  * color to the right rating's V/A color — the transition itself becomes
  * part of the visual story.
  *
- * Layout responds to host width: side-by-side when wide, stacked when
- * narrow. Each half's face sits on the *outer* edge so the two faces
- * frame the gradient — left face on the left in row mode, top face on
- * the top in stacked mode (and the other half mirrors).
+ * Layout responds to host width via container queries (no JS): side-by-side
+ * when wide, stacked when narrow. Each half's face sits on the *outer*
+ * edge so the two faces frame the gradient — left/right when side-by-side,
+ * top/bottom when stacked. The inner result widgets pick up the right
+ * direction via CSS custom properties, so breakpoints stay aligned with
+ * compare's own stacking and there is no "middle state" where compare is
+ * side-by-side but each half is internally stacked.
  *
  * Each of `beforeRating` / `afterRating` accepts either a single `Rating`
  * (rendered as-is) or a `Rating[]` (averaged with `averageRatings()` for
@@ -47,16 +50,10 @@ import './affect-kit-result'; // ensure result element is registered
  */
 @customElement('affect-kit-compare')
 export class AffectKitCompare extends LitElement {
-  /**
-   * Below this host width (px), the two halves stack vertically. Picked so
-   * that each half in side-by-side mode is at least ~360px — comfortable
-   * room for face + words side-by-side via the inner result's row layout.
-   */
-  private static readonly STACK_BREAKPOINT = 720;
-
   static override styles = css`
     :host {
       display: block;
+      container-type: inline-size;
       font-size: 1rem;
     }
     .panel {
@@ -70,21 +67,20 @@ export class AffectKitCompare extends LitElement {
     /*
      * The gradient layer paints the V/A → color transition from one side
      * to the other. Sits behind content; opacity matches the per-card
-     * glow used by <affect-kit-result>. Direction comes from --_dir,
-     * which we flip when the panel is in stacked mode.
+     * glow used by <affect-kit-result>. Direction comes from --_grad-dir,
+     * which the container query below flips when stacked.
      */
     .gradient {
-      --_dir: to right;
+      --_grad-dir: to right;
       position: absolute;
       inset: 0;
       opacity: 0;
-      background: linear-gradient(var(--_dir), var(--_from, #f0f0f0), var(--_to, #f0f0f0));
+      background: linear-gradient(var(--_grad-dir), var(--_from, #f0f0f0), var(--_to, #f0f0f0));
       transition: opacity 0.5s ease;
       pointer-events: none;
       z-index: 0;
     }
     :host([color-mode]) .gradient { opacity: 0.85; }
-    .panel.stacked .gradient { --_dir: to bottom; }
 
     .row {
       position: relative;
@@ -93,8 +89,6 @@ export class AffectKitCompare extends LitElement {
       grid-template-columns: 1fr 1fr;
       gap: 0;
     }
-    .panel.stacked .row { grid-template-columns: 1fr; }
-
     .side {
       display: flex;
       flex-direction: column;
@@ -102,12 +96,7 @@ export class AffectKitCompare extends LitElement {
       padding: 1.6em 1.8em;
       min-width: 0;
     }
-    /* Divider between the two halves. Thin, low-contrast, no labels. */
     .side.left { border-right: 1px solid rgba(0,0,0,0.08); }
-    .panel.stacked .side.left {
-      border-right: none;
-      border-bottom: 1px solid rgba(0,0,0,0.08);
-    }
 
     /*
      * Captions: white pill with dark text so they stay legible against
@@ -128,12 +117,57 @@ export class AffectKitCompare extends LitElement {
       margin: 0;
     }
     /* Right caption hugs the right edge in row mode. */
-    .panel:not(.stacked) .side.right .caption { align-self: flex-end; }
+    .side.right .caption { align-self: flex-end; }
+
     /*
-     * In stacked mode, the inner result is mirrored to column-reverse
-     * (words above face). The caption stays at the top of the side —
-     * top-to-bottom reads: caption, words, face.
+     * Side-by-side: drive each inner result into row mode regardless of
+     * its own width, so the breakpoints stay aligned with compare's.
+     * affect-kit-result reads these custom properties (they pierce the
+     * shadow DOM) and renders accordingly.
      */
+    affect-kit-result {
+      --_face-dir: row;
+      --_face-align: center;
+      --_face-gap: 2em;
+      --_face-step: 0.5em;
+      --_face-mb: 0;
+      --_face-mt: 0;
+    }
+    affect-kit-result[mirror] { --_face-dir: row-reverse; }
+
+    /*
+     * Stacked: when this host is narrow enough, switch the panel grid,
+     * the divider direction, the gradient direction, the caption alignment,
+     * AND the inner result direction — all via container queries, no JS.
+     * Threshold picked so each side in row mode has comfortable room
+     * (host ≥ 720px → ~340px per side after gutters).
+     */
+    @container (max-width: 720px) {
+      .row { grid-template-columns: 1fr; }
+      .side.left {
+        border-right: none;
+        border-bottom: 1px solid rgba(0,0,0,0.08);
+      }
+      /* Captions center when stacked. */
+      .side .caption,
+      .side.right .caption { align-self: center; }
+      .gradient { --_grad-dir: to bottom; }
+
+      /* Inner result switches to column mode. */
+      affect-kit-result {
+        --_face-dir: column;
+        --_face-align: stretch;
+        --_face-gap: 0;
+        --_face-step: 0.75em;
+        --_face-mb: 0.5em;
+        --_face-mt: 0;
+      }
+      affect-kit-result[mirror] {
+        --_face-dir: column-reverse;
+        --_face-mb: 0;
+        --_face-mt: 0.5em;
+      }
+    }
   `;
 
   /**
@@ -171,27 +205,6 @@ export class AffectKitCompare extends LitElement {
   @property({ type: Boolean, attribute: 'show-labels' })
   showLabels = true;
 
-  /** Internal: true when the host is narrow enough to stack vertically. */
-  @state() private _stacked = false;
-
-  private _ro?: ResizeObserver;
-
-  override connectedCallback(): void {
-    super.connectedCallback();
-    this._ro = new ResizeObserver(entries => {
-      const w = entries[0]?.contentRect.width ?? this.offsetWidth;
-      const next = w < AffectKitCompare.STACK_BREAKPOINT;
-      if (next !== this._stacked) this._stacked = next;
-    });
-    this._ro.observe(this);
-  }
-
-  override disconnectedCallback(): void {
-    super.disconnectedCallback();
-    this._ro?.disconnect();
-    delete this._ro;
-  }
-
   private _resolve(input: Rating | Rating[] | null): Rating | null {
     if (!input) return null;
     if (Array.isArray(input)) return averageRatings(input);
@@ -203,27 +216,21 @@ export class AffectKitCompare extends LitElement {
     const right = this._resolve(this.afterRating);
 
     // Gradient end-stops. Fall back to a low-saturation neutral if a side
-    // is null so the gradient still produces *something* sensible.
+    // is null so the gradient still produces something sensible.
     const lc = left  ? colorForVA(left.pad.v,  left.pad.a)  : [240, 240, 240] as const;
     const rc = right ? colorForVA(right.pad.v, right.pad.a) : [240, 240, 240] as const;
     const gradientStyle =
       `--_from: rgb(${lc[0]},${lc[1]},${lc[2]});` +
       `--_to: rgb(${rc[0]},${rc[1]},${rc[2]});`;
 
-    // Drive each inner result's layout explicitly from our stacked state,
-    // so the breakpoints stay aligned: side-by-side compare ↔ row results,
-    // stacked compare ↔ column results.
-    const innerLayout: 'row' | 'column' = this._stacked ? 'column' : 'row';
-
     return html`
-      <div class="panel${this._stacked ? ' stacked' : ''}">
+      <div class="panel">
         <div class="gradient" style=${gradientStyle}></div>
         <div class="row">
           <div class="side left">
             <p class="caption">${this.beforeLabel}</p>
             <affect-kit-result
               bare
-              layout=${innerLayout}
               .rating=${left}
               ?show-face=${this.showFace}
               ?show-labels=${this.showLabels}
@@ -234,7 +241,6 @@ export class AffectKitCompare extends LitElement {
             <affect-kit-result
               bare
               mirror
-              layout=${innerLayout}
               .rating=${right}
               ?show-face=${this.showFace}
               ?show-labels=${this.showLabels}
