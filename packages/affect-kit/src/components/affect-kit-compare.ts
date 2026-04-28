@@ -69,16 +69,27 @@ export class AffectKitCompare extends LitElement {
     }
     /*
      * The gradient layer paints the V/A → color transition from one side
-     * to the other. Sits behind content; opacity matches the per-card
-     * glow used by <affect-kit-result>. Direction comes from --_grad-dir,
-     * which the container query below flips when stacked.
+     * to the other. Stops are placed at 30% / 70% so each side keeps a
+     * generous solid block of its own saturated color before the blend
+     * starts — making the transition feel like a soft handoff rather
+     * than a continuous wash, and keeping each side's color readable
+     * regardless of which two V/A colors got picked. Sits behind
+     * content; opacity matches the per-card glow used by
+     * <affect-kit-result>. Direction comes from --_grad-dir, which the
+     * container query below flips when stacked.
      */
     .gradient {
       --_grad-dir: to right;
       position: absolute;
       inset: 0;
       opacity: 0;
-      background: linear-gradient(var(--_grad-dir), var(--_from, #f0f0f0), var(--_to, #f0f0f0));
+      background: linear-gradient(
+        var(--_grad-dir),
+        var(--_from, #f0f0f0) 0%,
+        var(--_from, #f0f0f0) 30%,
+        var(--_to, #f0f0f0) 70%,
+        var(--_to, #f0f0f0) 100%
+      );
       transition: opacity 0.5s ease;
       pointer-events: none;
       z-index: 0;

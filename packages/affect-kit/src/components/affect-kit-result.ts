@@ -295,7 +295,7 @@ export class AffectKitResult extends LitElement {
 
           ${this.showLabels && r.labels.length > 0 ? html`
             <div class="words">
-              ${r.labels.map(l => {
+              ${[...r.labels].sort((a, b) => b.level - a.level).map(l => {
                 const lv = Math.max(1, Math.min(3, l.level));
                 // Triangle weight: peaks at lv=2 (500), drops to 400 at lv=1 and lv=3.
                 // The display serif at high levels carries weight on its own; the
