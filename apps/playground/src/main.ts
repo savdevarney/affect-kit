@@ -4,11 +4,13 @@ import 'affect-kit/face';
 import './example-tabs';
 import './recipes/recipe-sparkline';
 import './recipes/recipe-scatter';
+import './recipes/recipe-cumulative';
 import type { AffectKitFace }   from 'affect-kit/face';
 import type { AffectKitResult } from 'affect-kit/result';
 import type { AffectKitRater }  from 'affect-kit/rater';
-import type { RecipeSparkline } from './recipes/recipe-sparkline';
-import type { RecipeScatter }   from './recipes/recipe-scatter';
+import type { RecipeSparkline }  from './recipes/recipe-sparkline';
+import type { RecipeScatter }    from './recipes/recipe-scatter';
+import type { RecipeCumulative } from './recipes/recipe-cumulative';
 import { createRating, averageRatings } from 'affect-kit';
 import type { Rating, EmotionName } from 'affect-kit';
 
@@ -231,18 +233,20 @@ const examples: Array<{ name: string; shape: string; ratings: Rating[] }> = [
   { name: 'Example 3', shape: 'a varied series',   ratings: series3 },
 ];
 
-const summaryEl   = document.getElementById('series-summary')   as AffectKitResult | null;
-const sparklineEl = document.getElementById('series-sparkline') as RecipeSparkline | null;
-const scatterEl   = document.getElementById('series-scatter')   as RecipeScatter   | null;
-const statsEl     = document.getElementById('series-stats');
-const captionEl   = document.getElementById('series-caption');
+const summaryEl    = document.getElementById('series-summary')    as AffectKitResult   | null;
+const sparklineEl  = document.getElementById('series-sparkline')  as RecipeSparkline   | null;
+const scatterEl    = document.getElementById('series-scatter')    as RecipeScatter     | null;
+const cumulativeEl = document.getElementById('series-cumulative') as RecipeCumulative  | null;
+const statsEl      = document.getElementById('series-stats');
+const captionEl    = document.getElementById('series-caption');
 
 function loadExample(idx: number): void {
   const ex = examples[idx];
   if (!ex) return;
-  if (summaryEl)   summaryEl.rating     = averageRatings(ex.ratings);
-  if (sparklineEl) sparklineEl.ratings  = ex.ratings;
-  if (scatterEl)   scatterEl.ratings    = ex.ratings;
+  if (summaryEl)    summaryEl.rating       = averageRatings(ex.ratings);
+  if (sparklineEl)  sparklineEl.ratings    = ex.ratings;
+  if (scatterEl)    scatterEl.ratings      = ex.ratings;
+  if (cumulativeEl) cumulativeEl.ratings   = ex.ratings;
 
   if (captionEl) {
     captionEl.innerHTML = `<strong>${ex.name}</strong> — ${ex.shape}.`;

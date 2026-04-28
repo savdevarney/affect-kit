@@ -395,11 +395,25 @@ sparklineEl.ratings = series;  // Rating[]</code></pre>
 
         <example-tabs>
           <div slot="demo">
+            <recipe-cumulative id="series-cumulative"></recipe-cumulative>
+          </div>
+          <pre slot="code"><code>import './recipes/recipe-cumulative';
+
+cumulativeEl.ratings = series;  // Rating[]
+// Slope = current rate of V/A movement.
+// Plateaus = stretches with little change.</code></pre>
+        </example-tabs>
+
+        <example-tabs>
+          <div slot="demo">
             <recipe-scatter id="series-scatter"></recipe-scatter>
           </div>
           <pre slot="code"><code>import './recipes/recipe-scatter';
 
-scatterEl.ratings = series;  // Rating[]</code></pre>
+scatterEl.ratings = series;  // Rating[]
+// Renders the phase portrait: convex hull (range)
+// + connecting lines (trajectory) + dots (positions),
+// all faded by age.</code></pre>
         </example-tabs>
 
         <div class="stats" id="series-stats"></div>
