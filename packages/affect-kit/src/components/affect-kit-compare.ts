@@ -96,11 +96,28 @@ export class AffectKitCompare extends LitElement {
     }
     :host([color-mode]) .gradient { opacity: 0.85; }
 
+    /*
+     * Layout strategy: STACKED is the default — the layout that always
+     * fits at any width. Side-by-side is *unlocked* at one of two
+     * container-query thresholds depending on what content is visible:
+     *
+     *   - Both face and labels shown → unlock at 720px
+     *     (each side needs room for a face + words side-by-side)
+     *   - Only face *or* only labels   → unlock at 480px
+     *     (each side only has one content type, less width needed)
+     *
+     * Keeping STACKED as the default means we write each set of style
+     * values in *one place*; the side-by-side block below appears twice
+     * (once per threshold) but flips them all together, so adding a new
+     * style is a one-line change in the default + a single line in each
+     * unlock block.
+     */
+
     .row {
       position: relative;
       z-index: 1;
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr;  /* STACKED default */
       gap: 0;
     }
     .side {
@@ -110,15 +127,18 @@ export class AffectKitCompare extends LitElement {
       padding: 1.6em 1.8em;
       min-width: 0;
     }
-    .side.left { border-right: 1px solid rgba(0,0,0,0.08); }
+    /* Divider (STACKED default — sits below the top half). */
+    .side.left {
+      border-right: none;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+    }
+    /* Gradient flow (STACKED default — top to bottom). */
+    .gradient { --_grad-dir: to bottom; }
 
-    /*
-     * Captions: white pill with dark text so they stay legible against
-     * any V/A gradient color underneath.
-     */
+    /* White-pill captions; dark text stays legible against any V/A color. */
     .caption {
       display: inline-block;
-      align-self: flex-start;
+      align-self: center;  /* STACKED default — centered above each half */
       background: white;
       color: #1a1a1a;
       font-size: 0.62rem;
@@ -130,56 +150,70 @@ export class AffectKitCompare extends LitElement {
       box-shadow: 0 1px 2px rgba(0,0,0,0.06);
       margin: 0;
     }
-    /* Right caption hugs the right edge in row mode. */
-    .side.right .caption { align-self: flex-end; }
 
-    /*
-     * Side-by-side: drive each inner result into row mode regardless of
-     * its own width, so the breakpoints stay aligned with compare's.
-     * affect-kit-result reads these custom properties (they pierce the
-     * shadow DOM) and renders accordingly.
-     */
+    /* Inner result — STACKED default flows column-then-mirror. */
     affect-kit-result {
-      --_face-dir: row;
-      --_face-align: center;
-      --_face-gap: 2em;
-      --_face-step: 0.5em;
-      --_face-mb: 0;
+      --_face-dir: column;
+      --_face-align: stretch;
+      --_face-gap: 0;
+      --_face-step: 0.75em;
+      --_face-mb: 0.5em;
       --_face-mt: 0;
     }
-    affect-kit-result[mirror] { --_face-dir: row-reverse; }
+    affect-kit-result[mirror] {
+      --_face-dir: column-reverse;
+      --_face-mb: 0;
+      --_face-mt: 0.5em;
+    }
 
     /*
-     * Stacked: when this host is narrow enough, switch the panel grid,
-     * the divider direction, the gradient direction, the caption alignment,
-     * AND the inner result direction — all via container queries, no JS.
-     * Threshold picked so each side in row mode has comfortable room
-     * (host ≥ 720px → ~340px per side after gutters).
+     * Unlock side-by-side. Two blocks, same body — kept in sync by
+     * convention. CSS nesting keeps each block tight; the only thing
+     * that differs between them is the @container threshold and
+     * (for the second) a :where() selector that gates the rule on
+     * the content being light enough to need only the narrower
+     * threshold.
      */
-    @container (max-width: 720px) {
-      .row { grid-template-columns: 1fr; }
+    @container (min-width: 720px) {
+      .row { grid-template-columns: 1fr 1fr; }
       .side.left {
-        border-right: none;
-        border-bottom: 1px solid rgba(0,0,0,0.08);
+        border-right: 1px solid rgba(0,0,0,0.08);
+        border-bottom: none;
       }
-      /* Captions center when stacked. */
-      .side .caption,
-      .side.right .caption { align-self: center; }
-      .gradient { --_grad-dir: to bottom; }
-
-      /* Inner result switches to column mode. */
+      .gradient { --_grad-dir: to right; }
+      .side .caption { align-self: flex-start; }
+      .side.right .caption { align-self: flex-end; }
       affect-kit-result {
-        --_face-dir: column;
-        --_face-align: stretch;
-        --_face-gap: 0;
-        --_face-step: 0.75em;
-        --_face-mb: 0.5em;
+        --_face-dir: row;
+        --_face-align: center;
+        --_face-gap: 2em;
+        --_face-step: 0.5em;
+        --_face-mb: 0;
         --_face-mt: 0;
       }
-      affect-kit-result[mirror] {
-        --_face-dir: column-reverse;
-        --_face-mb: 0;
-        --_face-mt: 0.5em;
+      affect-kit-result[mirror] { --_face-dir: row-reverse; }
+    }
+
+    /* Light content (face OR labels off) — unlock side-by-side at 480px. */
+    @container (min-width: 480px) {
+      :host(:where(:not([show-face]), :not([show-labels]))) {
+        & .row { grid-template-columns: 1fr 1fr; }
+        & .side.left {
+          border-right: 1px solid rgba(0,0,0,0.08);
+          border-bottom: none;
+        }
+        & .gradient { --_grad-dir: to right; }
+        & .side .caption { align-self: flex-start; }
+        & .side.right .caption { align-self: flex-end; }
+        & affect-kit-result {
+          --_face-dir: row;
+          --_face-align: center;
+          --_face-gap: 2em;
+          --_face-step: 0.5em;
+          --_face-mb: 0;
+          --_face-mt: 0;
+        }
+        & affect-kit-result[mirror] { --_face-dir: row-reverse; }
       }
     }
   `;
@@ -204,8 +238,9 @@ export class AffectKitCompare extends LitElement {
   @property({ type: String, attribute: 'after-label' })
   afterLabel = 'After';
 
-  /** Forwarded to each `<affect-kit-result>`. */
-  @property({ type: Boolean, attribute: 'show-face' })
+  /** Forwarded to each `<affect-kit-result>`. Reflected so CSS rules
+      below can branch on which content types are visible. */
+  @property({ type: Boolean, attribute: 'show-face', reflect: true })
   showFace = false;
 
   /**
@@ -215,8 +250,9 @@ export class AffectKitCompare extends LitElement {
   @property({ type: Boolean, attribute: 'color-mode', reflect: true })
   colorMode = false;
 
-  /** Forwarded to each `<affect-kit-result>`. Defaults true. */
-  @property({ type: Boolean, attribute: 'show-labels' })
+  /** Forwarded to each `<affect-kit-result>`. Defaults true. Reflected
+      so CSS rules can branch on which content types are visible. */
+  @property({ type: Boolean, attribute: 'show-labels', reflect: true })
   showLabels = true;
 
   private _resolve(input: Rating | Rating[] | null): Rating | null {
