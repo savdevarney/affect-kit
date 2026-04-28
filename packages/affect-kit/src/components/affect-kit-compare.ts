@@ -99,6 +99,8 @@ export class AffectKitCompare extends LitElement {
       color: #999;
       margin: 0;
     }
+    /* Right-align the right caption only when in side-by-side row mode. */
+    .side.right .caption { text-align: right; }
 
     /*
      * On narrow containers, stack vertically. Divider becomes horizontal,
@@ -110,6 +112,8 @@ export class AffectKitCompare extends LitElement {
         border-right: none;
         border-bottom: 1px solid rgba(0,0,0,0.08);
       }
+      /* Reset right-caption alignment to left when stacked. */
+      .side.right .caption { text-align: left; }
       .gradient { --_dir: to bottom; }
     }
   `;
@@ -187,6 +191,7 @@ export class AffectKitCompare extends LitElement {
             <p class="caption">${this.afterLabel}</p>
             <affect-kit-result
               bare
+              mirror
               .rating=${right}
               ?show-face=${this.showFace}
               ?show-labels=${this.showLabels}

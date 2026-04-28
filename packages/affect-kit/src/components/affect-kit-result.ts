@@ -149,6 +149,14 @@ export class AffectKitResult extends LitElement {
       }
       .content.has-face .face-zone { margin-bottom: 0; }
       .content.has-face .words     { flex: 1 1 auto; min-width: 0; }
+
+      /*
+       * 'mirror' flips the row order — face on the right, words on the left.
+       * Only applies in row mode; stacked layout below 360px keeps face on top.
+       * Useful for paired-comparison hosts (e.g. affect-kit-compare's right
+       * panel) so each face sits on the outer edge of its half.
+       */
+      :host([mirror]) .content.has-face { flex-direction: row-reverse; }
     }
   `;
 
@@ -187,6 +195,15 @@ export class AffectKitResult extends LitElement {
    */
   @property({ type: Boolean, reflect: true })
   bare = false;
+
+  /**
+   * Flip face / words order in the row layout — face on the right, words
+   * on the left. Only takes effect in the wide row layout; stacked layout
+   * keeps face on top. Useful for paired-comparison hosts so each face
+   * sits on the outer edge of its half.
+   */
+  @property({ type: Boolean, reflect: true })
+  mirror = false;
 
   /**
    * Breath animation on the face glyph. Defaults `true`.

@@ -339,29 +339,43 @@ cmp.afterRating  = lastWeekRatings;   // Rating | Rating[]
       </example-tabs>
     </div>
 
-    <!-- Design-rationale note — replaces the prior longitudinal demo. -->
+    <!-- Forward-looking note: how affect-kit could support longitudinal viz. -->
     <div class="card note-card">
-      <p class="card-label">On longitudinal viz — what's deliberately not here</p>
+      <p class="card-label">Longitudinal progress visualization — where this could go</p>
       <p style="font-size:0.85rem; color:#444; line-height:1.55">
-        Earlier iterations of this playground shipped widgets named
-        <em>inertia</em>, <em>resilience</em>, and <em>range</em> — each layered
-        clinical-flavoured language onto V/A trajectories. They've been retired.
+        affect-kit captures and displays single ratings;
+        <code style="font-size:0.78rem">&lt;affect-kit-compare&gt;</code>
+        bridges to paired snapshots. The natural next question is how to
+        support showing <em>change across many sessions</em> — patterns like
+        how much the state moves (inertia), how it recovers from low points
+        (resilience), and how much of the V/A range gets visited (range).
       </p>
       <p style="font-size:0.85rem; color:#444; line-height:1.55">
-        Why: longitudinal interpretation of dimensional affect is genuinely
-        unsettled science, and putting names like "stuck" or "recovered" on
-        regions of V/A space prescribes meaning the data alone doesn't carry.
-        affect-kit's stance for now is <strong>logbook substrate, not diagnostic</strong> —
-        capture, render, aggregate. Interpretation belongs to the user,
-        clinician, or researcher.
+        The dimension users and researchers most reliably converge on is
+        <strong>valence</strong>. Sustained low V matters, recovery from low V
+        matters, a wide V range matters. Future progress-tracking recipes
+        would likely anchor here. <strong>Arousal</strong> is a candidate
+        secondary axis but its longitudinal interpretation is more contested.
+        <strong>Dominance</strong> has very little longitudinal literature;
+        affect-kit defers showing it until an academic conversation defines
+        what it should claim.
       </p>
       <p style="font-size:0.85rem; color:#444; line-height:1.55">
-        We expect to bring inertia / resilience / range back as <em>recipes</em>
-        eventually — anchored on the universally recognised <strong>valence</strong>
-        axis (and possibly arousal), since that's where users and the literature
-        most reliably converge. See
+        The trap to avoid is naming quadrants of V/A space —
+        calling a region "anxious" or "depressed" imports clinical meaning
+        that the rater UI never asserted. The face / color / quadrants in
+        <code style="font-size:0.78rem">&lt;affect-kit-rater&gt;</code> are
+        affordances for label selection, not semantic claims about the
+        territory itself.
+      </p>
+      <p style="font-size:0.85rem; color:#444; line-height:1.55">
+        When these recipes do ship, they'll be parameterised (consumers set
+        thresholds, windows, definitions), cite their literature floor, and
+        live as recipe examples before graduating to package widgets — earning
+        the move with a defended default and a clear story about what they
+        don't claim. See
         <code style="font-size:0.78rem">docs/longitudinal-future.md</code>
-        for the full rationale and what we'd want to defend before shipping each.
+        for the full rationale.
       </p>
     </div>
 
