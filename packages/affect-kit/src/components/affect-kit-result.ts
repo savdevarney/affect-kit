@@ -46,6 +46,20 @@ export class AffectKitResult extends LitElement {
     .panel.compact { padding: 1.4em 1.75em; }
     .panel.with-face { padding: 1.6em 2em; }
 
+    /*
+     * The 'bare' attribute strips panel chrome and the color glow so the
+     * host widget (e.g. affect-kit-compare) can manage its own card and
+     * its own background. Words and face still render normally.
+     */
+    :host([bare]) .panel {
+      background: transparent;
+      padding: 0;
+      box-shadow: none;
+      border-radius: 0;
+      overflow: visible;
+    }
+    :host([bare]) .glow { display: none; }
+
     .glow {
       position: absolute;
       inset: 0;
@@ -165,6 +179,14 @@ export class AffectKitResult extends LitElement {
   /** Sizing preset. */
   @property({ type: String })
   variant: 'default' | 'compact' = 'default';
+
+  /**
+   * Strip panel chrome (background, padding, shadow, radius) and the color
+   * glow. Use when embedding this widget inside another that manages its
+   * own card chrome — e.g. `<affect-kit-compare>`.
+   */
+  @property({ type: Boolean, reflect: true })
+  bare = false;
 
   /**
    * Breath animation on the face glyph. Defaults `true`.

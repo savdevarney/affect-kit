@@ -143,58 +143,16 @@
     }
     .reset-btn:hover { background: #f5f5f3; color: #444; }
 
-    /* Longitudinal demo — segmented series picker + single widget stack */
-    .seg {
-      display: inline-flex;
-      background: #efeee9;
-      border-radius: 8px;
-      padding: 3px;
-      gap: 2px;
-      margin: 0.25rem 0 0.6rem;
+    /* Note card at the bottom — design-rationale callout. */
+    .note-card {
+      grid-column: 1 / -1;
+      background: #faf9f6;
+      border: 1px dashed rgba(0,0,0,0.12);
+      box-shadow: none;
+      margin-top: 1.5rem;
     }
-    .seg button {
-      background: transparent;
-      border: none;
-      font-family: inherit;
-      font-size: 0.72rem;
-      font-weight: 500;
-      letter-spacing: 0.02em;
-      color: #888;
-      padding: 0.4rem 0.85rem;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background 0.15s ease, color 0.15s ease;
-    }
-    .seg button:hover { color: #444; }
-    .seg button[aria-selected="true"] {
-      background: white;
-      color: #1a1a1a;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-    }
-    .series-caption {
-      font-size: 0.85rem;
-      color: #666;
-      margin: 0 0 1.25rem;
-    }
-    .series-caption strong {
-      font-weight: 600;
-      color: #1a1a1a;
-    }
-    .series-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 0.85rem;
-    }
-    .stats {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem 1.5rem;
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 0.7rem;
-      color: #777;
-      padding: 0.7rem 0.2rem 0;
-      border-top: 1px solid rgba(0,0,0,0.05);
-    }
+    .note-card p { margin: 0.5rem 0; }
+    .note-card a { color: #1a1a1a; }
   </style>
 </head>
 <body>
@@ -381,72 +339,30 @@ cmp.afterRating  = lastWeekRatings;   // Rating | Rating[]
       </example-tabs>
     </div>
 
-    <!-- Longitudinal demo — single widget stack, switchable between series -->
-    <div class="card" style="grid-column: 1 / -1">
-      <div class="card-header">
-        <p class="card-label">Longitudinal demo</p>
-        <span style="font-size:0.7rem; color:#aaa">recipes — not part of affect-kit's package surface</span>
-      </div>
-      <p class="subtitle" style="margin: 0.25rem 0 1rem">
-        These widgets describe the <em>shape</em> of a series — they don't interpret it.
-        affect-kit ships a logbook substrate; meaning-making belongs to the user, clinician, or researcher.
+    <!-- Design-rationale note — replaces the prior longitudinal demo. -->
+    <div class="card note-card">
+      <p class="card-label">On longitudinal viz — what's deliberately not here</p>
+      <p style="font-size:0.85rem; color:#444; line-height:1.55">
+        Earlier iterations of this playground shipped widgets named
+        <em>inertia</em>, <em>resilience</em>, and <em>range</em> — each layered
+        clinical-flavoured language onto V/A trajectories. They've been retired.
       </p>
-
-      <div class="seg" role="tablist" aria-label="Choose example series">
-        <button id="series-btn-1" role="tab" type="button" aria-selected="true">Example 1</button>
-        <button id="series-btn-2" role="tab" type="button" aria-selected="false">Example 2</button>
-        <button id="series-btn-3" role="tab" type="button" aria-selected="false">Example 3</button>
-      </div>
-
-      <p class="series-caption" id="series-caption">
-        <strong>Example 1</strong> — a steady series.
+      <p style="font-size:0.85rem; color:#444; line-height:1.55">
+        Why: longitudinal interpretation of dimensional affect is genuinely
+        unsettled science, and putting names like "stuck" or "recovered" on
+        regions of V/A space prescribes meaning the data alone doesn't carry.
+        affect-kit's stance for now is <strong>logbook substrate, not diagnostic</strong> —
+        capture, render, aggregate. Interpretation belongs to the user,
+        clinician, or researcher.
       </p>
-
-      <div class="series-stack">
-        <example-tabs>
-          <div slot="demo">
-            <affect-kit-result id="series-summary" show-face show-labels color-mode></affect-kit-result>
-          </div>
-          <pre slot="code"><code>import 'affect-kit/result';
-import { averageRatings } from 'affect-kit';
-
-resultEl.rating = averageRatings(series);  // series: Rating[]</code></pre>
-        </example-tabs>
-
-        <example-tabs>
-          <div slot="demo">
-            <recipe-sparkline id="series-sparkline"></recipe-sparkline>
-          </div>
-          <pre slot="code"><code>import './recipes/recipe-sparkline';
-
-sparklineEl.ratings = series;  // Rating[]</code></pre>
-        </example-tabs>
-
-        <example-tabs>
-          <div slot="demo">
-            <recipe-cumulative id="series-cumulative"></recipe-cumulative>
-          </div>
-          <pre slot="code"><code>import './recipes/recipe-cumulative';
-
-cumulativeEl.ratings = series;  // Rating[]
-// Slope = current rate of V/A movement.
-// Plateaus = stretches with little change.</code></pre>
-        </example-tabs>
-
-        <example-tabs>
-          <div slot="demo">
-            <recipe-scatter id="series-scatter"></recipe-scatter>
-          </div>
-          <pre slot="code"><code>import './recipes/recipe-scatter';
-
-scatterEl.ratings = series;  // Rating[]
-// Renders the phase portrait: convex hull (range)
-// + connecting lines (trajectory) + dots (positions),
-// all faded by age.</code></pre>
-        </example-tabs>
-
-        <div class="stats" id="series-stats"></div>
-      </div>
+      <p style="font-size:0.85rem; color:#444; line-height:1.55">
+        We expect to bring inertia / resilience / range back as <em>recipes</em>
+        eventually — anchored on the universally recognised <strong>valence</strong>
+        axis (and possibly arousal), since that's where users and the literature
+        most reliably converge. See
+        <code style="font-size:0.78rem">docs/longitudinal-future.md</code>
+        for the full rationale and what we'd want to defend before shipping each.
+      </p>
     </div>
 
   </div>
