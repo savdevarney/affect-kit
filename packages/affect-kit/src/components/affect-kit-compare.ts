@@ -101,10 +101,12 @@ export class AffectKitCompare extends LitElement {
      * fits at any width. Side-by-side is *unlocked* at one of two
      * container-query thresholds depending on what content is visible:
      *
-     *   - Both face and labels shown → unlock at 720px
-     *     (each side needs room for a face + words side-by-side)
-     *   - Only face *or* only labels   → unlock at 480px
-     *     (each side only has one content type, less width needed)
+     *   - Default (both content types, or face-only) → unlock at 720px.
+     *     Faces don't benefit from horizontal real estate (square, fixed
+     *     size); stacking reads cleaner than two faces with empty space
+     *     between, so face-only uses the same threshold as full content.
+     *   - Labels-only → unlock at 480px. Words flow horizontally and
+     *     wrap nicely, so each side needs less room.
      *
      * Keeping STACKED as the default means we write each set of style
      * values in *one place*; the side-by-side block below appears twice
@@ -194,9 +196,10 @@ export class AffectKitCompare extends LitElement {
       affect-kit-result[mirror] { --_face-dir: row-reverse; }
     }
 
-    /* Light content (face OR labels off) — unlock side-by-side at 480px. */
+    /* Labels-only (face off) — words flow horizontally so each side
+       needs less width. Unlock at 480px. */
     @container (min-width: 480px) {
-      :host(:where(:not([show-face]), :not([show-labels]))) {
+      :host(:not([show-face])) {
         & .row { grid-template-columns: 1fr 1fr; }
         & .side.left {
           border-right: 1px solid rgba(0,0,0,0.08);
