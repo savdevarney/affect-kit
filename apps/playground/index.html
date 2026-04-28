@@ -32,11 +32,13 @@
       border: 1px solid rgba(0,0,0,0.07);
     }
 
-    /* Card header row: label left, toggles right */
+    /* Card header row: label left, toggles right. Wraps when narrow. */
     .card-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 0.75rem 1rem;
+      flex-wrap: wrap;
       margin: 0 0 1rem;
     }
     .card-label {
@@ -49,8 +51,9 @@
     }
     .toggles {
       display: flex;
-      gap: 12px;
+      gap: 12px 14px;
       align-items: center;
+      flex-wrap: wrap;
     }
     .toggle-item {
       display: flex;
@@ -213,6 +216,12 @@
             face
           </label>
           <label class="toggle-item">
+            <button class="toggle-switch" id="result-labels-toggle" type="button" aria-pressed="true">
+              <span class="toggle-thumb" style="transform:translateX(14px)"></span>
+            </button>
+            labels
+          </label>
+          <label class="toggle-item">
             <button class="toggle-switch" id="result-animated-toggle" type="button" aria-pressed="true">
               <span class="toggle-thumb" style="transform:translateX(14px)"></span>
             </button>
@@ -312,7 +321,29 @@
 
     <!-- affect-kit-compare — paired side-by-side comparison -->
     <div class="card" style="grid-column: 1 / -1; margin-top: 1.5rem">
-      <p class="card-label" style="margin-bottom: 1rem">&lt;affect-kit-compare&gt;</p>
+      <div class="card-header">
+        <p class="card-label">&lt;affect-kit-compare&gt;</p>
+        <div class="toggles">
+          <label class="toggle-item">
+            <button class="toggle-switch" id="compare-color-toggle" type="button" aria-pressed="true">
+              <span class="toggle-thumb" style="transform:translateX(14px)"></span>
+            </button>
+            color
+          </label>
+          <label class="toggle-item">
+            <button class="toggle-switch" id="compare-face-toggle" type="button" aria-pressed="true">
+              <span class="toggle-thumb" style="transform:translateX(14px)"></span>
+            </button>
+            face
+          </label>
+          <label class="toggle-item">
+            <button class="toggle-switch" id="compare-labels-toggle" type="button" aria-pressed="true">
+              <span class="toggle-thumb" style="transform:translateX(14px)"></span>
+            </button>
+            labels
+          </label>
+        </div>
+      </div>
       <p class="subtitle" style="margin: -0.5rem 0 1rem">
         Two ratings (or two rating series, averaged) shown side-by-side. Same
         words+face+color language as <code>&lt;affect-kit-result&gt;</code>;
@@ -324,18 +355,11 @@
             id="demo-compare"
             show-face
             color-mode
-            before-label="First week"
-            after-label="Last week"
+            before-label="Yesterday"
+            after-label="Today"
           ></affect-kit-compare>
         </div>
-        <pre slot="code"><code>import 'affect-kit/compare';
-
-const cmp = document.querySelector('affect-kit-compare');
-cmp.beforeRating = firstWeekRatings;  // Rating | Rating[]
-cmp.afterRating  = lastWeekRatings;   // Rating | Rating[]
-
-// Attributes: before-label, after-label, show-face,
-//             color-mode, show-labels.</code></pre>
+        <pre slot="code"><code id="code-compare"></code></pre>
       </example-tabs>
     </div>
 
