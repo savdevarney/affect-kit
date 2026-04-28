@@ -24,19 +24,15 @@ if (resultPlain) resultPlain.rating = testRating;
 
 // ── Rater → result wiring ──────────────────────────────────────────────────
 const rater = document.getElementById('rater');
-const result = document.getElementById('result');
-const log = document.getElementById('event-log');
-
-rater?.addEventListener('change', (e) => {
+document.getElementById('rater')?.addEventListener('change', (e) => {
   const rating = (e as CustomEvent).detail;
-  if (result) (result as any).rating = rating;
-  if (log) {
-    const entry = document.createElement('p');
-    entry.textContent = JSON.stringify(rating, null, 0);
-    const empty = log.querySelector('.empty-log');
-    if (empty) empty.remove();
-    log.prepend(entry);
-  }
+  if (resultEl) resultEl.rating = rating;
+  if (resultPlain) resultPlain.rating = rating;
+});
+
+document.getElementById('rater-color')?.addEventListener('change', (e) => {
+  const rating = (e as CustomEvent).detail;
+  console.log('rater-color change:', JSON.stringify(rating));
 });
 
 // ── Interactive face controls ──────────────────────────────────────────────
