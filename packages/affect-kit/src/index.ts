@@ -13,10 +13,12 @@
 import './components/affect-kit-rater';
 import './components/affect-kit-result';
 import './components/affect-kit-face';
+import './components/affect-kit-compare';
 
-export { AffectKitRater }  from './components/affect-kit-rater';
-export { AffectKitResult } from './components/affect-kit-result';
-export { AffectKitFace }   from './components/affect-kit-face';
+export { AffectKitRater }   from './components/affect-kit-rater';
+export { AffectKitResult }  from './components/affect-kit-result';
+export { AffectKitFace }    from './components/affect-kit-face';
+export { AffectKitCompare } from './components/affect-kit-compare';
 
 export type { Rating, EmotionLabel, EmotionName } from './core/types';
 export { createRating, averageRatings } from './core/vad';

@@ -352,6 +352,35 @@
 
   </div>
 
+    <!-- affect-kit-compare — paired side-by-side comparison -->
+    <div class="card" style="grid-column: 1 / -1; margin-top: 1.5rem">
+      <p class="card-label" style="margin-bottom: 1rem">&lt;affect-kit-compare&gt;</p>
+      <p class="subtitle" style="margin: -0.5rem 0 1rem">
+        Two ratings (or two rating series, averaged) shown side-by-side. Same
+        words+face+color language as <code>&lt;affect-kit-result&gt;</code>;
+        no comparison metric, no "improvement" claim — just two snapshots.
+      </p>
+      <example-tabs>
+        <div slot="demo">
+          <affect-kit-compare
+            id="demo-compare"
+            show-face
+            color-mode
+            before-label="First week"
+            after-label="Last week"
+          ></affect-kit-compare>
+        </div>
+        <pre slot="code"><code>import 'affect-kit/compare';
+
+const cmp = document.querySelector('affect-kit-compare');
+cmp.beforeRating = firstWeekRatings;  // Rating | Rating[]
+cmp.afterRating  = lastWeekRatings;   // Rating | Rating[]
+
+// Attributes: before-label, after-label, show-face,
+//             color-mode, show-labels.</code></pre>
+      </example-tabs>
+    </div>
+
     <!-- Longitudinal demo — single widget stack, switchable between series -->
     <div class="card" style="grid-column: 1 / -1">
       <div class="card-header">

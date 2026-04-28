@@ -1,13 +1,15 @@
 import 'affect-kit/rater';
 import 'affect-kit/result';
 import 'affect-kit/face';
+import 'affect-kit/compare';
 import './example-tabs';
 import './recipes/recipe-sparkline';
 import './recipes/recipe-scatter';
 import './recipes/recipe-cumulative';
-import type { AffectKitFace }   from 'affect-kit/face';
-import type { AffectKitResult } from 'affect-kit/result';
-import type { AffectKitRater }  from 'affect-kit/rater';
+import type { AffectKitFace }    from 'affect-kit/face';
+import type { AffectKitResult }  from 'affect-kit/result';
+import type { AffectKitRater }   from 'affect-kit/rater';
+import type { AffectKitCompare } from 'affect-kit/compare';
 import type { RecipeSparkline }  from './recipes/recipe-sparkline';
 import type { RecipeScatter }    from './recipes/recipe-scatter';
 import type { RecipeCumulative } from './recipes/recipe-cumulative';
@@ -279,3 +281,13 @@ for (let i = 0; i < examples.length; i++) {
 }
 
 loadExample(0);
+
+// ── <affect-kit-compare> demo ──────────────────────────────────────────────
+// Use the drifting series (Example 2) split first half vs last half — the
+// before/after framing tells the drift story by averaging windows.
+const compareEl = document.getElementById('demo-compare') as AffectKitCompare | null;
+if (compareEl) {
+  const half = Math.floor(series2.length / 2);
+  compareEl.beforeRating = series2.slice(0, half);
+  compareEl.afterRating  = series2.slice(half);
+}

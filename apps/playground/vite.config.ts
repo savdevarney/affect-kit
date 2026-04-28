@@ -7,10 +7,11 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   resolve: {
     alias: {
-      'affect-kit/rater':  resolve(__dirname, '../../packages/affect-kit/src/rater.ts'),
-      'affect-kit/result': resolve(__dirname, '../../packages/affect-kit/src/result.ts'),
-      'affect-kit/face':   resolve(__dirname, '../../packages/affect-kit/src/face.ts'),
-      'affect-kit':        resolve(__dirname, '../../packages/affect-kit/src/index.ts'),
+      'affect-kit/rater':   resolve(__dirname, '../../packages/affect-kit/src/rater.ts'),
+      'affect-kit/result':  resolve(__dirname, '../../packages/affect-kit/src/result.ts'),
+      'affect-kit/face':    resolve(__dirname, '../../packages/affect-kit/src/face.ts'),
+      'affect-kit/compare': resolve(__dirname, '../../packages/affect-kit/src/compare.ts'),
+      'affect-kit':         resolve(__dirname, '../../packages/affect-kit/src/index.ts'),
     },
   },
 });
