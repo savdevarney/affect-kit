@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>affect-kit playground</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      font-size: 16px;
+      color: #1a1a1a;
+      background: #f5f5f3;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin: 0 0 0.25rem;
+    }
+
+    .subtitle {
+      font-size: 0.85rem;
+      color: #666;
+      margin: 0 0 2.5rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid rgba(0, 0, 0, 0.07);
+    }
+
+    .card-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #999;
+      margin: 0 0 1rem;
+    }
+
+    .stub-note {
+      font-size: 0.8rem;
+      color: #aaa;
+      font-style: italic;
+      margin-top: 0.75rem;
+    }
+
+    /* Stub placeholders for not-yet-implemented components */
+    affect-kit-rater,
+    affect-kit-result {
+      display: block;
+      min-height: 60px;
+      border: 1.5px dashed #ddd;
+      border-radius: 8px;
+      background: #fafafa;
+    }
+
+    .face-row {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .face-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .face-label {
+      font-size: 0.72rem;
+      color: #888;
+      text-align: center;
+    }
+
+    .face-coords {
+      font-size: 0.65rem;
+      color: #bbb;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    /* Interactive face controls */
+    .face-controls {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 0.5rem 0.75rem;
+      margin-top: 1.25rem;
+      font-size: 0.78rem;
+    }
+
+    .face-controls label {
+      color: #666;
+      font-weight: 500;
+    }
+
+    .face-controls input[type=range] {
+      width: 100%;
+    }
+
+    .face-controls .val {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: #888;
+      min-width: 3.5ch;
+      text-align: right;
+    }
+
+    .interactive-face-row {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .event-log {
+      font-size: 0.78rem;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      background: #f8f8f8;
+      border: 1px solid #eee;
+      border-radius: 6px;
+      padding: 0.75rem;
+      max-height: 200px;
+      overflow-y: auto;
+      margin-top: 1rem;
+      color: #555;
+    }
+
+    .event-log p {
+      margin: 0 0 0.4rem;
+    }
+
+    .event-log p:last-child {
+      margin: 0;
+    }
+
+    .empty-log {
+      color: #bbb;
+      font-style: italic;
+    }
+
+    .shock-btn {
+      margin-top: 0.75rem;
+      padding: 0.35rem 0.75rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: white;
+      font-size: 0.78rem;
+      cursor: pointer;
+      color: #444;
+    }
+    .shock-btn:hover { background: #f5f5f3; }
+  </style>
+</head>
+<body>
+  <h1>affect-kit playground</h1>
+  <p class="subtitle">Live source — edits to <code>packages/affect-kit/src</code> hot-reload here.</p>
+
+  <div class="grid">
+
+    <!-- affect-kit-face: four quadrant corners + neutral -->
+    <div class="card">
+      <p class="card-label">&lt;affect-kit-face&gt; — quadrant corners</p>
+      <div class="face-row">
+        <div class="face-item">
+          <affect-kit-face v="-0.8" a="0.8" style="width:80px;height:80px"></affect-kit-face>
+          <span class="face-label">anger</span>
+          <span class="face-coords">v=−0.8, a=0.8</span>
+        </div>
+        <div class="face-item">
+          <affect-kit-face v="0.8" a="0.8" style="width:80px;height:80px"></affect-kit-face>
+          <span class="face-label">joy</span>
+          <span class="face-coords">v=0.8, a=0.8</span>
+        </div>
+        <div class="face-item">
+          <affect-kit-face v="0.8" a="-0.8" style="width:80px;height:80px"></affect-kit-face>
+          <span class="face-label">calm</span>
+          <span class="face-coords">v=0.8, a=−0.8</span>
+        </div>
+        <div class="face-item">
+          <affect-kit-face v="-0.8" a="-0.8" style="width:80px;height:80px"></affect-kit-face>
+          <span class="face-label">sad</span>
+          <span class="face-coords">v=−0.8, a=−0.8</span>
+        </div>
+        <div class="face-item">
+          <affect-kit-face v="0" a="0" style="width:80px;height:80px"></affect-kit-face>
+          <span class="face-label">neutral</span>
+          <span class="face-coords">v=0, a=0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- affect-kit-face: interactive V/A sliders -->
+    <div class="card">
+      <p class="card-label">&lt;affect-kit-face&gt; — interactive</p>
+      <div class="interactive-face-row">
+        <affect-kit-face id="interactive-face" v="0" a="0" style="width:120px;height:120px"></affect-kit-face>
+        <div style="flex:1">
+          <div class="face-controls">
+            <label>V</label>
+            <input type="range" id="v-slider" min="-1" max="1" step="0.01" value="0">
+            <span class="val" id="v-val">0.00</span>
+            <label>A</label>
+            <input type="range" id="a-slider" min="-1" max="1" step="0.01" value="0">
+            <span class="val" id="a-val">0.00</span>
+          </div>
+          <button class="shock-btn" id="shock-btn">triggerShock()</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- affect-kit-face: static (animated="false") -->
+    <div class="card">
+      <p class="card-label">&lt;affect-kit-face animated="false"&gt;</p>
+      <div class="face-row">
+        <div class="face-item">
+          <affect-kit-face v="-0.8" a="0.8" animated="false" style="width:80px;height:80px"></affect-kit-face>
+          <span class="face-label">anger (static)</span>
+        </div>
+        <div class="face-item">
+          <affect-kit-face v="0.8" a="0.8" animated="false" style="width:80px;height:80px"></affect-kit-face>
+          <span class="face-label">joy (static)</span>
+        </div>
+        <div class="face-item">
+          <affect-kit-face v="0.8" a="-0.8" animated="false" style="width:80px;height:80px"></affect-kit-face>
+          <span class="face-label">calm (static)</span>
+        </div>
+        <div class="face-item">
+          <affect-kit-face v="-0.8" a="-0.8" animated="false" style="width:80px;height:80px"></affect-kit-face>
+          <span class="face-label">sad (static)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- affect-kit-rater (stub) -->
+    <div class="card">
+      <p class="card-label">&lt;affect-kit-rater&gt; (stub)</p>
+      <affect-kit-rater id="rater"></affect-kit-rater>
+      <div class="event-log" id="event-log">
+        <p class="empty-log">Waiting for change events…</p>
+      </div>
+    </div>
+
+    <!-- affect-kit-result -->
+    <div class="card">
+      <p class="card-label">&lt;affect-kit-result&gt;</p>
+      <affect-kit-result id="result" show-face show-labels show-color show-vad></affect-kit-result>
+    </div>
+
+    <!-- affect-kit-result: variants -->
+    <div class="card">
+      <p class="card-label">&lt;affect-kit-result&gt; — compact, no face, no color</p>
+      <affect-kit-result id="result-plain" show-labels align="left"></affect-kit-result>
+    </div>
+
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

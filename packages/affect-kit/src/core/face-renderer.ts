@@ -164,9 +164,12 @@ export function renderFace(p: FaceParams): FacePaths {
   // Nose
   const nose = 'M -3 5 Q 0 9 3 5';
 
-  // Mouth: closed = rounded bezier arc; open = hollow shape with upper + lower arc
+  // Mouth: closed = rounded bezier arc; open = hollow shape with upper + lower arc.
+  // closedThickness ensures upper/lower arcs always differ when mouthOpen=0 —
+  // without it the two quadratics collapse to the same curve (zero-area fill).
+  const closedThickness = 4.5;
   const upperY  = p.mouthMidY - p.mouthOpen * 0.35;
-  const lowerY  = p.mouthMidY + p.mouthOpen * 0.65;
+  const lowerY  = p.mouthMidY + p.mouthOpen * 0.65 + closedThickness;
   const mouth   = `M ${-p.mouthWidth} ${p.mouthCornerY} Q 0 ${upperY} ${p.mouthWidth} ${p.mouthCornerY} Q 0 ${lowerY} ${-p.mouthWidth} ${p.mouthCornerY} Z`;
 
   return { leftBrow, rightBrow, leftEye, rightEye, crowsFeetLeft, crowsFeetRight, nose, mouth };
