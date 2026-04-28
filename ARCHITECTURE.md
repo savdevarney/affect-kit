@@ -69,8 +69,8 @@ The `package.json#exports` field is the resolver-level wall:
 | Surface | Form | API |
 |---|---|---|
 | `<affect-kit-rater>` | custom element | props: `color-mode`, `show-vad` · event: `change` |
-| `<affect-kit-result>` | custom element | props: `rating`, `show-face`, `show-labels`, `show-color`, `show-vad`, `align`, `variant`, `animate` |
-| `<affect-kit-face>` | custom element | props: `v`, `a`, `animate` |
+| `<affect-kit-result>` | custom element | props: `rating`, `show-face`, `show-labels`, `show-color`, `show-vad`, `align`, `variant`, `animated` |
+| `<affect-kit-face>` | custom element | props: `v`, `a`, `animated` |
 | `Rating` | TS type | re-exported from each entry |
 | `EmotionLabel` | TS type | re-exported from each entry |
 | CSS custom properties | runtime | `--affect-kit-{ink,paper,rule}`, `--affect-kit-color-{pink,gold,green,blue}`, `--affect-kit-font-display` |
@@ -90,9 +90,9 @@ All three components default `animate=true`. The boolean attribute uses a custom
 | Form | Result |
 |---|---|
 | `<affect-kit-face>` | animated |
-| `<affect-kit-face animate>` | animated |
-| `<affect-kit-face animate="true">` | animated |
-| `<affect-kit-face animate="false">` | static |
+| `<affect-kit-face animated>` | animated |
+| `<affect-kit-face animated="true">` | animated |
+| `<affect-kit-face animated="false">` | static |
 
 `prefers-reduced-motion: reduce` is honored automatically — reduced-motion users see a static face regardless of the prop. The rater's drag morphing is preserved (functional, not decorative); only breath, tremor, and chip-reorder FLIP are gated.
 

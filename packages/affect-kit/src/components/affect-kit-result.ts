@@ -61,7 +61,7 @@ export class AffectKitResult extends LitElement {
    * in the result panel even at high arousal.
    */
   @property({ converter: animateConverter, reflect: true })
-  animate = true;
+  animated = true;
 
   override render() {
     return html`<div><!-- TODO --></div>`;

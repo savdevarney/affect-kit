@@ -37,11 +37,11 @@ export class AffectKitFace extends LitElement {
 
   /**
    * Breath + tremor animation. Defaults true.
-   * Set `animate="false"` to render a static face. Reduced-motion users
+   * Set `animated="false"` to render a static face. Reduced-motion users
    * see a static face regardless.
    */
   @property({ converter: animateConverter, reflect: true })
-  animate = true;
+  animated = true;
 
   override render() {
     return html`<svg viewBox="-85 -85 170 170" aria-hidden="true"><!-- TODO --></svg>`;
