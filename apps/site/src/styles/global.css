@@ -621,7 +621,12 @@
   }
 
   @media (max-width: 860px) {
-    .rp-toc-list { flex-direction: row; flex-wrap: wrap; gap: 0.25rem 1rem; }
+    .rp-toc-list {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 0.15rem 0.5rem;
+    }
+    .rp-toc-list li { white-space: nowrap; }
   }
 
   .rp-toc-list a {
