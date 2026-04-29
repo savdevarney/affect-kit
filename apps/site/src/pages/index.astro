@@ -160,7 +160,7 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
             ></affect-kit-compare>
           </div>
 
-          <!-- affect-kit-rater: thumbnail -->
+          <!-- affect-kit-rater -->
           <div class="component-card">
             <p class="component-tag">&lt;affect-kit-rater&gt;</p>
             <p class="component-desc">
@@ -168,17 +168,10 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
               then intensity-rate up to 5 labels from the NRC VAD lexicon. Fires a
               <code>change</code> event on commit.
             </p>
-            <div class="component-thumb">
-              <affect-kit-face v="0.4" a="0.35" class="thumb-face"></affect-kit-face>
-              <div class="thumb-chips">
-                <span class="thumb-chip">calm</span>
-                <span class="thumb-chip">hopeful</span>
-                <span class="thumb-chip">grateful</span>
-              </div>
-            </div>
+            <a href="/docs#rater" class="component-link">Full API →</a>
           </div>
 
-          <!-- affect-kit-result: seeded thumbnail -->
+          <!-- affect-kit-result -->
           <div class="component-card">
             <p class="component-tag">&lt;affect-kit-result&gt;</p>
             <p class="component-desc">
@@ -186,21 +179,17 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
               and optional color chip. Pair with <code>&lt;affect-kit-rater&gt;</code>
               or drive from stored data.
             </p>
-            <div class="component-thumb">
-              <affect-kit-result id="card-result" show-face show-labels color-mode></affect-kit-result>
-            </div>
+            <a href="/docs#result" class="component-link">Full API →</a>
           </div>
 
-          <!-- affect-kit-face: seeded thumbnail -->
+          <!-- affect-kit-face -->
           <div class="component-card">
             <p class="component-tag">&lt;affect-kit-face&gt;</p>
             <p class="component-desc">
               Standalone face glyph driven by <code>v</code> and <code>a</code> props.
               Any size via CSS. Animates breath + tremor by default.
             </p>
-            <div class="component-thumb">
-              <affect-kit-face v="0.65" a="-0.3" class="thumb-face--lg"></affect-kit-face>
-            </div>
+            <a href="/docs#face" class="component-link">Full API →</a>
           </div>
 
         </div>
@@ -263,16 +252,6 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
       if (result) result.rating = (e as CustomEvent).detail;
       resultItem?.classList.add('is-revealed');
     });
-
-    // ── Seed the result card thumbnail ────────────────────────
-    const cardResult = document.getElementById('card-result') as AffectKitResult | null;
-    if (cardResult) {
-      cardResult.rating = createRating({ v: 0.55, a: -0.1, labels: [
-        { name: 'calm',     level: 3 },
-        { name: 'grateful', level: 2 },
-        { name: 'content',  level: 1 },
-      ]});
-    }
 
     // ── Compare demo data ──────────────────────────────────────
     const yesterday = [

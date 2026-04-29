@@ -390,46 +390,20 @@
     grid-column: 1 / -1;
   }
 
-  /* Thumbnail preview inside component cards */
-  .component-thumb {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 1.5rem 1.25rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 0.75rem;
-    min-height: 148px;
-  }
-
-  .thumb-face {
-    width: 60px;
-    height: 60px;
-    display: block;
-  }
-
-  .thumb-face--lg {
-    width: 80px;
-    height: 80px;
-    display: block;
-  }
-
-  .thumb-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.3rem;
-    justify-content: center;
-  }
-
-  .thumb-chip {
-    font-size: 0.7rem;
+  .component-link {
+    font-size: 0.8rem;
+    font-weight: 600;
     color: var(--ink-muted);
-    background: var(--bg);
-    border: 1px solid var(--border-mid);
-    border-radius: 999px;
-    padding: 0.18rem 0.55rem;
+    text-decoration: none;
+    border-bottom: 1px solid var(--border-mid);
+    padding-bottom: 1px;
+    transition: color 0.15s, border-color 0.15s;
+    display: inline-block;
+    margin-top: 0.25rem;
+  }
+  .component-link:hover {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
   }
 
   .component-tag {
