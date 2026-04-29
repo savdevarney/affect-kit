@@ -1,0 +1,780 @@
+---
+import Base from '../../layouts/Base.astro';
+import '../../styles/global.css';
+---
+<Base
+  title="Component reference — affect-kit"
+  description="Full API reference for all four affect-kit web components: rater, result, face, and compare."
+>
+
+  <nav class="site-nav">
+    <a href="/" class="wordmark">affect-kit</a>
+    <div class="nav-links">
+      <a href="/research">
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M8.5 2a.5.5 0 0 0-.5.5V8L4.146 14.16A2 2 0 0 0 5.9 17h8.2a2 2 0 0 0 1.754-2.84L12 8V2.5a.5.5 0 0 0-.5-.5h-3Zm-1 .5V8.5a.5.5 0 0 1-.072.258L5.062 12h9.876l-2.366-3.242A.5.5 0 0 1 12.5 8.5V2.5h-5Z" clip-rule="evenodd"/>
+        </svg>
+        Research
+      </a>
+      <a href="/docs" aria-current="page">
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path d="M10.75 16.82A7.462 7.462 0 0 1 15 15.5c.71 0 1.396.098 2.046.282A.75.75 0 0 0 18 15.06v-11a.75.75 0 0 0-.546-.721A9.006 9.006 0 0 0 15 3a8.963 8.963 0 0 0-4.25 1.065V16.82ZM9.25 4.065A8.963 8.963 0 0 0 5 3c-.85 0-1.673.118-2.454.339A.75.75 0 0 0 2 4.06v11a.75.75 0 0 0 .954.721A7.506 7.506 0 0 1 5 15.5c1.579 0 3.042.487 4.25 1.32V4.065Z"/>
+        </svg>
+        Docs
+      </a>
+      <a href="https://github.com/savdevarney/affect-kit" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        GitHub
+      </a>
+      <a href="https://www.npmjs.com/package/affect-kit" target="_blank" rel="noopener">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M4 4h16v12H12v2H8v-2H4V4Zm2 2v8h4v-6h2v6h2V6H6Z"/>
+        </svg>
+        npm
+      </a>
+    </div>
+  </nav>
+
+  <div class="rp-layout">
+
+    <!-- ── Sidebar ToC ──────────────────────────────────────── -->
+    <aside class="rp-toc">
+      <p class="rp-toc-label">On this page</p>
+      <nav>
+        <ol class="rp-toc-list">
+          <li><a href="#getting-started">Getting started</a></li>
+          <li><a href="#rater">&lt;affect-kit-rater&gt;</a></li>
+          <li><a href="#result">&lt;affect-kit-result&gt;</a></li>
+          <li><a href="#face">&lt;affect-kit-face&gt;</a></li>
+          <li><a href="#compare">&lt;affect-kit-compare&gt;</a></li>
+          <li><a href="#types">TypeScript types</a></li>
+        </ol>
+      </nav>
+    </aside>
+
+    <!-- ── Main content ────────────────────────────────────── -->
+    <main class="rp-content">
+
+      <header class="rp-header">
+        <p class="section-eyebrow">Component reference</p>
+        <h1 class="rp-title">Components</h1>
+        <p class="rp-lead">
+          Four web components — custom elements built with Lit, framework-agnostic,
+          TypeScript-first. Each component has a named entry point for precise imports.
+          The <code>Rating</code> object is the shared data contract between them.
+        </p>
+      </header>
+
+      <!-- ── 1: Getting started ─────────────────────────── -->
+      <section id="getting-started" class="rp-section">
+        <h2>Getting started</h2>
+
+        <pre class="docs-code">npm install affect-kit</pre>
+
+        <h3>Imports</h3>
+        <p>Each component has its own entry point. Import only what you need:</p>
+        <pre class="docs-code">import 'affect-kit/rater';   // registers &lt;affect-kit-rater&gt;
+import 'affect-kit/result';  // registers &lt;affect-kit-result&gt;
+import 'affect-kit/face';    // registers &lt;affect-kit-face&gt;
+import 'affect-kit/compare'; // registers &lt;affect-kit-compare&gt;
+
+// Or register all four at once:
+import 'affect-kit';</pre>
+
+        <h3>TypeScript types</h3>
+        <pre class="docs-code" set:text={`import type { Rating, EmotionLabel, EmotionName } from 'affect-kit';
+import { createRating, averageRatings }           from 'affect-kit';`}></pre>
+
+        <h3>Quick wiring: rater → result</h3>
+        <pre class="docs-code">&lt;affect-kit-rater id="rater"&gt;&lt;/affect-kit-rater&gt;
+&lt;affect-kit-result id="result" show-face show-labels color-mode&gt;&lt;/affect-kit-result&gt;
+
+&lt;script type="module"&gt;
+  import 'affect-kit/rater';
+  import 'affect-kit/result';
+
+  const rater  = document.querySelector('affect-kit-rater');
+  const result = document.querySelector('affect-kit-result');
+  rater.addEventListener('change', e =&gt; result.rating = e.detail);
+&lt;/script&gt;</pre>
+
+        <h3>React</h3>
+        <p>
+          Custom elements work in React 19+ with native support, or React 18 with a thin ref wrapper.
+          TypeScript types are available via the global <code>HTMLElementTagNameMap</code> augmentation
+          shipped in each component entry point.
+        </p>
+        <pre class="docs-code" set:text={`// React 19+
+import 'affect-kit/rater';
+
+function App() {
+  return (
+    <affect-kit-rater
+      color-mode
+      onchange={(e) => console.log(e.detail)}
+    />
+  );
+}`}></pre>
+      </section>
+
+      <!-- ── 2: affect-kit-rater ────────────────────────── -->
+      <section id="rater" class="rp-section">
+        <h2>2. <code>&lt;affect-kit-rater&gt;</code></h2>
+        <p>
+          The primary capture interface. The user drags on a V/A pad to set a gut-feeling position —
+          the face glyph and background color update in real time. On release, 55 emotion chips
+          from the NRC VAD Lexicon rearrange by proximity to the pad position. The user taps chips
+          to intensity-rate them at 1, 2, or 3. Every pad release and chip toggle after the first
+          placement fires a <code>change</code> event with a <code>Rating</code> object.
+        </p>
+
+        <div class="docs-demo">
+          <affect-kit-rater id="docs-rater" show-vad color-mode></affect-kit-rater>
+        </div>
+
+        <h3>Attributes / props</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Attribute</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>color-mode</code></td>
+                <td>boolean</td>
+                <td><code>false</code></td>
+                <td>Tints the surface with the current V/A quadrant color. Chips automatically adapt their contrast to the surface lightness.</td>
+              </tr>
+              <tr>
+                <td><code>animated</code></td>
+                <td>boolean</td>
+                <td><code>true</code></td>
+                <td>Enables breath + tremor animation on the face glyph. Always respects <code>prefers-reduced-motion: reduce</code>. Set <code>animated="false"</code> in HTML to opt out.</td>
+              </tr>
+              <tr>
+                <td><code>show-vad</code></td>
+                <td>boolean</td>
+                <td><code>false</code></td>
+                <td>Shows a debug readout of the current V / A / D values below the chip list.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Events</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Event</th><th>Detail type</th><th>When it fires</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>change</code></td>
+                <td><code>Rating</code></td>
+                <td>On every pointer release from the pad, and on every chip toggle after the first pad placement. Not fired on the initial drag before first release.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Methods</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Method</th><th>Signature</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>setRating()</code></td>
+                <td><code>(rating: Rating) =&gt; void</code></td>
+                <td>Programmatically pre-fills the rater from a <code>Rating</code> object. Reveals chips immediately. Useful for editing a previously captured rating.</td>
+              </tr>
+              <tr>
+                <td><code>reset()</code></td>
+                <td><code>() =&gt; void</code></td>
+                <td>Clears all state back to the initial empty position — pad at center, no chips selected, face neutral.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>CSS custom properties</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Property</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--affect-kit-rater-max-width</code></td>
+                <td><code>640px</code></td>
+                <td>Maximum width of the widget. Override to fit narrow or wide containers.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── 3: affect-kit-result ───────────────────────── -->
+      <section id="result" class="rp-section">
+        <h2>3. <code>&lt;affect-kit-result&gt;</code></h2>
+        <p>
+          A display panel for a captured <code>Rating</code>. Renders the selected emotion words
+          scaled by intensity (level 3 is largest, level 1 is smallest), an optional face glyph,
+          and an optional color tint. Designed to pair with <code>&lt;affect-kit-rater&gt;</code>
+          but can also be driven from stored data. The face and color always follow
+          <code>rating.pad</code> (the raw drag position), not the label-aggregated coordinates —
+          preserving the visual signal of the gut feeling even when labels shift the V/A/D values.
+        </p>
+
+        <div class="docs-demo">
+          <affect-kit-result id="docs-result" show-face show-labels color-mode></affect-kit-result>
+          <p class="docs-demo-hint">← Rate something on the rater above to see it here, or this is pre-seeded.</p>
+        </div>
+
+        <h3>Attributes / props</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Attribute / prop</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>rating</code> <span class="docs-prop-tag">prop only</span></td>
+                <td><code>Rating | null</code></td>
+                <td><code>null</code></td>
+                <td>The rating to display. Set via JavaScript property — not an HTML attribute. The component renders nothing when <code>null</code>.</td>
+              </tr>
+              <tr>
+                <td><code>show-face</code></td>
+                <td>boolean</td>
+                <td><code>false</code></td>
+                <td>Show the face glyph. Face shape and color follow <code>rating.pad</code>, not the label-aggregated V/A.</td>
+              </tr>
+              <tr>
+                <td><code>show-labels</code></td>
+                <td>boolean</td>
+                <td><code>true</code></td>
+                <td>Show the selected emotion words, scaled continuously by intensity level.</td>
+              </tr>
+              <tr>
+                <td><code>color-mode</code></td>
+                <td>boolean</td>
+                <td><code>false</code></td>
+                <td>Apply a V/A color tint to the panel background.</td>
+              </tr>
+              <tr>
+                <td><code>show-vad</code></td>
+                <td>boolean</td>
+                <td><code>false</code></td>
+                <td>Show the raw V / A / D readout (debug).</td>
+              </tr>
+              <tr>
+                <td><code>align</code></td>
+                <td><code>'left' | 'center' | 'right'</code></td>
+                <td><code>'center'</code></td>
+                <td>Word alignment within the panel.</td>
+              </tr>
+              <tr>
+                <td><code>variant</code></td>
+                <td><code>'default' | 'compact'</code></td>
+                <td><code>'default'</code></td>
+                <td>Sizing preset. <code>'compact'</code> reduces padding for tight layouts.</td>
+              </tr>
+              <tr>
+                <td><code>bare</code></td>
+                <td>boolean</td>
+                <td><code>false</code></td>
+                <td>Strips the panel chrome (background, padding, shadow, radius) and color glow. Use when embedding inside a parent that manages its own card, e.g. <code>&lt;affect-kit-compare&gt;</code>.</td>
+              </tr>
+              <tr>
+                <td><code>mirror</code></td>
+                <td>boolean</td>
+                <td><code>false</code></td>
+                <td>Flips the face / words order. In row mode → face right, words left. In column mode → face below words. Useful in paired layouts.</td>
+              </tr>
+              <tr>
+                <td><code>animated</code></td>
+                <td>boolean</td>
+                <td><code>true</code></td>
+                <td>Enables breath animation on the face glyph. Respects <code>prefers-reduced-motion</code>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>CSS custom properties</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Property</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--affect-kit-result-max-width</code></td>
+                <td><code>640px</code></td>
+                <td>Maximum width of the widget.</td>
+              </tr>
+              <tr>
+                <td><code>--affect-kit-font-display</code></td>
+                <td><code>'DM Serif Display', Georgia, serif</code></td>
+                <td>Display serif used for high-intensity emotion words (level ≥ 2.5).</td>
+              </tr>
+              <tr>
+                <td><code>--affect-kit-ink</code></td>
+                <td><code>#1a1a1a</code></td>
+                <td>Ink color for emotion words.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Layout custom properties</h3>
+        <p>
+          These pierce the shadow DOM and let a parent container (like
+          <code>&lt;affect-kit-compare&gt;</code>) drive the inner face/words layout via
+          container queries without JS:
+        </p>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Property</th><th>Controls</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>--_face-dir</code></td><td><code>flex-direction</code> of the content row</td></tr>
+              <tr><td><code>--_face-align</code></td><td><code>align-items</code> of the content row</td></tr>
+              <tr><td><code>--_face-gap</code></td><td>Gap between face and words</td></tr>
+              <tr><td><code>--_face-step</code></td><td>Word size growth per intensity level</td></tr>
+              <tr><td><code>--_face-mb</code></td><td>Face zone <code>margin-bottom</code></td></tr>
+              <tr><td><code>--_face-mt</code></td><td>Face zone <code>margin-top</code></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── 4: affect-kit-face ─────────────────────────── -->
+      <section id="face" class="rp-section">
+        <h2>4. <code>&lt;affect-kit-face&gt;</code></h2>
+        <p>
+          A standalone animated face glyph driven directly by <code>v</code> (valence) and
+          <code>a</code> (arousal) props. Runs a 60 fps animation loop by default — breath
+          (subtle scale oscillation) and tremor (position noise scaled by arousal). Size is
+          set via CSS; the SVG fills its container. Used internally by both
+          <code>&lt;affect-kit-rater&gt;</code> and <code>&lt;affect-kit-result&gt;</code>.
+        </p>
+
+        <div class="docs-demo docs-face-demo">
+          <affect-kit-face id="docs-face" v="0" a="0" style="width:140px;height:140px"></affect-kit-face>
+          <div class="docs-face-sliders">
+            <div class="slider-row">
+              <label for="docs-v-slider">V</label>
+              <input type="range" id="docs-v-slider" min="-1" max="1" step="0.01" value="0">
+              <span class="slider-val" id="docs-v-val">0.00</span>
+            </div>
+            <div class="slider-row">
+              <label for="docs-a-slider">A</label>
+              <input type="range" id="docs-a-slider" min="-1" max="1" step="0.01" value="0">
+              <span class="slider-val" id="docs-a-val">0.00</span>
+            </div>
+          </div>
+        </div>
+
+        <h3>Attributes / props</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Attribute / prop</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>v</code></td>
+                <td>number</td>
+                <td><code>0</code></td>
+                <td>Valence ∈ [−1, 1]. Drives brow angle, eye shape, and mouth curve. Clamped silently if out of range.</td>
+              </tr>
+              <tr>
+                <td><code>a</code></td>
+                <td>number</td>
+                <td><code>0</code></td>
+                <td>Arousal ∈ [−1, 1]. Drives eye openness, animation tremor amplitude, and lip parting. Clamped silently.</td>
+              </tr>
+              <tr>
+                <td><code>animated</code></td>
+                <td>boolean</td>
+                <td><code>true</code></td>
+                <td>Enables breath + tremor animation. Use <code>animated="false"</code> in HTML. Always respects <code>prefers-reduced-motion: reduce</code> regardless of this attribute.</td>
+              </tr>
+              <tr>
+                <td><code>motionScale</code> <span class="docs-prop-tag">prop only</span></td>
+                <td>number</td>
+                <td><code>1</code></td>
+                <td>Scales all animation amplitude in [0, 1]. The rater sets this to ~0.2 while the user is actively dragging so the face stays readable, then restores to 1.0 on release.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Methods</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Method</th><th>Signature</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>triggerShock()</code></td>
+                <td><code>() =&gt; void</code></td>
+                <td>Triggers a brief high-frequency shake. Called by <code>&lt;affect-kit-rater&gt;</code> internally when a high-arousal emotion chip is toggled up, so the face reacts to the selection.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Default size</h3>
+        <p>
+          The element defaults to <code>120 × 120px</code> (set via <code>:host</code> styles).
+          Override freely with CSS — the SVG fills 100% of its container:
+        </p>
+        <pre class="docs-code" set:text={`affect-kit-face { width: 80px; height: 80px; }
+/* or inline: */
+<affect-kit-face style="width:200px;height:200px"></affect-kit-face>`}></pre>
+      </section>
+
+      <!-- ── 5: affect-kit-compare ──────────────────────── -->
+      <section id="compare" class="rp-section">
+        <h2>5. <code>&lt;affect-kit-compare&gt;</code></h2>
+        <p>
+          A paired side-by-side display for two ratings or two rating arrays. When
+          <code>color-mode</code> is on, the card background is a gradient from the
+          left rating's V/A color to the right rating's V/A color — the color transition
+          itself tells the story. Layout responds to host width via container queries:
+          side-by-side when wide, stacked when narrow. Each half's face sits on the outer
+          edge so the faces frame the gradient. The widget makes no claims about what the
+          comparison means — interpretation belongs to the user.
+        </p>
+
+        <div class="docs-demo">
+          <affect-kit-compare
+            id="docs-compare"
+            show-face
+            color-mode
+            show-labels
+            before-label="Last week"
+            after-label="This week"
+          ></affect-kit-compare>
+        </div>
+
+        <h3>Attributes / props</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Attribute / prop</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>beforeRating</code> <span class="docs-prop-tag">prop only</span></td>
+                <td><code>Rating | Rating[] | null</code></td>
+                <td><code>null</code></td>
+                <td>Left side. A single <code>Rating</code> (rendered as-is) or a <code>Rating[]</code> (averaged via <code>averageRatings()</code>). Property is <code>beforeRating</code> because <code>before</code> is reserved on <code>Element</code>.</td>
+              </tr>
+              <tr>
+                <td><code>afterRating</code> <span class="docs-prop-tag">prop only</span></td>
+                <td><code>Rating | Rating[] | null</code></td>
+                <td><code>null</code></td>
+                <td>Right side. Same shape as <code>beforeRating</code>.</td>
+              </tr>
+              <tr>
+                <td><code>before-label</code></td>
+                <td>string</td>
+                <td><code>'Before'</code></td>
+                <td>Caption above the left rating.</td>
+              </tr>
+              <tr>
+                <td><code>after-label</code></td>
+                <td>string</td>
+                <td><code>'After'</code></td>
+                <td>Caption above the right rating.</td>
+              </tr>
+              <tr>
+                <td><code>show-face</code></td>
+                <td>boolean</td>
+                <td><code>false</code></td>
+                <td>Show face glyphs in each half. Forwarded to each inner <code>&lt;affect-kit-result&gt;</code>.</td>
+              </tr>
+              <tr>
+                <td><code>show-labels</code></td>
+                <td>boolean</td>
+                <td><code>true</code></td>
+                <td>Show emotion words in each half.</td>
+              </tr>
+              <tr>
+                <td><code>color-mode</code></td>
+                <td>boolean</td>
+                <td><code>false</code></td>
+                <td>When on, the card background is a gradient between the two V/A colors.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>CSS custom properties</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Property</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>--affect-kit-compare-max-width</code></td>
+                <td><code>880px</code></td>
+                <td>Maximum width of the widget.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Averaging arrays</h3>
+        <p>
+          Pass a <code>Rating[]</code> to either side and the widget averages it automatically.
+          Useful for windowed comparisons (e.g. last month vs last week):
+        </p>
+        <pre class="docs-code" set:text={`import 'affect-kit/compare';
+import { createRating } from 'affect-kit';
+
+const cmp = document.querySelector('affect-kit-compare');
+cmp.beforeRating = lastMonthRatings; // Rating[]
+cmp.afterRating  = lastWeekRatings;  // Rating[]`}></pre>
+      </section>
+
+      <!-- ── 6: TypeScript types ────────────────────────── -->
+      <section id="types" class="rp-section">
+        <h2>6. TypeScript types</h2>
+        <pre class="docs-code" set:text={`import type { Rating, EmotionLabel, EmotionName } from 'affect-kit';
+import { createRating, averageRatings }           from 'affect-kit';`}></pre>
+
+        <h3>Rating</h3>
+        <p>The central data object. Emitted by <code>change</code> events, consumed by result and compare.</p>
+        <pre class="docs-code" set:text={`interface Rating {
+  /** Valence ∈ [-1, 1]. Drives face shape and color. */
+  v: number;
+  /** Arousal ∈ [-1, 1]. Drives face shape and color. */
+  a: number;
+  /** Dominance ∈ [-1, 1]. Not visualized — preserved as analytical metadata. */
+  d: number;
+  /** Raw pad position before label aggregation. */
+  pad: { v: number; a: number };
+  /** True when v/a were aggregated from labels rather than from the pad drag. */
+  fromLabels: boolean;
+  /** Selected emotion words and their intensity. */
+  labels: EmotionLabel[];
+  /** Unix timestamp (ms) at commit time. */
+  timestamp: number;
+}`}></pre>
+
+        <h3>EmotionLabel</h3>
+        <pre class="docs-code" set:text={`interface EmotionLabel {
+  name: string;  // must be a valid EmotionName from the NRC vocabulary
+  level: number; // 1 | 2 | 3 from rater; widened to number for averaged data
+}`}></pre>
+
+        <h3>createRating()</h3>
+        <p>Construct a <code>Rating</code> from a pad position and optional labels. Useful for seeding demos and tests:</p>
+        <pre class="docs-code" set:text={`import { createRating } from 'affect-kit';
+
+const r = createRating({
+  v: 0.5, a: 0.3,           // pad position (required)
+  labels: [                  // optional
+    { name: 'calm',     level: 2 },
+    { name: 'grateful', level: 1 },
+  ],
+});`}></pre>
+
+        <h3>averageRatings()</h3>
+        <p>Average an array of <code>Rating</code> objects into a single <code>Rating</code>. Label levels are averaged continuously — the result widget renders averaged levels as continuous intermediate sizes:</p>
+        <pre class="docs-code" set:text={`import { averageRatings } from 'affect-kit';
+
+const avg = averageRatings(sessionRatings); // Rating[] → Rating`}></pre>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <p>
+      affect-kit · MIT License ·
+      <a href="https://github.com/savdevarney/affect-kit">github.com/savdevarney/affect-kit</a>
+    </p>
+  </footer>
+
+  <script>
+    import 'affect-kit/rater';
+    import 'affect-kit/result';
+    import 'affect-kit/face';
+    import 'affect-kit/compare';
+    import { createRating } from 'affect-kit';
+    import type { AffectKitRater }   from 'affect-kit/rater';
+    import type { AffectKitResult }  from 'affect-kit/result';
+    import type { AffectKitFace }    from 'affect-kit/face';
+    import type { AffectKitCompare } from 'affect-kit/compare';
+
+    // Wire the docs rater to the docs result
+    const rater  = document.getElementById('docs-rater')  as AffectKitRater  | null;
+    const result = document.getElementById('docs-result') as AffectKitResult | null;
+    rater?.addEventListener('change', (e) => {
+      if (result) result.rating = (e as CustomEvent).detail;
+    });
+
+    // Pre-seed the result with a sample rating so it isn't blank
+    const seed = createRating({ v: 0.55, a: 0.2, labels: [
+      { name: 'content',  level: 3 },
+      { name: 'grateful', level: 2 },
+      { name: 'calm',     level: 1 },
+    ]});
+    if (result) result.rating = seed;
+
+    // Face sliders
+    const face    = document.getElementById('docs-face')     as AffectKitFace  | null;
+    const vSlider = document.getElementById('docs-v-slider') as HTMLInputElement | null;
+    const aSlider = document.getElementById('docs-a-slider') as HTMLInputElement | null;
+    const vVal    = document.getElementById('docs-v-val');
+    const aVal    = document.getElementById('docs-a-val');
+
+    function updateFace() {
+      if (!face || !vSlider || !aSlider) return;
+      const v = parseFloat(vSlider.value);
+      const a = parseFloat(aSlider.value);
+      face.v = v; face.a = a;
+      if (vVal) vVal.textContent = v.toFixed(2);
+      if (aVal) aVal.textContent = a.toFixed(2);
+    }
+    vSlider?.addEventListener('input', updateFace);
+    aSlider?.addEventListener('input', updateFace);
+
+    // Pre-seed compare
+    const before = [
+      createRating({ v: -0.5, a: 0.5, labels: [{ name: 'overwhelmed', level: 3 }, { name: 'anxious', level: 2 }] }),
+      createRating({ v: -0.4, a: 0.4, labels: [{ name: 'frustrated', level: 2 }, { name: 'tired', level: 2 }] }),
+    ];
+    const after = [
+      createRating({ v:  0.6, a: 0.3, labels: [{ name: 'calm', level: 2 }, { name: 'hopeful', level: 2 }] }),
+      createRating({ v:  0.7, a: 0.4, labels: [{ name: 'joy', level: 3 }, { name: 'grateful', level: 1 }] }),
+    ];
+    const cmp = document.getElementById('docs-compare') as AffectKitCompare | null;
+    if (cmp) { cmp.beforeRating = before; cmp.afterRating = after; }
+  </script>
+
+</Base>
+
+<style is:global>
+  /* ── Docs page overrides (re-uses rp-* from research page) ── */
+
+  /* Demo blocks */
+  .docs-demo {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin: 1.5rem 0 2rem;
+  }
+
+  .docs-demo-hint {
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+    margin-top: 0.75rem;
+    font-style: italic;
+  }
+
+  .docs-face-demo {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .docs-face-sliders {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* Code blocks */
+  .docs-code {
+    background: var(--bg);
+    border: 1px solid var(--border-mid);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+    font-size: 0.78rem;
+    line-height: 1.8;
+    overflow-x: auto;
+    color: var(--ink);
+    font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+    margin: 1rem 0 1.5rem;
+    white-space: pre;
+  }
+
+  /* Tables */
+  .docs-table-wrap {
+    overflow-x: auto;
+    margin: 1rem 0 2rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+  }
+
+  .docs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    line-height: 1.5;
+  }
+
+  .docs-table th {
+    text-align: left;
+    padding: 0.6rem 1rem;
+    background: var(--bg);
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .docs-table td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink-muted);
+    vertical-align: top;
+  }
+
+  .docs-table tr:last-child td { border-bottom: none; }
+
+  .docs-table td:first-child {
+    color: var(--ink);
+    font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+    white-space: nowrap;
+  }
+
+  .docs-table code {
+    font-size: 0.8em;
+  }
+
+  /* Prop-only badge */
+  .docs-prop-tag {
+    display: inline-block;
+    background: color-mix(in srgb, var(--color-blue) 12%, transparent);
+    color: var(--color-blue);
+    font-size: 0.65rem;
+    font-weight: 600;
+    font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+    padding: 0.1em 0.45em;
+    border-radius: 3px;
+    vertical-align: middle;
+    margin-left: 0.2em;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+</style>
