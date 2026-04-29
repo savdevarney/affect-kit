@@ -645,6 +645,18 @@
     margin-bottom: 3rem;
     padding-bottom: 2rem;
     border-bottom: 1px solid var(--border);
+    /* Four-corner rainbow gradient — same palette as the hero */
+    background:
+      radial-gradient(ellipse 80% 120% at 0%   0%,   color-mix(in srgb, var(--color-pink)  13%, transparent), transparent),
+      radial-gradient(ellipse 80% 120% at 100% 0%,   color-mix(in srgb, var(--color-gold)  13%, transparent), transparent),
+      radial-gradient(ellipse 80% 120% at 100% 100%, color-mix(in srgb, var(--color-green) 10%, transparent), transparent),
+      radial-gradient(ellipse 80% 120% at 0%   100%, color-mix(in srgb, var(--color-blue)  10%, transparent), transparent);
+    /* Pull the gradient flush to the left content edge by bleeding into padding */
+    margin-left: calc(-1 * clamp(1.5rem, 4vw, 3rem));
+    margin-right: calc(-1 * clamp(1.5rem, 4vw, 3rem));
+    padding-left: clamp(1.5rem, 4vw, 3rem);
+    padding-right: clamp(1.5rem, 4vw, 3rem);
+    padding-top: clamp(2rem, 4vw, 3rem);
   }
 
   .rp-title {
