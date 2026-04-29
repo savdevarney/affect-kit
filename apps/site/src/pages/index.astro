@@ -270,10 +270,10 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
           composite: rating.composite
             ? { v: round(rating.composite.v), a: round(rating.composite.a), d: round(rating.composite.d) }
             : null,
-          labels: rating.labels.map((l: { name: string; level: number; nrc?: { v: number; a: number; d: number } }) => ({
+          labels: rating.labels.map((l: { name: string; level: number; vad?: { v: number; a: number; d: number } }) => ({
             name:  l.name,
             level: l.level,
-            nrc:   l.nrc ? { v: round(l.nrc.v), a: round(l.nrc.a), d: round(l.nrc.d) } : undefined,
+            vad:   l.vad ? { v: round(l.vad.v), a: round(l.vad.a), d: round(l.vad.d) } : undefined,
           })),
         }, null, 2);
       }

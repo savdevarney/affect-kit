@@ -13,14 +13,15 @@ export type { EmotionName } from '../vocabulary/en';
  *
  * Level 0 means "not selected" and is never present in `Rating.labels`.
  *
- * `nrc` holds the NRC VAD Lexicon coordinates (National Research Council Canada,
- * Mohammad 2025) for this emotion name. Populated automatically by `buildRating`
- * and `createRating` when the name is in the vocabulary; absent for unknown names.
+ * `vad` holds the VAD coordinates for this emotion name from the NRC VAD Lexicon
+ * (National Research Council Canada, Mohammad 2025). Populated automatically by
+ * `buildRating` and `createRating` when the name is in the vocabulary; absent for
+ * unknown names.
  */
 export interface EmotionLabel {
   name: string; // kept as string so callers with string sources don't need a cast
   level: number;
-  nrc?: { v: number; a: number; d: number };
+  vad?: { v: number; a: number; d: number };
 }
 
 /**

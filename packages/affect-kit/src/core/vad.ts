@@ -63,7 +63,7 @@ export function buildRating(args: {
   const enrichedLabels: EmotionLabel[] = labels.map(l => {
     const emotion = EMOTIONS_BY_NAME.get(l.name);
     if (!emotion) return l;
-    return { ...l, nrc: { v: emotion.v, a: emotion.a, d: emotion.d } };
+    return { ...l, vad: { v: emotion.v, a: emotion.a, d: emotion.d } };
   });
 
   const vad = computeVAD(padV, padA, enrichedLabels);
@@ -164,7 +164,7 @@ export function averageRatings(ratings: Rating[]): Rating | null {
     const freqBoost = 0.6 + 0.4 * (count / maxCount);
     const emotion   = EMOTIONS_BY_NAME.get(name);
     const label: EmotionLabel = { name, level: avgLevel * freqBoost };
-    if (emotion) label.nrc = { v: emotion.v, a: emotion.a, d: emotion.d };
+    if (emotion) label.vad = { v: emotion.v, a: emotion.a, d: emotion.d };
     labels.push(label);
   }
   labels.sort((a, b) => b.level - a.level);

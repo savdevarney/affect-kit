@@ -81,8 +81,8 @@ describe('buildRating', () => {
     expect(rating.v).toBeCloseTo(0.750, 3); // calm's v (NRC v2.1)
     expect(rating.composite).not.toBeNull();
     // Label should be enriched with NRC values
-    expect(rating.labels[0]!.nrc).toBeDefined();
-    expect(rating.labels[0]!.nrc!.v).toBeCloseTo(0.750, 3);
+    expect(rating.labels[0]!.vad).toBeDefined();
+    expect(rating.labels[0]!.vad!.v).toBeCloseTo(0.750, 3);
   });
 
   it('uses Date.now() by default (smoke test)', () => {
