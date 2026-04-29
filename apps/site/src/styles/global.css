@@ -572,7 +572,7 @@
     max-width: 1200px;
     margin-inline: auto;
     align-items: start;
-    padding-top: var(--nav-h);
+    /* no padding-top — rp-header now provides nav clearance */
   }
 
   @media (max-width: 860px) {
@@ -586,6 +586,10 @@
     align-self: start;
     border-right: 1px solid var(--border);
     min-height: 80vh;
+    /* Frosted glass — content scrolls behind the sidebar */
+    background: rgba(245, 245, 243, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   @media (max-width: 860px) {
@@ -625,9 +629,8 @@
     color: var(--ink-muted);
     text-decoration: none;
     display: block;
-    padding: 0.25rem 0;
+    padding: 0.25rem 0 0.25rem 0.6rem;
     border-left: 2px solid transparent;
-    padding-left: 0.6rem;
     transition: color 0.15s, border-color 0.15s;
   }
 
@@ -636,27 +639,39 @@
     border-left-color: var(--border-mid);
   }
 
+  /* On mobile the nav stacks horizontally — use underline instead of left border */
+  @media (max-width: 860px) {
+    .rp-toc-list a {
+      padding-left: 0;
+      border-left: none;
+    }
+    .rp-toc-list a:hover {
+      border-left-color: transparent;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+  }
+
   .rp-content {
     padding: 2.5rem clamp(1.5rem, 4vw, 3rem) 4rem;
     max-width: 72ch;
   }
 
+  /* Full-viewport-width header — gradient bleeds edge-to-edge behind fixed nav */
   .rp-header {
-    margin-bottom: 3rem;
-    padding-bottom: 2rem;
     border-bottom: 1px solid var(--border);
     /* Four-corner rainbow gradient — same palette as the hero */
     background:
-      radial-gradient(ellipse 80% 120% at 0%   0%,   color-mix(in srgb, var(--color-pink)  13%, transparent), transparent),
-      radial-gradient(ellipse 80% 120% at 100% 0%,   color-mix(in srgb, var(--color-gold)  13%, transparent), transparent),
-      radial-gradient(ellipse 80% 120% at 100% 100%, color-mix(in srgb, var(--color-green) 10%, transparent), transparent),
-      radial-gradient(ellipse 80% 120% at 0%   100%, color-mix(in srgb, var(--color-blue)  10%, transparent), transparent);
-    /* Pull the gradient flush to the left content edge by bleeding into padding */
-    margin-left: calc(-1 * clamp(1.5rem, 4vw, 3rem));
-    margin-right: calc(-1 * clamp(1.5rem, 4vw, 3rem));
-    padding-left: clamp(1.5rem, 4vw, 3rem);
-    padding-right: clamp(1.5rem, 4vw, 3rem);
-    padding-top: clamp(2rem, 4vw, 3rem);
+      radial-gradient(ellipse 70% 140% at 0%   0%,   color-mix(in srgb, var(--color-pink)  13%, transparent), transparent),
+      radial-gradient(ellipse 70% 140% at 100% 0%,   color-mix(in srgb, var(--color-gold)  13%, transparent), transparent),
+      radial-gradient(ellipse 70% 140% at 100% 100%, color-mix(in srgb, var(--color-green) 10%, transparent), transparent),
+      radial-gradient(ellipse 70% 140% at 0%   100%, color-mix(in srgb, var(--color-blue)  10%, transparent), transparent);
+  }
+
+  .rp-header-inner {
+    max-width: 1200px;
+    margin-inline: auto;
+    padding: calc(var(--nav-h) + clamp(2rem, 5vw, 3.5rem)) var(--px) clamp(2rem, 4vw, 3rem);
   }
 
   .rp-title {
