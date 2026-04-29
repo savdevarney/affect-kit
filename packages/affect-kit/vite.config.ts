@@ -9,10 +9,11 @@ export default defineConfig({
   build: {
     lib: {
       entry: {
-        index:  resolve(__dirname, 'src/index.ts'),
-        rater:  resolve(__dirname, 'src/rater.ts'),
-        result: resolve(__dirname, 'src/result.ts'),
-        face:   resolve(__dirname, 'src/face.ts'),
+        index:   resolve(__dirname, 'src/index.ts'),
+        rater:   resolve(__dirname, 'src/rater.ts'),
+        result:  resolve(__dirname, 'src/result.ts'),
+        face:    resolve(__dirname, 'src/face.ts'),
+        compare: resolve(__dirname, 'src/compare.ts'),
       },
       formats: ['es'],
     },

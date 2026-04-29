@@ -10,6 +10,7 @@ build/
 .next/
 .svelte-kit/
 .angular/
+*.tsbuildinfo
 
 # Test artifacts
 coverage/

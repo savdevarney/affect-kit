@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--workspace=playground"],
       "port": 5173
+    },
+    {
+      "name": "harness-react",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "@affect-kit-harness/react", "dev"],
+      "port": 5174
     }
   ]
 }

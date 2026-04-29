@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>affect-kit react harness</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #f5f5f3;
+      padding: 2rem;
+      color: #1a1a1a;
+    }
+    h1 { font-size: 1.1rem; font-weight: 600; margin: 0 0 0.25rem; }
+    .subtitle { font-size: 0.85rem; color: #666; margin: 0 0 2rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      max-width: 1200px;
+    }
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      border: 1px solid rgba(0,0,0,0.07);
+    }
+    .label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #999;
+      margin: 0 0 1rem;
+    }
+    .log {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 0.7rem;
+      color: #666;
+      background: #faf9f6;
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      margin-top: 1rem;
+      white-space: pre-wrap;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+    button {
+      font-family: inherit;
+      font-size: 0.78rem;
+      padding: 0.4rem 0.85rem;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: white;
+      cursor: pointer;
+      margin-top: 0.5rem;
+    }
+    button:hover { background: #f5f5f3; }
+  </style>
+</head>
+<body>
+  <h1>affect-kit react harness</h1>
+  <p class="subtitle">Validates the <code>@affect-kit/react</code> wrappers in a real React app.</p>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+</body>
+</html>
