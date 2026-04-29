@@ -9,6 +9,7 @@ import type { AffectKitFace } from './affect-kit-face';
 
 const DWELL_MS = 500;
 const HIGH_AROUSAL_THRESH = 0.3;
+const MAX_LABELS = 5;
 
 const animateConverter = {
   fromAttribute: (value: string | null): boolean => value !== 'false',
@@ -214,6 +215,80 @@ export class AffectKitRater extends LitElement {
       text-transform: uppercase;
     }
 
+    /* ── Chip header (hint + submit) ─────────────────────── */
+    .chip-header {
+      transition: opacity 0.25s ease;
+    }
+    .chip-header.dragging {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* ── Prompt hint ──────────────────────────────────────── */
+    .chips-hint {
+      margin-top: 4px;
+      margin-bottom: 12px;
+      font-size: 11px;
+      color: rgba(0,0,0,0.35);
+      text-align: center;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      max-height: 40px;
+      overflow: hidden;
+      pointer-events: none;
+      transition:
+        max-height  0.4s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity     0.3s ease,
+        margin-top  0.35s cubic-bezier(0.4, 0, 0.2, 1),
+        margin-bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .chips-hint.gone {
+      max-height: 0;
+      opacity: 0;
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+
+    /* ── Submit button ────────────────────────────────────── */
+    .submit-btn {
+      margin-top: 0;
+      margin-bottom: 14px;
+      display: block;
+      width: 100%;
+      padding: 11px 16px;
+      background: rgba(0,0,0,0.88);
+      color: rgba(255,255,255,0.96);
+      border: none;
+      border-radius: 14px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(8px);
+      transition:
+        opacity    0.4s ease,
+        transform  0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        background 0.15s ease;
+      pointer-events: none;
+    }
+    .submit-btn.visible {
+      opacity: 1;
+      transform: none;
+      pointer-events: auto;
+    }
+    .submit-btn:hover  { background: rgba(0,0,0,0.72); }
+    .submit-btn:active { transform: scale(0.98); }
+
+    :host([color-mode]) .submit-btn {
+      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
+      color: var(--_text-l3, rgba(0,0,0,0.95));
+    }
+    :host([color-mode]) .submit-btn:hover {
+      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.82);
+    }
+
     /* Wide layout: face left, chips right */
     @container (min-width: 860px) {
       .surface {
@@ -255,6 +330,10 @@ export class AffectKitRater extends LitElement {
   @property({ type: Boolean, attribute: 'show-vad' })
   showVad = false;
 
+  /** Label for the submit button. Override via the `submit-label` attribute. */
+  @property({ attribute: 'submit-label' })
+  submitLabel = 'Done';
+
   @state() private _padV = 0;
   @state() private _padA = 0;
   @state() private _levels = new Map<string, 0 | 1 | 2 | 3>();
@@ -274,8 +353,8 @@ export class AffectKitRater extends LitElement {
    * Reveals chips immediately and sets the pad + label state from the rating.
    */
   setRating(rating: Rating): void {
-    this._padV = rating.pad.v;
-    this._padA = rating.pad.a;
+    this._padV = rating.raw.v;
+    this._padA = rating.raw.a;
     const levels = new Map<string, 0 | 1 | 2 | 3>();
     // Rating.level is `number` to support averaged longitudinal data, but the
     // rater itself only renders integer chip levels — round and clamp on prefill.
@@ -286,8 +365,8 @@ export class AffectKitRater extends LitElement {
     }
     this._levels = levels;
     this._revealed = true;
-    this._ghostX = (rating.pad.v + 1) / 2;
-    this._ghostY = (1 - rating.pad.a) / 2;
+    this._ghostX = (rating.raw.v + 1) / 2;
+    this._ghostY = (1 - rating.raw.a) / 2;
     this._sortOrder = this._computeSortOrder();
     this._hasFlippedOnce = true;
     this._updateColorVars();
@@ -358,6 +437,11 @@ export class AffectKitRater extends LitElement {
 
   private _cycleChip(name: string) {
     const cur = this._levels.get(name) ?? 0;
+    // Cap total selected labels at MAX_LABELS — only block adding a new one.
+    if (cur === 0) {
+      const active = [...this._levels.values()].filter(l => l > 0).length;
+      if (active >= MAX_LABELS) return;
+    }
     const next = ((cur + 1) % 4) as 0 | 1 | 2 | 3;
     const levels = new Map(this._levels);
     levels.set(name, next);
@@ -466,6 +550,21 @@ export class AffectKitRater extends LitElement {
     }));
   }
 
+  // ── Commit (explicit submit) ──────────────────────────────────────────────
+
+  private _onSubmit() {
+    const labels: EmotionLabel[] = [];
+    for (const [name, level] of this._levels) {
+      if (level > 0) labels.push({ name, level: level as 1 | 2 | 3 });
+    }
+    const rating = buildRating({ padV: this._padV, padA: this._padA, labels });
+    this.dispatchEvent(new CustomEvent<Rating>('commit', {
+      detail: rating,
+      bubbles: true,
+      composed: true,
+    }));
+  }
+
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   protected override updated(changed: PropertyValues) {
@@ -484,7 +583,8 @@ export class AffectKitRater extends LitElement {
     for (const [name, level] of this._levels) {
       if (level > 0) activeLabels.push({ name, level: level as 1 | 2 | 3 });
     }
-    const vad = activeLabels.length
+    const hasLabels = activeLabels.length > 0;
+    const vad = hasLabels
       ? this._computeDisplayVAD(activeLabels)
       : { v: this._padV, a: this._padA, d: 0 };
 
@@ -516,6 +616,13 @@ export class AffectKitRater extends LitElement {
         </div>
 
         <div class="chips-zone${this._revealed ? '' : ' empty'}">
+          <div class="chip-header${this._dragging ? ' dragging' : ''}">
+            <p class="chips-hint${hasLabels ? ' gone' : ''}">name what you feel</p>
+            <button
+              class="submit-btn${hasLabels ? ' visible' : ''}"
+              @click=${this._onSubmit}
+            >${this.submitLabel}</button>
+          </div>
           <div class="chip-list">
             ${EMOTIONS.map(emotion => {
               const level = this._levels.get(emotion.name) ?? 0;
@@ -556,5 +663,7 @@ declare global {
   interface HTMLElementEventMap {
     /** Emitted after pointer release or chip toggle. `event.detail` is the {@link Rating}. */
     change: CustomEvent<Rating>;
+    /** Emitted when the user clicks the submit button — the explicit "done" signal. `event.detail` is the final {@link Rating}. */
+    commit: CustomEvent<Rating>;
   }
 }

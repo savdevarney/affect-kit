@@ -12,33 +12,48 @@ export type { EmotionName } from '../vocabulary/en';
  * rendering — the display interpolates size, weight, and opacity continuously.
  *
  * Level 0 means "not selected" and is never present in `Rating.labels`.
+ *
+ * `nrc` holds the NRC VAD Lexicon coordinates (National Research Council Canada,
+ * Mohammad 2025) for this emotion name. Populated automatically by `buildRating`
+ * and `createRating` when the name is in the vocabulary; absent for unknown names.
  */
 export interface EmotionLabel {
   name: string; // kept as string so callers with string sources don't need a cast
   level: number;
+  nrc?: { v: number; a: number; d: number };
 }
 
 /**
- * The captured rating object emitted by `<affect-kit-rater>` on every commit
+ * The captured rating object emitted by `<affect-kit-rater>` on commit
  * and consumed by `<affect-kit-result>` for display.
  *
- * `v`/`a` drive visual rendering; `d` is preserved as analytical metadata.
- * `pad` keeps the raw drag position even after labels override `v`/`a`,
- * because the gut-vs-language gap is itself a research signal.
+ * **Two sources of VAD:**
+ * - `raw` — the pre-verbal pad gesture; always present.
+ * - `composite` — intensity-weighted centroid of the selected labels' NRC VAD
+ *   coordinates. This is a novel, unvalidated derivation grounded in affective
+ *   theory. Researchers should treat it as exploratory. `null` when no labels
+ *   were selected.
+ *
+ * **Rendering shorthands** — `v`, `a`, `d` are pre-resolved for convenience:
+ * `composite ?? { v: raw.v, a: raw.a, d: 0 }`. Use `raw` or `composite` directly
+ * for analytical work.
  */
 export interface Rating {
-  /** Valence, -1..1. Drives face shape and color. */
-  v: number;
-  /** Arousal, -1..1. Drives face shape and color. */
-  a: number;
-  /** Dominance, -1..1. Analytical metadata; not visualized. */
-  d: number;
-  /** Raw pad position before any label aggregation. */
-  pad: { v: number; a: number };
-  /** True when `v`/`a` were aggregated from labels rather than from drag. */
-  fromLabels: boolean;
-  /** Selected emotion words and their intensity. */
-  labels: EmotionLabel[];
   /** ms since epoch at commit time. */
   timestamp: number;
+  /** Raw pad position — the pre-verbal gut gesture, independent of label choice. */
+  raw: { v: number; a: number };
+  /** Selected emotion words with intensity and NRC VAD coordinates. */
+  labels: EmotionLabel[];
+  /**
+   * Intensity-weighted centroid of selected labels' NRC VAD values.
+   * Novel derivation — not independently validated. `null` when no labels selected.
+   */
+  composite: { v: number; a: number; d: number } | null;
+  /** Valence, -1..1. Rendering shorthand: `composite?.v ?? raw.v`. */
+  v: number;
+  /** Arousal, -1..1. Rendering shorthand: `composite?.a ?? raw.a`. */
+  a: number;
+  /** Dominance, -1..1. Rendering shorthand: `composite?.d ?? 0`. */
+  d: number;
 }

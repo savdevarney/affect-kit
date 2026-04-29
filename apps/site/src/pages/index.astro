@@ -49,13 +49,20 @@ import '../styles/global.css';
         </div>
 
         <div class="hero-demo">
-          <div class="hero-demo-item">
-            <p class="demo-label">&lt;affect-kit-rater&gt;</p>
-            <affect-kit-rater id="hero-rater" show-vad color-mode></affect-kit-rater>
-          </div>
-          <div class="hero-demo-item hero-result-wrapper" id="hero-result-item">
-            <p class="demo-label">&lt;affect-kit-result&gt;</p>
-            <affect-kit-result id="hero-result" show-face show-labels color-mode></affect-kit-result>
+          <div class="hero-demo-slot" id="hero-demo-slot">
+            <div class="hero-demo-pane" id="hero-rater-pane">
+              <p class="demo-label">&lt;affect-kit-rater&gt;</p>
+              <affect-kit-rater id="hero-rater" color-mode></affect-kit-rater>
+            </div>
+            <div class="hero-demo-pane hero-demo-pane--result" id="hero-result-pane">
+              <p class="demo-label">&lt;affect-kit-result&gt;</p>
+              <affect-kit-result id="hero-result" show-face show-labels color-mode></affect-kit-result>
+              <div class="hero-json-wrap">
+                <p class="demo-label">commit event.detail</p>
+                <pre class="hero-rating-json"><code id="hero-rating-json"></code></pre>
+              </div>
+              <button class="hero-rerate" id="hero-rerate">← rate again</button>
+            </div>
           </div>
         </div>
       </div>
@@ -244,14 +251,52 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
     import type { AffectKitResult }  from 'affect-kit/result';
     import type { AffectKitCompare } from 'affect-kit/compare';
 
-    // ── Hero: wire rater → result (reveal on first commit) ────
-    const rater      = document.getElementById('hero-rater')    as AffectKitRater  | null;
-    const result     = document.getElementById('hero-result')   as AffectKitResult | null;
-    const resultItem = document.getElementById('hero-result-item');
+    // ── Hero: rater commits → result replaces it; rerate → back ──
+    const rater     = document.getElementById('hero-rater')     as AffectKitRater  | null;
+    const result    = document.getElementById('hero-result')    as AffectKitResult | null;
+    const slot      = document.getElementById('hero-demo-slot');
+    const raterPane = document.getElementById('hero-rater-pane');
+    const rerate    = document.getElementById('hero-rerate');
+    const jsonEl    = document.getElementById('hero-rating-json');
 
-    rater?.addEventListener('change', (e) => {
-      if (result) result.rating = (e as CustomEvent).detail;
-      resultItem?.classList.add('is-revealed');
+    rater?.addEventListener('commit', (e) => {
+      const rating = (e as CustomEvent).detail;
+      if (result) result.rating = rating;
+      // Populate JSON snippet
+      if (jsonEl) {
+        const round = (x: number) => +x.toFixed(3);
+        jsonEl.textContent = JSON.stringify({
+          raw: { v: round(rating.raw.v), a: round(rating.raw.a) },
+          composite: rating.composite
+            ? { v: round(rating.composite.v), a: round(rating.composite.a), d: round(rating.composite.d) }
+            : null,
+          labels: rating.labels.map((l: { name: string; level: number; nrc?: { v: number; a: number; d: number } }) => ({
+            name:  l.name,
+            level: l.level,
+            nrc:   l.nrc ? { v: round(l.nrc.v), a: round(l.nrc.a), d: round(l.nrc.d) } : undefined,
+          })),
+        }, null, 2);
+      }
+      slot?.classList.add('showing-result');
+    });
+
+    // After rater fades out, collapse its height so slot snaps to result size
+    raterPane?.addEventListener('transitionend', (e) => {
+      if ((e as TransitionEvent).propertyName !== 'opacity') return;
+      if (slot?.classList.contains('showing-result') && raterPane) {
+        raterPane.style.height   = '0';
+        raterPane.style.overflow = 'hidden';
+      }
+    });
+
+    rerate?.addEventListener('click', () => {
+      // Restore rater pane dimensions (still invisible under showing-result)
+      if (raterPane) { raterPane.style.height = ''; raterPane.style.overflow = ''; }
+      // Let browser process the layout change, then reverse the transition
+      requestAnimationFrame(() => {
+        slot?.classList.remove('showing-result');
+        rater?.reset();
+      });
     });
 
     // ── Compare demo data ──────────────────────────────────────

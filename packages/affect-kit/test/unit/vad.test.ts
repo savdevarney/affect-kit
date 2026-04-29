@@ -2,21 +2,22 @@ import { describe, it, expect } from 'vitest';
 import { computeVAD, buildRating } from '../../src/core/vad';
 
 describe('computeVAD', () => {
-  it('returns pad V/A with fromLabels=false when no labels are active', () => {
+  it('returns pad V/A with composite=null when no labels are active', () => {
     const result = computeVAD(0.3, -0.5, []);
     expect(result.v).toBeCloseTo(0.3);
     expect(result.a).toBeCloseTo(-0.5);
     expect(result.d).toBe(0);
-    expect(result.fromLabels).toBe(false);
+    expect(result.composite).toBeNull();
   });
 
-  it('returns emotion VAD with fromLabels=true for a single level-3 label', () => {
+  it('returns emotion VAD with composite set for a single level-3 label', () => {
     // 'calm' from NRC VAD v2.1: { v: 0.75, a: -0.90, d: -0.373 }
     const result = computeVAD(0, 0, [{ name: 'calm', level: 3 }]);
     expect(result.v).toBeCloseTo(0.750, 3);
     expect(result.a).toBeCloseTo(-0.900, 3);
     expect(result.d).toBeCloseTo(-0.373, 3);
-    expect(result.fromLabels).toBe(true);
+    expect(result.composite).not.toBeNull();
+    expect(result.composite!.v).toBeCloseTo(0.750, 3);
   });
 
   it('weights level-1 as 1/3 of level-3', () => {
@@ -35,7 +36,7 @@ describe('computeVAD', () => {
       { name: 'calm', level: 3 },
     ]);
     expect(result.v).toBeCloseTo((0.960 + 0.750) / 2, 5);
-    expect(result.fromLabels).toBe(true);
+    expect(result.composite).not.toBeNull();
   });
 
   it('weights higher-level labels more heavily', () => {
@@ -51,7 +52,7 @@ describe('computeVAD', () => {
 
   it('skips unknown emotion names silently', () => {
     const result = computeVAD(0.1, 0.2, [{ name: 'nonexistent-emotion', level: 2 }]);
-    expect(result.fromLabels).toBe(false);
+    expect(result.composite).toBeNull();
     expect(result.v).toBeCloseTo(0.1);
   });
 });
@@ -63,22 +64,25 @@ describe('buildRating', () => {
     expect(rating.v).toBeCloseTo(0.3);
     expect(rating.a).toBeCloseTo(-0.4);
     expect(rating.d).toBe(0);
-    expect(rating.pad).toEqual({ v: 0.3, a: -0.4 });
-    expect(rating.fromLabels).toBe(false);
+    expect(rating.raw).toEqual({ v: 0.3, a: -0.4 });
+    expect(rating.composite).toBeNull();
     expect(rating.labels).toEqual([]);
     expect(rating.timestamp).toBe(ts);
   });
 
-  it('preserves pad separately when labels override V/A', () => {
+  it('preserves raw separately when labels override V/A, and enriches labels with NRC', () => {
     const rating = buildRating({
       padV: 0.1,
       padA: 0.1,
       labels: [{ name: 'calm', level: 3 }],
       now: () => 0,
     });
-    expect(rating.pad).toEqual({ v: 0.1, a: 0.1 });
+    expect(rating.raw).toEqual({ v: 0.1, a: 0.1 });
     expect(rating.v).toBeCloseTo(0.750, 3); // calm's v (NRC v2.1)
-    expect(rating.fromLabels).toBe(true);
+    expect(rating.composite).not.toBeNull();
+    // Label should be enriched with NRC values
+    expect(rating.labels[0]!.nrc).toBeDefined();
+    expect(rating.labels[0]!.nrc!.v).toBeCloseTo(0.750, 3);
   });
 
   it('uses Date.now() by default (smoke test)', () => {

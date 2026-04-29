@@ -280,8 +280,8 @@ export class AffectKitResult extends LitElement {
     // Face shape and color always follow the raw pad gesture, not the
     // label-aggregated v/a — the visual represents WHERE the user placed
     // their feeling, not what words they chose afterward.
-    const padV = r.pad.v;
-    const padA = r.pad.a;
+    const padV = r.raw.v;
+    const padA = r.raw.a;
     const [cr, cg, cb] = colorForVA(padV, padA);
     const glowStyle = this.colorMode
       ? `background: rgb(${cr},${cg},${cb})`
