@@ -77,11 +77,20 @@
   }
 
   .wordmark {
-    font-weight: 700;
-    font-size: 0.95rem;
-    letter-spacing: -0.02em;
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: -0.03em;
     text-decoration: none;
-    color: var(--ink);
+    /* Four-quadrant gradient — the V/A color system lives in the wordmark */
+    background: linear-gradient(105deg,
+      var(--color-pink)  0%,
+      var(--color-gold)  35%,
+      var(--color-green) 68%,
+      var(--color-blue)  100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 
   .nav-links {
@@ -122,6 +131,12 @@
     max-width: var(--max-w);
     margin-inline: auto;
     padding: clamp(3rem, 8vw, 6rem) var(--px) clamp(2.5rem, 6vw, 5rem);
+    /* Faint four-corner gradient — references the V/A quadrant color system */
+    background:
+      radial-gradient(ellipse 55% 50% at 5%  5%,  color-mix(in srgb, var(--color-pink)  9%, transparent), transparent),
+      radial-gradient(ellipse 55% 50% at 95% 5%,  color-mix(in srgb, var(--color-gold)  9%, transparent), transparent),
+      radial-gradient(ellipse 55% 50% at 95% 95%, color-mix(in srgb, var(--color-green) 9%, transparent), transparent),
+      radial-gradient(ellipse 55% 50% at 5%  95%, color-mix(in srgb, var(--color-blue)  9%, transparent), transparent);
   }
 
   @media (max-width: 700px) {

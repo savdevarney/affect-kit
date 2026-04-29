@@ -1,0 +1,1443 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/global.css';
+---
+<Base
+  title="Research foundations — affect-kit"
+  description="The affective science, design decisions, and literature that ground affect-kit's approach to dimensional emotion rating."
+>
+
+  <nav class="site-nav">
+    <a href="/" class="wordmark">affect-kit</a>
+    <div class="nav-links">
+      <a href="/research" aria-current="page">Research</a>
+      <a href="https://github.com/savdevarney/affect-kit">GitHub</a>
+      <a href="https://www.npmjs.com/package/affect-kit">npm</a>
+    </div>
+  </nav>
+
+  <div class="rp-layout">
+
+    <!-- ── Sidebar ToC ──────────────────────────────────────── -->
+    <aside class="rp-toc">
+      <p class="rp-toc-label">On this page</p>
+      <nav>
+        <ol class="rp-toc-list">
+          <li><a href="#dimensional-model">The dimensional model</a></li>
+          <li><a href="#interaction-model">Interaction model</a></li>
+          <li><a href="#face-glyph">The face glyph</a></li>
+          <li><a href="#vocabulary">Vocabulary</a></li>
+          <li><a href="#color-design">Color design</a></li>
+          <li><a href="#longitudinal">Longitudinal foundations</a></li>
+          <li><a href="#design-position">Design position</a></li>
+          <li><a href="#bibliography">Bibliography</a></li>
+        </ol>
+      </nav>
+    </aside>
+
+    <!-- ── Main content ────────────────────────────────────── -->
+    <main class="rp-content">
+
+      <header class="rp-header">
+        <p class="section-eyebrow">Scientific foundations</p>
+        <h1 class="rp-title">Research foundations</h1>
+        <p class="rp-lead">
+          affect-kit is grounded in four decades of affective science: the dimensional
+          model of emotion, validated lexicons, FACS-based face design, and longitudinal
+          affect dynamics. This document consolidates the theory, design decisions, and
+          primary literature behind every component in the package.
+        </p>
+      </header>
+
+      <!-- ── 1: Dimensional model ────────────────────────── -->
+      <section id="dimensional-model" class="rp-section">
+        <h2>1. The dimensional model of affect</h2>
+
+        <h3>Why dimensions, not categories</h3>
+        <p>
+          Discrete-emotion theories — Ekman's "basic emotions" of anger, disgust, fear,
+          happiness, sadness, and surprise — have been challenged since the 1980s by
+          evidence that emotion is better modeled as a continuous space than as a set of
+          named categories. Russell's circumplex model <a href="#ref-2" class="rp-cite">[2]</a>
+          and Mehrabian &amp; Russell's PAD/VAD model <a href="#ref-1" class="rp-cite">[1]</a>
+          propose that any emotional state can be located in a space defined by three
+          orthogonal dimensions:
+        </p>
+
+        <ul class="rp-deflist">
+          <li>
+            <strong>Valence (V)</strong> — pleasantness. How positive or negative the
+            experience is. Ranges from −1 (maximally negative) to +1 (maximally positive).
+          </li>
+          <li>
+            <strong>Arousal (A)</strong> — activation. How energized or calm. Ranges from
+            −1 (maximally calm/lethargic) to +1 (maximally energized/excited).
+          </li>
+          <li>
+            <strong>Dominance (D)</strong> — control. The degree of agency, from −1
+            (completely helpless) to +1 (completely in control). See §1.2 for why this
+            dimension is preserved even though it isn't visualized.
+          </li>
+        </ul>
+
+        <p>
+          The dimensional approach has accumulated substantial evidence:
+        </p>
+        <ul>
+          <li>
+            Posner et al. (2005) found that PET and fMRI studies map emotional experience
+            onto valence and arousal axes more cleanly than onto discrete categories.
+          </li>
+          <li>
+            Lindquist et al. (2012) <a href="#ref-7" class="rp-cite">[7]</a> found that
+            "basic emotion" categories lack consistent neural signatures, while valence
+            and arousal dimensions do.
+          </li>
+          <li>
+            Barrett (2017) <a href="#ref-6" class="rp-cite">[6]</a>, in
+            <em>How Emotions Are Made</em>, argues that emotions are constructed from
+            core affect (valence × arousal) plus conceptual knowledge — strong support for
+            treating dimensions as primary and labels as secondary refinements.
+          </li>
+        </ul>
+
+        <!-- VAD diagram -->
+        <figure class="rp-figure">
+          <figcaption class="rp-figcaption rp-figcaption--top">
+            The three-dimensional VAD space (Mehrabian &amp; Russell 1974/1980;
+            Russell 1980). Selected emotion examples plotted at their NRC VAD
+            Lexicon coordinates <a href="#ref-3" class="rp-cite">[3]</a>.
+            Axes extend −1 to +1. Note that anger and anxious share similar V/A
+            positions but differ substantially in D (control): anger D=+0.31,
+            anxious D=−0.13.
+          </figcaption>
+          <div class="rp-diagram-wrap">
+            <svg viewBox="0 0 520 310" xmlns="http://www.w3.org/2000/svg"
+                 aria-label="3D scatter plot of the VAD (Valence, Arousal, Dominance) space with six emotion examples plotted at their NRC lexicon coordinates.">
+              <defs>
+                <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4"
+                  markerWidth="5" markerHeight="5" orient="auto">
+                  <path d="M0,0 L8,4 L0,8 Z" fill="#1a1a1a"/>
+                </marker>
+              </defs>
+
+              <!-- Quadrant color wash on the V/A plane (D=0 cross-section) -->
+              <rect x="110" y="125" width="85" height="75" fill="#FF1457" fill-opacity="0.05"/>
+              <rect x="195" y="125" width="85" height="75" fill="#FFC700" fill-opacity="0.05"/>
+              <rect x="195" y="200" width="85" height="75" fill="#1FE085" fill-opacity="0.05"/>
+              <rect x="110" y="200" width="85" height="75" fill="#2D72F0" fill-opacity="0.05"/>
+
+              <!-- Grid lines at D=0 -->
+              <line x1="195" y1="125" x2="195" y2="275" stroke="#1a1a1a" stroke-width="0.5" stroke-opacity="0.12"/>
+              <line x1="110" y1="200" x2="280" y2="200" stroke="#1a1a1a" stroke-width="0.5" stroke-opacity="0.12"/>
+
+              <!-- D axis negative (dashed) -->
+              <line x1="195" y1="200" x2="147" y2="227" stroke="#bbb" stroke-width="1" stroke-dasharray="4,3"/>
+              <!-- D axis positive -->
+              <line x1="195" y1="200" x2="244" y2="172" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
+
+              <!-- V axis negative (dashed) -->
+              <line x1="195" y1="200" x2="107" y2="200" stroke="#bbb" stroke-width="1" stroke-dasharray="4,3"/>
+              <!-- V axis positive -->
+              <line x1="195" y1="200" x2="284" y2="200" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
+
+              <!-- A axis negative (dashed) -->
+              <line x1="195" y1="200" x2="195" y2="277" stroke="#bbb" stroke-width="1" stroke-dasharray="4,3"/>
+              <!-- A axis positive -->
+              <line x1="195" y1="200" x2="195" y2="117" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
+
+              <!-- Axis labels -->
+              <text x="291" y="197" font-size="11" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif">Valence</text>
+              <text x="291" y="210" font-size="9" fill="#888" font-family="system-ui, -apple-system, sans-serif">positive →</text>
+              <text x="198" y="112" font-size="11" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif">Arousal</text>
+              <text x="198" y="124" font-size="9" fill="#888" font-family="system-ui, -apple-system, sans-serif">energized →</text>
+              <text x="249" y="166" font-size="11" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif">Dominance</text>
+              <text x="249" y="178" font-size="9" fill="#888" font-family="system-ui, -apple-system, sans-serif">in-control →</text>
+
+              <!-- Negative axis labels -->
+              <text x="97" y="197" font-size="8" fill="#ccc" font-family="system-ui, -apple-system, sans-serif" text-anchor="end">−V</text>
+              <text x="193" y="290" font-size="8" fill="#ccc" font-family="system-ui, -apple-system, sans-serif" text-anchor="end">−A</text>
+              <text x="142" y="237" font-size="8" fill="#ccc" font-family="system-ui, -apple-system, sans-serif" text-anchor="end">−D</text>
+
+              <!-- joy (V=0.96, A=0.65, D=0.59): x=305, y=135 -->
+              <circle cx="305" cy="135" r="5.5" fill="#FFC700" stroke="#1a1a1a" stroke-width="1"/>
+              <text x="313" y="133" font-size="9.5" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif">joy</text>
+              <text x="313" y="144" font-size="7.5" fill="#aaa" font-family="'SF Mono', 'Fira Code', monospace">0.96, 0.65, +0.59</text>
+
+              <!-- anger (V=-0.67, A=0.73, D=0.31): x=153, y=137 -->
+              <circle cx="153" cy="137" r="5.5" fill="#FF1457" stroke="#1a1a1a" stroke-width="1"/>
+              <text x="147" y="133" font-size="9.5" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif" text-anchor="end">anger</text>
+              <text x="147" y="144" font-size="7.5" fill="#aaa" font-family="'SF Mono', 'Fira Code', monospace" text-anchor="end">−0.67, 0.73, +0.31</text>
+
+              <!-- calm (V=0.75, A=-0.90, D=-0.37): x=241, y=278 -->
+              <circle cx="241" cy="278" r="5.5" fill="#1FE085" stroke="#1a1a1a" stroke-width="1"/>
+              <text x="249" y="276" font-size="9.5" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif">calm</text>
+              <text x="249" y="287" font-size="7.5" fill="#aaa" font-family="'SF Mono', 'Fira Code', monospace">0.75, −0.90, −0.37</text>
+
+              <!-- sadness (V=-0.55, A=-0.33, D=-0.70): x=115, y=244 -->
+              <circle cx="115" cy="244" r="5.5" fill="#2D72F0" stroke="#1a1a1a" stroke-width="1"/>
+              <text x="109" y="242" font-size="9.5" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif" text-anchor="end">sadness</text>
+              <text x="109" y="253" font-size="7.5" fill="#aaa" font-family="'SF Mono', 'Fira Code', monospace" text-anchor="end">−0.55, −0.33, −0.70</text>
+
+              <!-- frustrated (V=-0.84, A=0.30, D=-0.49): x=100, y=191 -->
+              <circle cx="100" cy="191" r="5.5" fill="#FF1457" stroke="#1a1a1a" stroke-width="1" fill-opacity="0.65"/>
+              <text x="94" y="189" font-size="9.5" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif" text-anchor="end">frustrated</text>
+              <text x="94" y="200" font-size="7.5" fill="#aaa" font-family="'SF Mono', 'Fira Code', monospace" text-anchor="end">−0.84, 0.30, −0.49</text>
+
+              <!-- hopeful (V=0.89, A=-0.29, D=0.25): x=283, y=215 -->
+              <circle cx="283" cy="215" r="5.5" fill="#1FE085" stroke="#1a1a1a" stroke-width="1" fill-opacity="0.75"/>
+              <text x="291" y="213" font-size="9.5" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif">hopeful</text>
+              <text x="291" y="224" font-size="7.5" fill="#aaa" font-family="'SF Mono', 'Fira Code', monospace">0.89, −0.29, +0.25</text>
+
+              <!-- neutral (origin) -->
+              <circle cx="195" cy="200" r="3" fill="#ddd" stroke="#bbb" stroke-width="0.5"/>
+              <text x="200" y="208" font-size="7.5" fill="#bbb" font-family="system-ui, -apple-system, sans-serif">neutral</text>
+            </svg>
+          </div>
+        </figure>
+
+        <h3 id="why-dominance">1.1 Why include dominance even though it's not visualized</h3>
+        <p>
+          Two emotions can share nearly identical V and A coordinates but differ meaningfully in D:
+        </p>
+        <div class="rp-compare-callout">
+          <div class="rp-compare-item">
+            <strong>Frustrated</strong>
+            <code>V=−0.84, A=0.30, D=−0.49</code>
+            <p>Negative, somewhat activated, <em>helpless</em>. Angry but without agency.</p>
+          </div>
+          <div class="rp-compare-item">
+            <strong>Anger</strong>
+            <code>V=−0.67, A=0.73, D=+0.31</code>
+            <p>Negative, highly activated, <em>agentic</em>. Angry and feeling capable of acting.</p>
+          </div>
+        </div>
+        <p>
+          These distinctions have genuine clinical relevance: high-D negative states call
+          for assertion and boundary skills; low-D negative states call for containment and
+          grounding. The difference also surfaces in longitudinal patterns — chronic low-D
+          states correlate with depression and learned helplessness; chronic high-D negative
+          states with anger dysregulation.
+        </p>
+        <p>
+          In affect-kit, the face glyph and color visualization use only V and A — those are
+          the dimensions a face can naturally communicate. D is preserved in every
+          <code>Rating</code> object as analytical metadata, available for downstream research
+          export and aggregation, but not visualized in the UI.
+        </p>
+      </section>
+
+      <!-- ── 2: Interaction model ────────────────────────── -->
+      <section id="interaction-model" class="rp-section">
+        <h2>2. The interaction model: rate, then refine</h2>
+
+        <h3>2.1 The two-step flow</h3>
+        <p>
+          The fundamental flow is <strong>rate, then refine</strong>:
+        </p>
+        <ol class="rp-steps">
+          <li>
+            <strong>Drag the face on the V/A pad.</strong> This is the primary,
+            pre-verbal rating. The user places their gut feeling somewhere in the V/A
+            space — the face glyph and background color update in real-time to mirror
+            the position. No words required.
+          </li>
+          <li>
+            <strong>Settle and select labels.</strong> When the user releases the pad,
+            the 55 emotion chips rearrange themselves by proximity to the pad position
+            in V/A space — words that match the gut feeling rise to the top. The user
+            taps chips to select them at intensities 1, 2, or 3.
+          </li>
+          <li>
+            <strong>Commit.</strong> The committed rating carries both the raw pad
+            position <em>and</em> the label-derived V/A/D coordinates. These are
+            preserved separately.
+          </li>
+        </ol>
+
+        <p>
+          This sequence is grounded in affective science:
+        </p>
+        <ul>
+          <li>
+            Feeling precedes naming (Damasio 1999 <a href="#ref-16" class="rp-cite">[16]</a>;
+            Barrett 2017 <a href="#ref-6" class="rp-cite">[6]</a>). Pre-verbal somatic
+            awareness is more accurate for in-the-moment state.
+          </li>
+          <li>
+            Labeling emotions reduces their intensity — "affect labeling" (Lieberman
+            et al. 2007 <a href="#ref-9" class="rp-cite">[9]</a>) — so labeling
+            <em>after</em> initial assessment avoids contaminating the primary rating.
+          </li>
+          <li>
+            The face provides immediate nonjudgmental feedback: it is a mirror of the
+            user's state, not an evaluation of it.
+          </li>
+        </ul>
+
+        <h3>2.2 The pad as a sorting mechanism</h3>
+        <p>
+          This is the most important design insight to understand:
+          <strong>the V/A pad drag is not the final scientific measurement</strong>.
+          It serves three purposes, exactly:
+        </p>
+        <ol>
+          <li>Drive the face glyph expression in real-time</li>
+          <li>Drive the background color interpolation</li>
+          <li>Sort the NRC VAD Lexicon chips by Euclidean distance from the pad
+            position in V/A space, surfacing the most relevant words first</li>
+        </ol>
+        <p>
+          The pad position is an <em>affordance for navigation</em> through a
+          55-word vocabulary — an intuitive, pre-verbal entry point into the lexicon.
+          A user who drags toward the upper-left (negative V, positive A) sees anger,
+          panic, and frustration rise to the top; a user who drags toward the
+          lower-right sees calm, peaceful, and serene. The pad replaces what would
+          otherwise be a flat, overwhelming list.
+        </p>
+
+        <h3>2.3 Labels compose the final V/A/D rating</h3>
+        <p>
+          The final scientific measurement comes from the <strong>selected emotion
+          labels and their intensity levels</strong>, using the NRC VAD Lexicon
+          coordinates for each word:
+        </p>
+
+        <div class="rp-formula">
+          <p class="rp-formula-label">For each selected label at intensity <em>level</em> ∈ {1, 2, 3}:</p>
+          <pre class="rp-formula-code">weight  = level / 3         // 0.33, 0.67, or 1.0
+
+final V = Σ(emotion.v × weight) / Σ(weight)
+final A = Σ(emotion.a × weight) / Σ(weight)
+final D = Σ(emotion.d × weight) / Σ(weight)</pre>
+          <p class="rp-formula-note">
+            If no labels are selected, the rating falls back to the pad's
+            <code>(padV, padA)</code> with D=0. This preserves the gut-feeling
+            signal even when the user doesn't refine further.
+          </p>
+        </div>
+
+        <p>
+          This design is why affect-kit can produce <strong>genuine D values</strong>
+          despite showing only a 2D pad: D enters the rating through the lexicon. A user
+          who taps "frustrated" at level 3 gets the NRC lexicon's D value for
+          "frustrated" (−0.49, low-control). A user who taps "anger" gets D=+0.31
+          (higher-control). The face pad alone cannot distinguish these states; the
+          label selection step does.
+        </p>
+
+        <h3>2.4 The pad-vs-label gap as a signal</h3>
+        <p>
+          The <code>Rating</code> object preserves both the raw pad position
+          (<code>rating.pad</code>) and the label-aggregated V/A coordinates
+          (<code>rating.v</code>, <code>rating.a</code>). The gap between them is
+          itself a research signal.
+        </p>
+        <p>
+          Research on emotional granularity (Barrett 2001; Kashdan, Barrett &amp; McKnight
+          2015 <a href="#ref-8" class="rp-cite">[8]</a>) links the ability to make
+          fine-grained distinctions between similar emotions to mental health outcomes.
+          Large, persistent gaps between where a user drags and what they eventually label
+          are operationally close to measures of <em>alexithymia</em> — difficulty
+          identifying or describing one's own feelings. Longitudinal tracking of this
+          gap is a future research use case for the package.
+        </p>
+      </section>
+
+      <!-- ── 3: Face glyph ───────────────────────────────── -->
+      <section id="face-glyph" class="rp-section">
+        <h2>3. The face glyph</h2>
+
+        <h3>3.1 FACS action units</h3>
+        <p>
+          The face glyph encodes V and A using Facial Action Coding System (FACS,
+          Ekman &amp; Friesen 1978 <a href="#ref-5" class="rp-cite">[5]</a>) action
+          units selected for their cross-cultural consistency — validated in 17 cultures
+          by Cordaro et al. (2018) <a href="#ref-10" class="rp-cite">[10]</a>:
+        </p>
+
+        <div class="rp-table-wrap">
+          <table class="rp-table">
+            <thead>
+              <tr>
+                <th>Action unit</th>
+                <th>What it does</th>
+                <th>Driven by</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>AU 1+2 (inner+outer brow raiser)</td>
+                <td>Surprise / sad brow lift</td>
+                <td>Sadness: negative V × negative A</td>
+              </tr>
+              <tr>
+                <td>AU 4 (brow lowerer)</td>
+                <td>Frowning, anger furrow</td>
+                <td>Anger: negative V × positive A</td>
+              </tr>
+              <tr>
+                <td>AU 6 (cheek raiser)</td>
+                <td>Crows feet, Duchenne smile</td>
+                <td>Joy: positive V × positive A</td>
+              </tr>
+              <tr>
+                <td>AU 12 (lip corner puller)</td>
+                <td>Smile arc</td>
+                <td>Joy + general positive V</td>
+              </tr>
+              <tr>
+                <td>AU 15 (lip corner depressor)</td>
+                <td>Down-turned mouth</td>
+                <td>Sadness: all negative V</td>
+              </tr>
+              <tr>
+                <td>Eye openness (width + thickness)</td>
+                <td>Wide vs narrow</td>
+                <td>Arousal: positive A = wider</td>
+              </tr>
+              <tr>
+                <td>Mouth openness</td>
+                <td>Parted lips</td>
+                <td>Arousal: positive A = open</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Face examples -->
+        <div class="rp-face-row">
+          <div class="rp-face-item">
+            <affect-kit-face v="-0.8" a="0.8" animated="false"></affect-kit-face>
+            <span class="rp-face-label">anger</span>
+            <span class="rp-face-note">AU 4 + narrow eyes</span>
+          </div>
+          <div class="rp-face-item">
+            <affect-kit-face v="-0.5" a="-0.6" animated="false"></affect-kit-face>
+            <span class="rp-face-label">sadness</span>
+            <span class="rp-face-note">AU 1+2 + AU 15</span>
+          </div>
+          <div class="rp-face-item">
+            <affect-kit-face v="0" a="0" animated="false"></affect-kit-face>
+            <span class="rp-face-label">neutral</span>
+            <span class="rp-face-note">baseline</span>
+          </div>
+          <div class="rp-face-item">
+            <affect-kit-face v="0.75" a="-0.8" animated="false"></affect-kit-face>
+            <span class="rp-face-label">calm</span>
+            <span class="rp-face-note">soft arch (no crows feet)</span>
+          </div>
+          <div class="rp-face-item">
+            <affect-kit-face v="0.8" a="0.8" animated="false"></affect-kit-face>
+            <span class="rp-face-label">joy</span>
+            <span class="rp-face-note">AU 6 + AU 12 (Duchenne)</span>
+          </div>
+        </div>
+
+        <p>
+          <strong>Calm vs joy distinction.</strong> The calm face uses a soft upward
+          eye arch (positive V, negative A) without crows feet. Joy adds the Duchenne
+          crows feet — orbicularis oculi contracts only with high-intensity positive
+          affect. This anatomical distinction matters for cross-cultural recognition.
+        </p>
+
+        <h3>3.2 Why a reductive glyph</h3>
+        <p>
+          The face is intentionally minimal: black ink linework, no skin tone, no eye
+          whites, no hair, no body. This is by design:
+        </p>
+        <ol>
+          <li>
+            <strong>Cultural neutrality.</strong> Skin color, hair texture, and facial
+            structure encode race, ethnicity, and gender. Removing them removes that
+            load from a tool designed to reflect universal affective dimensions.
+          </li>
+          <li>
+            <strong>Universality.</strong> The features are a graph of
+            <em>relationships</em> — brows above eyes, mouth below nose — not a portrait
+            of a specific person.
+          </li>
+          <li>
+            <strong>Self-projection.</strong> A non-photorealistic face is easier to
+            project onto. Users see "their" feeling, not a depicted person's feeling.
+          </li>
+          <li>
+            <strong>Research-aligned.</strong> Schematic faces are recognized at the V/A
+            level as well as photographs (Aviezer et al. 2008
+            <a href="#ref-15" class="rp-cite">[15]</a>).
+          </li>
+        </ol>
+
+        <h3>3.3 Animation principles</h3>
+        <p>
+          The face on the rater is alive but not theatrical:
+        </p>
+        <ul>
+          <li>
+            <strong>Breath.</strong> Subtle vertical translation at ~0.55 Hz, amplitude
+            ~0.5 viewBox units. Conveys a living presence without being distracting.
+          </li>
+          <li>
+            <strong>V-driven cohesion.</strong> At high arousal with negative valence
+            (anger zone), facial features tremor and are displaced from each other. At
+            high arousal with positive valence, features are stable but bouncy. Calm
+            states are still. The rule: "out of control but still a face."
+          </li>
+          <li>
+            <strong>Shock on chip selection.</strong> Selecting a high-arousal label
+            triggers a brief burst of additional motion, reinforcing the connection
+            between the word and the face's expression.
+          </li>
+          <li>
+            <strong>Reduced motion.</strong> <code>prefers-reduced-motion: reduce</code>
+            disables tremor and breath. Functional transitions (drag morphing,
+            chip level changes) are preserved but shortened.
+          </li>
+        </ul>
+      </section>
+
+      <!-- ── 4: Vocabulary ───────────────────────────────── -->
+      <section id="vocabulary" class="rp-section">
+        <h2>4. Vocabulary: the NRC VAD Lexicon</h2>
+
+        <h3>4.1 Primary source</h3>
+        <p>
+          affect-kit's 55-word emotion vocabulary draws V/A/D coordinates from the
+          <strong>NRC Valence-Arousal-Dominance Lexicon v2.1</strong> (Mohammad
+          2025 <a href="#ref-3" class="rp-cite">[3]</a>):
+        </p>
+        <ul>
+          <li>20,000+ English words with V/A/D ratings, crowd-sourced from native speakers</li>
+          <li>Published values normalized to 0..1 (rescaled to −1..1 in affect-kit)</li>
+          <li>Free for research and commercial use</li>
+          <li>Multilingual extensions available for ~100 languages</li>
+        </ul>
+        <p>
+          Secondary cross-references: Warriner et al. (2013)
+          <a href="#ref-4" class="rp-cite">[4]</a> (13,915 words, V/A only, high
+          precision) and Bradley &amp; Lang (1999) ANEW norms (1,034 words,
+          comprehensive V/A/D).
+        </p>
+
+        <h3>4.2 Vocabulary curation principles</h3>
+        <p>
+          The 55 emotions were selected from the NRC lexicon following these principles:
+        </p>
+        <ol>
+          <li>
+            <strong>Quadrant coverage.</strong> Span all four V/A quadrants
+            reasonably evenly. Avoid the common clinical bias toward negative-emotion
+            vocabularies.
+          </li>
+          <li>
+            <strong>Intensity gradation.</strong> Include emotions of varying intensity
+            within each quadrant. <em>Content</em> and <em>ecstatic</em> are both
+            positive-valence / positive-arousal but at very different intensities.
+          </li>
+          <li>
+            <strong>Single-word.</strong> Prefer single words over phrases.
+            "Overwhelmed" not "feeling overwhelmed." Compactness matters for chip rendering.
+          </li>
+          <li>
+            <strong>Common language.</strong> Everyday words over clinical terms.
+            "Sad" not "dysphoric."
+          </li>
+          <li>
+            <strong>No moral loading.</strong> Skip words that imply judgment.
+            "Resentful" is an emotion; "guilty" carries moral weight but is included
+            because it's affectively specific. "Sinful" is not.
+          </li>
+        </ol>
+        <p>
+          One word from the original prototype vocabulary ("focused") was removed because
+          it is attentional rather than affective and is absent from the NRC lexicon.
+        </p>
+
+        <h3>4.3 Emotional granularity as a trackable outcome</h3>
+        <p>
+          Research by Barrett and colleagues (Kashdan, Barrett &amp; McKnight 2015
+          <a href="#ref-8" class="rp-cite">[8]</a>) established that
+          <strong>emotional granularity</strong> — the ability to make fine-grained
+          distinctions between similar emotions — predicts mental health outcomes:
+          higher granularity correlates with lower psychopathology; lower granularity
+          with depression, anxiety, and alexithymia.
+        </p>
+        <p>
+          The intensity levels (1/2/3) on chips are themselves a granularity affordance.
+          A user who selects only level-3 chips treats each emotion as binary; a user
+          who uses all three levels makes finer distinctions. The number of distinct
+          emotion words a user employs across sessions, and how they distribute across
+          V/A space, are trackable granularity signals.
+        </p>
+
+        <h3>4.4 Why the vocabulary is not customizable</h3>
+        <p>
+          Consumers cannot pass custom emotion words via props. The reasons:
+        </p>
+        <ul>
+          <li>
+            <strong>Trust.</strong> The entire rating computation depends on V/A/D
+            values being empirically validated. Arbitrary words break that guarantee silently.
+          </li>
+          <li>
+            <strong>Calibration.</strong> V/A/D values are empirical norms, not opinions.
+            Allowing overrides is a category mistake.
+          </li>
+          <li>
+            <strong>Internationalization is principled.</strong> Future language support
+            will use validated multilingual lexicons (NRC has them for ~100 languages),
+            selected via a strict <code>language</code> prop, not free-form data.
+          </li>
+        </ul>
+      </section>
+
+      <!-- ── 5: Color design ────────────────────────────── -->
+      <section id="color-design" class="rp-section">
+        <h2>5. Color design</h2>
+
+        <h3>5.1 The four-quadrant palette</h3>
+        <p>
+          Color mode maps the V/A position to a continuous blend across four corner
+          colors, each associated with a quadrant of emotional space:
+        </p>
+
+        <div class="rp-color-grid">
+          <div class="rp-color-swatch" style="background:#FF1457">
+            <span class="rp-swatch-label">Pink</span>
+            <span class="rp-swatch-quad">−V, +A</span>
+            <span class="rp-swatch-note">anger, frustration, agitation</span>
+          </div>
+          <div class="rp-color-swatch" style="background:#FFC700; color:#1a1a1a">
+            <span class="rp-swatch-label">Gold</span>
+            <span class="rp-swatch-quad">+V, +A</span>
+            <span class="rp-swatch-note">joy, excitement, enthusiasm</span>
+          </div>
+          <div class="rp-color-swatch" style="background:#1FE085; color:#1a1a1a">
+            <span class="rp-swatch-label">Green</span>
+            <span class="rp-swatch-quad">+V, −A</span>
+            <span class="rp-swatch-note">calm, content, peaceful</span>
+          </div>
+          <div class="rp-color-swatch" style="background:#2D72F0">
+            <span class="rp-swatch-label">Blue</span>
+            <span class="rp-swatch-quad">−V, −A</span>
+            <span class="rp-swatch-note">sad, lonely, defeated</span>
+          </div>
+        </div>
+
+        <p>
+          Color choices follow cross-cultural color-emotion associations (Adams &amp;
+          Osgood 1973 <a href="#ref-18" class="rp-cite">[18]</a>; Hupka et al. 1997):
+          red/pink for anger, gold for joy, green for calm, blue for sadness. Cyan is
+          deliberately avoided at the lower-left (sadness) corner because in
+          HRV/biofeedback contexts cyan conventionally signals "high coherence" — a
+          semantic conflict with sadness.
+        </p>
+
+        <h3>5.2 OKLab interpolation</h3>
+        <p>
+          Colors blend in <strong>OKLab color space</strong> (Ottosson 2020
+          <a href="#ref-14" class="rp-cite">[14]</a>) via bilinear interpolation across
+          the four corners. OKLab is perceptually uniform, so V/A positions blend
+          smoothly without the hue-flip and luminance-jump artifacts that HSL
+          interpolation produces at quadrant interiors (particularly around gold, which
+          has a narrow luminance band in HSL).
+        </p>
+
+        <h3>5.3 When color is appropriate</h3>
+        <p>
+          Color mode defaults to off in clinical and wellness contexts where affect-kit
+          is a supporting instrument. Reasons:
+        </p>
+        <ul>
+          <li>
+            <strong>Don't compete with the primary signal.</strong> If the host product
+            owns a color identity (e.g., HRV biofeedback with a green/red palette),
+            affect-kit introducing a second color system creates visual noise.
+          </li>
+          <li>
+            <strong>Don't moralize the state.</strong> A bright pink surface for negative
+            emotions reads as "bad." Monochrome lets the user have a state without being
+            told it's good or bad.
+          </li>
+          <li>
+            <strong>Reduces visual stimulation for activated states.</strong> A user in
+            a high-arousal anxious state does not benefit from a vibrant red surface.
+          </li>
+        </ul>
+        <p>
+          Color mode is appropriate for standalone use — journaling, publication, social
+          sharing — where visual expressiveness is the point.
+        </p>
+      </section>
+
+      <!-- ── 6: Longitudinal foundations ────────────────── -->
+      <section id="longitudinal" class="rp-section">
+        <h2>6. Longitudinal foundations</h2>
+
+        <p>
+          affect-kit is a <em>logbook substrate</em> — it captures single ratings and
+          renders them faithfully. Longitudinal interpretation is future territory,
+          but the design decisions made now are constrained by what the literature
+          can actually defend.
+        </p>
+
+        <h3>6.1 What progress means for emotional self-rating</h3>
+        <p>
+          The fundamental error in longitudinal emotion tracking is treating affect as
+          having a monotonic "improvement" direction. Research shows otherwise:
+        </p>
+        <ul>
+          <li>
+            Feeling more negative emotion is not worse if it's contextually appropriate
+            (Davis, Gross &amp; Ochsner 2011
+            <a href="#ref-12" class="rp-cite">[12]</a>).
+          </li>
+          <li>
+            <strong>Emotional flexibility</strong> — the ability to access a range of
+            emotions including negative ones — predicts wellbeing better than emotional
+            positivity (Kashdan &amp; Rottenberg 2010
+            <a href="#ref-13" class="rp-cite">[13]</a>).
+          </li>
+          <li>
+            Pattern interruption carries more clinical information than long-term averages:
+            sudden shifts in emotion patterns over weeks matter more than whether
+            average valence is slightly positive (Bolger, Davis &amp; Rafaeli 2003
+            <a href="#ref-17" class="rp-cite">[17]</a>).
+          </li>
+        </ul>
+
+        <h3>6.2 Three operationally-defined longitudinal patterns</h3>
+        <p>
+          The affect-dynamics literature converges on three patterns that <em>can</em>
+          be meaningfully tracked longitudinally, anchored on <strong>valence</strong>
+          as the primary axis (the dimension with the most settled operational definitions
+          and the most intuitive user interpretation):
+        </p>
+
+        <div class="rp-longitudinal-grid">
+          <div class="rp-long-item">
+            <h4>Inertia</h4>
+            <p class="rp-long-cite">Kuppens et al. (2010) <a href="#ref-19" class="rp-cite">[19]</a></p>
+            <p>
+              The autocorrelation of affect across consecutive measurements. High inertia —
+              especially sustained negative valence — indexes a system that fails to respond
+              to context. The clinical reading is <em>stuck</em>, not <em>stable</em>.
+              Operationally: autocorrelation of V across a session window.
+            </p>
+          </div>
+          <div class="rp-long-item">
+            <h4>Resilience</h4>
+            <p class="rp-long-cite">Ong et al. (2006) <a href="#ref-20" class="rp-cite">[20]</a></p>
+            <p>
+              The rate at which affect returns toward baseline after a perturbation.
+              Faster, more reliable recovery is associated with better long-term adaptation.
+              Chronic non-recovery is a warning sign.
+              Operationally: V's slope back toward baseline after a negative excursion.
+            </p>
+          </div>
+          <div class="rp-long-item">
+            <h4>Range</h4>
+            <p class="rp-long-cite">Gruber et al. (2013) <a href="#ref-21" class="rp-cite">[21]</a>; Barrett (1998)</p>
+            <p>
+              Two distinct constructs live under this heading:
+              <strong>Affective variability</strong> — how much V actually moves across
+              a time window (the spread of V values); and
+              <strong>Emotional granularity</strong> — how finely the user discriminates
+              among states (the intraclass correlation across self-reported emotion ratings).
+              A person can gain granularity without gaining variability, and vice versa.
+            </p>
+          </div>
+        </div>
+
+        <h3>6.3 Why valence is the anchor for future recipes</h3>
+        <p>
+          Of the three VAD dimensions, valence is the strongest anchor for longitudinal
+          recipes. Arousal carries less interpretive consensus over time — the same
+          elevated arousal reading can mean excitement, anxiety, or flow depending on
+          context. Dominance has very little experience-sampling research behind it as
+          an outcome variable. Affect-kit captures all three dimensions in every
+          <code>Rating</code>, but the first longitudinal recipe implementations will
+          anchor on valence first.
+        </p>
+        <p>
+          Each future recipe must be parameterised (thresholds, windows, definitions set
+          by the consumer), cite the minimum it would defend, and avoid composite
+          "wellness scores." The construct opposite of emotional granularity is
+          alexithymia — not contentment. Both matter for different reasons.
+        </p>
+
+        <h3>6.4 HRV + affect: parallel tracks</h3>
+        <p>
+          In contexts pairing affect-kit with HRV biofeedback, the two signals must be
+          tracked in parallel and never combined into a single score. HRV is physiological
+          (autonomic state, objective normal ranges); affect is phenomenological (felt
+          experience, no normal ranges). A user with low HRV who reports calm is not
+          an error — it is interesting data. Show both as parallel timelines that share
+          an x-axis, and let users see the divergences themselves.
+        </p>
+      </section>
+
+      <!-- ── 7: Design position ─────────────────────────── -->
+      <section id="design-position" class="rp-section">
+        <h2>7. Design position: logbook substrate, not diagnostic</h2>
+
+        <p>
+          affect-kit's published components capture, render, and aggregate emotion
+          ratings. They do not interpret trajectories or make clinical claims.
+        </p>
+        <p>
+          Longitudinal interpretation of dimensional affect is genuinely unsettled science.
+          Applying clinical-flavored names like "stuck," "anxious loop," or "resilience
+          score" to regions of V/A space prescribes meaning the data alone doesn't carry.
+          The rater UI uses face, color, and quadrant position as <em>affordances for
+          label selection</em> — navigation aids — not as semantic claims about quadrants
+          themselves. Treating those quadrants as semantically meaningful in longitudinal
+          views would import meaning that the capture flow never asserted.
+        </p>
+
+        <div class="rp-position-block">
+          <h4>What affect-kit ships today</h4>
+          <ul>
+            <li><code>&lt;affect-kit-rater&gt;</code> — single-session capture</li>
+            <li><code>&lt;affect-kit-result&gt;</code> — single-rating display</li>
+            <li><code>&lt;affect-kit-face&gt;</code> — standalone V/A face glyph</li>
+            <li>
+              <code>&lt;affect-kit-compare&gt;</code> — two snapshots side-by-side with
+              no diff metric, no "improvement" claim
+            </li>
+          </ul>
+        </div>
+
+        <div class="rp-position-block">
+          <h4>Future recipe conditions</h4>
+          <p>
+            A longitudinal recipe can graduate from the playground to the published
+            package when it satisfies:
+          </p>
+          <ol>
+            <li>A defended default (specific thresholds with cited evidence)</li>
+            <li>Cited papers (minimum: one peer-reviewed study supporting the measure)</li>
+            <li>A story for what the widget <em>doesn't</em> claim</li>
+          </ol>
+        </div>
+
+        <div class="rp-position-block">
+          <h4>Privacy requirements</h4>
+          <p>
+            Emotion ratings are among the most sensitive categories of personal data.
+            Any application built on affect-kit's rating objects should:
+          </p>
+          <ul>
+            <li>Store ratings with end-to-end encryption at rest</li>
+            <li>Provide full deletion paths, irrevocably, on demand</li>
+            <li>Offer a local-first option — ratings storable entirely on-device</li>
+            <li>Never share ratings with third parties without explicit per-event consent</li>
+            <li>Export in standard formats (VAD CSV, PMHC-compatible for clinical use)</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ── 8: Bibliography ────────────────────────────── -->
+      <section id="bibliography" class="rp-section rp-bibliography">
+        <h2>Bibliography</h2>
+        <p class="rp-bib-note">
+          Listed in order of significance to the package, following the source document.
+        </p>
+        <ol class="rp-bib-list">
+          <li id="ref-1">
+            Mehrabian, A., &amp; Russell, J. A. (1974).
+            <em>An approach to environmental psychology.</em> MIT Press.
+            — Original VAD/PAD model.
+          </li>
+          <li id="ref-2">
+            Russell, J. A. (1980). A circumplex model of affect.
+            <em>Journal of Personality and Social Psychology, 39</em>(6), 1161–1178.
+            <a href="https://doi.org/10.1037/h0077714" class="rp-doi">doi:10.1037/h0077714</a>
+          </li>
+          <li id="ref-3">
+            Mohammad, S. M. (2025). NRC Valence-Arousal-Dominance Lexicon v2.1.
+            <em>National Research Council Canada.</em>
+            <a href="https://saifmohammad.com/WebPages/nrc-vad.html" class="rp-doi">saifmohammad.com/WebPages/nrc-vad.html</a>
+            — Primary vocabulary source.
+          </li>
+          <li id="ref-4">
+            Warriner, A. B., Kuperman, V., &amp; Brysbaert, M. (2013).
+            Norms of valence, arousal, and dominance for 13,915 English lemmas.
+            <em>Behavior Research Methods, 45</em>(4), 1191–1207.
+            <a href="https://doi.org/10.3758/s13428-012-0314-x" class="rp-doi">doi:10.3758/s13428-012-0314-x</a>
+          </li>
+          <li id="ref-5">
+            Ekman, P., &amp; Friesen, W. V. (1978).
+            <em>Facial Action Coding System.</em> Consulting Psychologists Press.
+            — FACS; basis for face glyph design.
+          </li>
+          <li id="ref-6">
+            Barrett, L. F. (2017).
+            <em>How Emotions Are Made: The Secret Life of the Brain.</em>
+            Houghton Mifflin Harcourt.
+            — Constructionist theory; rationale for V/A primacy.
+          </li>
+          <li id="ref-7">
+            Lindquist, K. A., et al. (2012). The brain basis of emotion: a
+            meta-analytic review. <em>Behavioral and Brain Sciences, 35</em>(3), 121–143.
+            <a href="https://doi.org/10.1017/S0140525X11000446" class="rp-doi">doi:10.1017/S0140525X11000446</a>
+          </li>
+          <li id="ref-8">
+            Kashdan, T. B., Barrett, L. F., &amp; McKnight, P. E. (2015).
+            Unpacking emotion differentiation: transforming unpleasant experience by
+            perceiving distinctions in negativity.
+            <em>Current Directions in Psychological Science, 24</em>(1), 10–16.
+            <a href="https://doi.org/10.1177/0963721414543222" class="rp-doi">doi:10.1177/0963721414543222</a>
+          </li>
+          <li id="ref-9">
+            Lieberman, M. D., et al. (2007). Putting feelings into words: affect
+            labeling disrupts amygdala activity.
+            <em>Psychological Science, 18</em>(5), 421–428.
+            <a href="https://doi.org/10.1111/j.1467-9280.2007.01916.x" class="rp-doi">doi:10.1111/j.1467-9280.2007.01916.x</a>
+          </li>
+          <li id="ref-10">
+            Cordaro, D. T., et al. (2018). Universals and cultural variations in 22
+            emotional expressions across five cultures.
+            <em>Emotion, 18</em>(1), 75–93.
+            <a href="https://doi.org/10.1037/emo0000301" class="rp-doi">doi:10.1037/emo0000301</a>
+          </li>
+          <li id="ref-11">
+            Mehling, W. E., et al. (2012). The Multidimensional Assessment of
+            Interoceptive Awareness (MAIA). <em>PLoS One, 7</em>(11), e48230.
+            <a href="https://doi.org/10.1371/journal.pone.0048230" class="rp-doi">doi:10.1371/journal.pone.0048230</a>
+          </li>
+          <li id="ref-12">
+            Davis, R. N., Gross, J. J., &amp; Ochsner, K. N. (2011). Psychological
+            distance and emotional experience: what you see is what you get.
+            <em>Emotion, 11</em>(2), 438–444.
+            <a href="https://doi.org/10.1037/a0022983" class="rp-doi">doi:10.1037/a0022983</a>
+          </li>
+          <li id="ref-13">
+            Kashdan, T. B., &amp; Rottenberg, J. (2010). Psychological flexibility as
+            a fundamental aspect of health.
+            <em>Clinical Psychology Review, 30</em>(7), 865–878.
+            <a href="https://doi.org/10.1016/j.cpr.2010.03.001" class="rp-doi">doi:10.1016/j.cpr.2010.03.001</a>
+          </li>
+          <li id="ref-14">
+            Ottosson, B. (2020). A perceptual color space for image processing.
+            <a href="https://bottosson.github.io/posts/oklab/" class="rp-doi">bottosson.github.io/posts/oklab</a>
+            — OKLab specification.
+          </li>
+          <li id="ref-15">
+            Aviezer, H., et al. (2008). Angry, disgusted, or afraid? Studies on the
+            malleability of emotion perception.
+            <em>Psychological Science, 19</em>(7), 724–732.
+            <a href="https://doi.org/10.1111/j.1467-9280.2008.02140.x" class="rp-doi">doi:10.1111/j.1467-9280.2008.02140.x</a>
+          </li>
+          <li id="ref-16">
+            Damasio, A. (1999). <em>The Feeling of What Happens.</em> Harcourt.
+            — Somatic-marker hypothesis; feeling-before-naming.
+          </li>
+          <li id="ref-17">
+            Bolger, N., Davis, A., &amp; Rafaeli, E. (2003). Diary methods: capturing
+            life as it is lived. <em>Annual Review of Psychology, 54</em>, 579–616.
+            <a href="https://doi.org/10.1146/annurev.psych.54.101601.145030" class="rp-doi">doi:10.1146/annurev.psych.54.101601.145030</a>
+          </li>
+          <li id="ref-18">
+            Adams, F. M., &amp; Osgood, C. E. (1973). A cross-cultural study of the
+            affective meanings of color.
+            <em>Journal of Cross-Cultural Psychology, 4</em>(2), 135–156.
+            <a href="https://doi.org/10.1177/002202217300400203" class="rp-doi">doi:10.1177/002202217300400203</a>
+          </li>
+          <li id="ref-19">
+            Kuppens, P., et al. (2010). Emotional inertia and psychological maladjustment.
+            <em>Psychological Science, 21</em>(7), 984–991.
+            <a href="https://doi.org/10.1177/0956797610361794" class="rp-doi">doi:10.1177/0956797610361794</a>
+            — Inertia: autocorrelation of affect across time.
+          </li>
+          <li id="ref-20">
+            Ong, A. D., et al. (2006). Psychological resilience, positive emotions,
+            and successful adaptation to stress in later life.
+            <em>Journal of Personality and Social Psychology, 91</em>(4), 730–749.
+            <a href="https://doi.org/10.1037/0022-3514.91.4.730" class="rp-doi">doi:10.1037/0022-3514.91.4.730</a>
+            — Resilience: rate of recovery toward baseline.
+          </li>
+          <li id="ref-21">
+            Gruber, J., et al. (2013). A matter of time: temporal dynamics of
+            emotional experience affect well-being.
+            <em>Emotion, 13</em>(6), 1030–1036.
+            <a href="https://doi.org/10.1037/a0033788" class="rp-doi">doi:10.1037/a0033788</a>
+            — Affective variability.
+          </li>
+        </ol>
+      </section>
+
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    <p>
+      affect-kit · MIT License ·
+      <a href="https://github.com/savdevarney/affect-kit">github.com/savdevarney/affect-kit</a>
+    </p>
+  </footer>
+
+  <script>
+    import 'affect-kit/face';
+  </script>
+
+</Base>
+
+<style is:global>
+  /* ── Research page layout ───────────────────────────── */
+  .rp-layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 0;
+    max-width: 1200px;
+    margin-inline: auto;
+    align-items: start;
+  }
+
+  @media (max-width: 860px) {
+    .rp-layout { grid-template-columns: 1fr; }
+  }
+
+  /* ── Sidebar ToC ────────────────────────────────────── */
+  .rp-toc {
+    position: sticky;
+    top: calc(3rem + 1px); /* below sticky nav */
+    padding: 2.5rem 1.5rem 2rem 2rem;
+    align-self: start;
+    border-right: 1px solid var(--border);
+    min-height: 80vh;
+  }
+
+  @media (max-width: 860px) {
+    .rp-toc {
+      position: static;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 1.5rem;
+      min-height: unset;
+    }
+  }
+
+  .rp-toc-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    margin: 0 0 0.75rem;
+  }
+
+  .rp-toc-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  @media (max-width: 860px) {
+    .rp-toc-list { flex-direction: row; flex-wrap: wrap; gap: 0.25rem 1rem; }
+  }
+
+  .rp-toc-list a {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    text-decoration: none;
+    display: block;
+    padding: 0.25rem 0;
+    border-left: 2px solid transparent;
+    padding-left: 0.6rem;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .rp-toc-list a:hover {
+    color: var(--ink);
+    border-left-color: var(--border-mid);
+  }
+
+  /* ── Main content ───────────────────────────────────── */
+  .rp-content {
+    padding: 2.5rem clamp(1.5rem, 4vw, 3rem) 4rem;
+    max-width: 72ch;
+  }
+
+  .rp-header {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rp-title {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    margin: 0.5rem 0 1rem;
+  }
+
+  .rp-lead {
+    font-size: 1rem;
+    color: var(--ink-muted);
+    line-height: 1.7;
+    max-width: 58ch;
+  }
+
+  /* ── Sections ───────────────────────────────────────── */
+  .rp-section {
+    padding-top: 0.5rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2.5rem;
+  }
+
+  .rp-section:last-child { border-bottom: none; }
+
+  .rp-section h2 {
+    font-size: 1.4rem;
+    letter-spacing: -0.02em;
+    margin: 0 0 1.25rem;
+    scroll-margin-top: 5rem;
+  }
+
+  .rp-section h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 1.75rem 0 0.6rem;
+    color: var(--ink);
+  }
+
+  .rp-section h4 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    margin: 0 0 0.4rem;
+  }
+
+  .rp-section p {
+    font-size: 0.9rem;
+    line-height: 1.75;
+    color: #333;
+    margin-bottom: 0.85rem;
+  }
+
+  .rp-section ul, .rp-section ol {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: #333;
+    padding-left: 1.4rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .rp-section li { margin-bottom: 0.4rem; }
+
+  .rp-section code {
+    font-size: 0.82em;
+    background: rgba(0,0,0,0.05);
+    border-radius: 3px;
+    padding: 0.1em 0.35em;
+  }
+
+  .rp-cite {
+    font-size: 0.78em;
+    color: var(--ink-muted);
+    text-decoration: none;
+    font-weight: 600;
+    vertical-align: super;
+    line-height: 1;
+  }
+  .rp-cite:hover { color: var(--ink); }
+
+  .rp-deflist {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.85rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .rp-deflist li {
+    padding: 0.6rem 0.75rem;
+    background: rgba(0,0,0,0.025);
+    border-radius: var(--radius-sm);
+    border-left: 3px solid var(--border-mid);
+    margin: 0;
+  }
+
+  /* ── VAD diagram ────────────────────────────────────── */
+  .rp-figure { margin: 1.75rem 0; }
+
+  .rp-figcaption {
+    font-size: 0.78rem;
+    color: var(--ink-muted);
+    line-height: 1.55;
+    max-width: 62ch;
+  }
+  .rp-figcaption--top { margin-bottom: 0.75rem; }
+
+  .rp-diagram-wrap {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem;
+    overflow-x: auto;
+  }
+
+  .rp-diagram-wrap svg {
+    width: 100%;
+    max-width: 520px;
+    height: auto;
+    display: block;
+  }
+
+  /* ── Dominance comparison callout ───────────────────── */
+  .rp-compare-callout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin: 1rem 0 1rem;
+  }
+
+  @media (max-width: 520px) { .rp-compare-callout { grid-template-columns: 1fr; } }
+
+  .rp-compare-item {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.85rem;
+  }
+  .rp-compare-item strong { display: block; font-size: 0.9rem; margin-bottom: 0.2rem; }
+  .rp-compare-item code {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--ink-muted);
+    margin-bottom: 0.35rem;
+  }
+  .rp-compare-item p { margin: 0; font-size: 0.82rem; color: var(--ink-muted); }
+
+  /* ── Computation formula ────────────────────────────── */
+  .rp-formula {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin: 1.25rem 0;
+  }
+
+  .rp-formula-label {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    margin: 0 0 0.6rem !important;
+  }
+
+  .rp-formula-code {
+    font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+    font-size: 0.78rem;
+    line-height: 1.8;
+    color: var(--ink);
+    white-space: pre;
+    overflow-x: auto;
+    margin: 0 0 0.75rem;
+    background: var(--bg);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .rp-formula-note {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    margin: 0 !important;
+    border-top: 1px solid var(--border);
+    padding-top: 0.6rem;
+  }
+
+  /* ── FACS steps list ────────────────────────────────── */
+  .rp-steps {
+    counter-reset: step;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .rp-steps li {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    margin: 0;
+  }
+  .rp-steps li::before {
+    counter-increment: step;
+    content: counter(step);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    background: var(--ink);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+
+  /* ── FACS table ─────────────────────────────────────── */
+  .rp-table-wrap { overflow-x: auto; margin: 1rem 0 1.25rem; }
+
+  .rp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    color: #333;
+  }
+  .rp-table th {
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-faint);
+    border-bottom: 1px solid var(--border-mid);
+    padding: 0.4rem 0.75rem 0.5rem;
+  }
+  .rp-table td {
+    padding: 0.45rem 0.75rem;
+    border-bottom: 1px solid var(--border);
+    line-height: 1.45;
+  }
+  .rp-table tr:last-child td { border-bottom: none; }
+  .rp-table tr:hover td { background: rgba(0,0,0,0.02); }
+
+  /* ── Face row ───────────────────────────────────────── */
+  .rp-face-row {
+    display: flex;
+    gap: clamp(1rem, 3vw, 2rem);
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin: 1.25rem 0;
+  }
+
+  .rp-face-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .rp-face-item affect-kit-face {
+    display: block;
+    width: 72px;
+    height: 72px;
+  }
+
+  .rp-face-label {
+    font-size: 0.76rem;
+    color: var(--ink-muted);
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .rp-face-note {
+    font-size: 0.62rem;
+    color: var(--ink-faint);
+    text-align: center;
+    font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+    max-width: 10ch;
+  }
+
+  /* ── Color swatches ─────────────────────────────────── */
+  .rp-color-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin: 1rem 0 1.25rem;
+  }
+
+  @media (max-width: 520px) { .rp-color-grid { grid-template-columns: repeat(2, 1fr); } }
+
+  .rp-color-swatch {
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 0.65rem;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .rp-swatch-label { font-weight: 700; font-size: 0.82rem; }
+  .rp-swatch-quad  { font-size: 0.72rem; opacity: 0.8; font-family: 'SF Mono', monospace; }
+  .rp-swatch-note  { font-size: 0.7rem; opacity: 0.75; line-height: 1.3; margin-top: 0.1rem; }
+
+  /* ── Longitudinal grid ──────────────────────────────── */
+  .rp-longitudinal-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin: 1rem 0 1.25rem;
+  }
+
+  @media (max-width: 640px) { .rp-longitudinal-grid { grid-template-columns: 1fr; } }
+
+  .rp-long-item {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+  }
+  .rp-long-item h4 { margin: 0 0 0.15rem; font-size: 0.9rem; }
+  .rp-long-cite { font-size: 0.72rem; color: var(--ink-faint); margin: 0 0 0.5rem !important; }
+  .rp-long-item p { font-size: 0.82rem; margin: 0 !important; }
+
+  /* ── Design position blocks ─────────────────────────── */
+  .rp-position-block {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .rp-position-block h4 { margin: 0 0 0.6rem; font-size: 0.85rem; }
+  .rp-position-block p, .rp-position-block ul, .rp-position-block ol {
+    font-size: 0.85rem;
+    margin-bottom: 0;
+  }
+
+  /* ── Bibliography ───────────────────────────────────── */
+  .rp-bibliography h2 { margin-bottom: 0.75rem; }
+
+  .rp-bib-note {
+    font-size: 0.8rem;
+    color: var(--ink-faint);
+    margin-bottom: 1.25rem !important;
+  }
+
+  .rp-bib-list {
+    list-style: decimal;
+    padding-left: 1.6rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin: 0;
+  }
+
+  .rp-bib-list li {
+    font-size: 0.83rem;
+    line-height: 1.6;
+    color: #444;
+    margin: 0;
+    padding-left: 0.25rem;
+  }
+
+  .rp-doi {
+    font-size: 0.78em;
+    color: var(--ink-muted);
+    font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+    word-break: break-all;
+  }
+  .rp-doi:hover { color: var(--ink); }
+
+  /* aria-current nav highlight */
+  .site-nav .nav-links a[aria-current="page"] {
+    color: var(--ink);
+    font-weight: 600;
+  }
+</style>
