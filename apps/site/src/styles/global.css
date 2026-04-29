@@ -335,6 +335,85 @@
     font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
   }
 
+  /* ── Why section ─────────────────────────────────────────── */
+  .why-section {
+    padding: clamp(3rem, 6vw, 5rem) var(--px);
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .why-inner {
+    max-width: var(--max-w);
+    margin-inline: auto;
+  }
+
+  .why-intro {
+    max-width: 54ch;
+    color: var(--ink-muted);
+    margin-top: 0.75rem;
+    margin-bottom: 2.5rem;
+    font-size: 1.05rem;
+    line-height: 1.65;
+  }
+
+  .why-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 2.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .why-grid { grid-template-columns: 1fr; }
+  }
+
+  .why-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem 1.75rem;
+  }
+
+  .why-card-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 0.5rem;
+  }
+
+  .why-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 0.75rem;
+    color: var(--ink);
+    line-height: 1.35;
+  }
+
+  .why-card p {
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--ink-muted);
+    margin: 0;
+  }
+
+  .why-conclusion {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--ink-muted);
+    max-width: 64ch;
+    margin: 0;
+    padding: 1.25rem 1.5rem;
+    border-left: 3px solid var(--ink);
+    background: var(--surface);
+  }
+
+  .why-conclusion strong {
+    color: var(--ink);
+  }
+
   /* ── Pillars ──────────────────────────────────────────────── */
   .pillars {
     display: grid;

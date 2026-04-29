@@ -57,6 +57,7 @@ import '../styles/global.css';
     <aside class="rp-toc">
       <nav>
         <ol class="rp-toc-list">
+          <li><a href="#measurement-gap">The measurement gap</a></li>
           <li><a href="#dimensional-model">The dimensional model</a></li>
           <li><a href="#interaction-model">Interaction model</a></li>
           <li><a href="#face-glyph">The face glyph</a></li>
@@ -71,6 +72,83 @@ import '../styles/global.css';
 
     <!-- ── Main content ────────────────────────────────────── -->
     <main class="rp-content">
+
+      <!-- ── 0: Measurement gap ────────────────────────── -->
+      <section id="measurement-gap" class="rp-section">
+        <h2>The measurement gap</h2>
+
+        <p>
+          Measuring emotional experience is harder than it looks. The dominant approaches
+          each carry structural limitations that leave a significant gap in what researchers
+          and practitioners can actually deploy.
+        </p>
+
+        <h3>Simple self-report scales</h3>
+        <p>
+          Single-item ratings ("How do you feel? 1–10"), emoji sliders, and visual analogue
+          scales are easy to administer and widely used. But they are not grounded in any
+          validated model of emotion. They collapse a complex, multidimensional experience
+          into a single number — losing almost all signal in the process. A "7" before an
+          experience and a "7" after could reflect entirely different emotional states.
+          There is no principled way to compare ratings across people, sessions, or contexts
+          because the scale itself has no anchored meaning.
+        </p>
+
+        <h3>Clinical instruments</h3>
+        <p>
+          Validated instruments like the PHQ-9 (depression), GAD-7 (anxiety), PANAS
+          (positive/negative affect schedule), and POMS (profile of mood states) are
+          rigorously developed and clinically meaningful. But they carry significant
+          structural limitations for general-purpose before/after emotional capture:
+        </p>
+        <ul>
+          <li>
+            <strong>Clinically specific.</strong> The PHQ-9 measures depression. The
+            GAD-7 measures anxiety. Neither spans the full range of human affective
+            experience — positive states, mixed states, and states that don't map onto
+            a clinical diagnosis are outside their scope.
+          </li>
+          <li>
+            <strong>Burdensome to administer.</strong> PHQ-9 takes 2–3 minutes; PANAS
+            and POMS take 10–20. For before/after capture or repeated daily administration
+            this is prohibitive. Completion rates fall sharply with length.
+          </li>
+          <li>
+            <strong>Opaque to users.</strong> "Over the last two weeks, how often have you
+            had little interest or pleasure in doing things? — Not at all / Several days /
+            More than half the days / Nearly every day." This question requires clinical
+            framing to interpret. The person answering rarely understands what their score
+            measures or how it relates to how they actually feel right now. This is a trust
+            and engagement failure on top of the scope limitation.
+          </li>
+          <li>
+            <strong>Not composable.</strong> No single instrument spans the full affective
+            space. Using multiple instruments compounds the administration burden and
+            produces disconnected data streams.
+          </li>
+        </ul>
+
+        <h3>The gap affect-kit addresses</h3>
+        <p>
+          There is no widely-adopted, evidence-grounded instrument that is simultaneously:
+        </p>
+        <ul>
+          <li>Fast enough for before/after capture and repeated administration</li>
+          <li>Broad enough to cover any emotional state, not just clinical ones</li>
+          <li>Grounded in validated affective science, not arbitrary scales</li>
+          <li>Legible to the people taking it — producing results they recognize and understand</li>
+        </ul>
+        <p>
+          affect-kit addresses this gap using Russell's circumplex model of affect as the
+          scientific foundation <a href="#ref-2" class="rp-cite">[2]</a> and the NRC VAD
+          Lexicon as the vocabulary backbone <a href="#ref-3" class="rp-cite">[3]</a>. The
+          design goal: an instrument a researcher can defend and a user can connect with —
+          simultaneously. The rater takes under 60 seconds, produces a structured
+          <code>Rating</code> object grounded in validated V/A/D coordinates, and uses
+          language users recognize because it comes from how people actually describe
+          how they feel.
+        </p>
+      </section>
 
       <!-- ── 1: Dimensional model ────────────────────────── -->
       <section id="dimensional-model" class="rp-section">
@@ -352,9 +430,8 @@ final D = Σ(emotion.d × weight) / Σ(weight)</pre>
         <h3>2.4 The pad-vs-label gap as a signal</h3>
         <p>
           The <code>Rating</code> object preserves both the raw pad position
-          (<code>rating.pad</code>) and the label-aggregated V/A coordinates
-          (<code>rating.v</code>, <code>rating.a</code>). The gap between them is
-          itself a research signal.
+          (<code>rating.raw</code>) and the label-aggregated composite coordinates
+          (<code>rating.composite</code>). The gap between them is itself a research signal.
         </p>
         <p>
           Research on emotional granularity (Barrett 2001; Kashdan, Barrett &amp; McKnight
