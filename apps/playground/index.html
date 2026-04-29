@@ -363,6 +363,34 @@
       </example-tabs>
     </div>
 
+    <!-- recipe-valence-trend — V over time with stuck-stretch shading -->
+    <div class="card" style="grid-column: 1 / -1; margin-top: 1.5rem">
+      <div class="card-header">
+        <p class="card-label">&lt;recipe-valence-trend&gt;</p>
+        <span style="font-size:0.7rem; color:#aaa">recipe — not part of affect-kit's package surface</span>
+      </div>
+      <p class="subtitle" style="margin: -0.5rem 0 1rem">
+        Valence over time. Stretches of <em>≥ 3 consecutive sessions</em>
+        with V &lt; −0.2 are shaded as a "stuck" pattern (Kuppens-style
+        emotional inertia). Sessions, not days — the widget makes no
+        calendar-time claim.
+      </p>
+      <example-tabs>
+        <div slot="demo">
+          <recipe-valence-trend id="demo-trend"></recipe-valence-trend>
+        </div>
+        <pre slot="code"><code>// Recipe — copy ./recipes/recipe-valence-trend.ts into your own app.
+import './recipes/recipe-valence-trend';
+
+const el = document.querySelector('recipe-valence-trend');
+el.ratings = ratings;  // Rating[]
+
+// Hard-coded thresholds (intentionally not attribute-tunable):
+//   stuck-V threshold:   V &lt; -0.2
+//   min stuck streak:    3 consecutive sessions</code></pre>
+      </example-tabs>
+    </div>
+
     <!-- Forward-looking note: how affect-kit could support longitudinal viz. -->
     <div class="card note-card">
       <p class="card-label">Visualizations for tracking progress — where this could go</p>
