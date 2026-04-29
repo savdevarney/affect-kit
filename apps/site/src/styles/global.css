@@ -73,7 +73,9 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    /* No background — gradient shows through from underlying section */
+    /* Always blurred so text beneath doesn't bleed through */
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   .wordmark {
@@ -91,6 +93,29 @@
     gap: 1.75rem;
     font-size: 0.83rem;
     font-weight: 600;
+  }
+
+  /* Two-row nav at very small screens so links don't overflow at 280px */
+  @media (max-width: 520px) {
+    :root { --nav-h: 4rem; }
+
+    .site-nav {
+      flex-wrap: wrap;
+      padding-block: 0.65rem;
+      row-gap: 0.75rem;
+    }
+
+    .wordmark {
+      width: 100%;
+      text-align: center;
+    }
+
+    .nav-links {
+      width: 100%;
+      justify-content: center;
+      gap: 0.9rem;
+      font-size: 0.78rem;
+    }
   }
 
   .nav-links a {
@@ -187,25 +212,93 @@
   }
 
   .hero-demo {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    align-items: flex-start;
+    width: 100%;
   }
 
-  /* Result is invisible until the first rating is committed */
-  .hero-result-wrapper {
+  /* Stacked slot — rater and result share the same grid cell */
+  .hero-demo-slot {
+    display: grid;
+    width: 100%;
+  }
+
+  .hero-demo-pane {
+    grid-row: 1;
+    grid-column: 1;
+    transition: opacity 0.4s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Result pane: hidden until commit */
+  .hero-demo-pane--result {
     opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
   }
 
-  @keyframes fade-in-up {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+  /* On commit: rater exits up, result enters from below */
+  .hero-demo-slot.showing-result .hero-demo-pane:first-child {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+  }
+  .hero-demo-slot.showing-result .hero-demo-pane--result {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
   }
 
-  .hero-result-wrapper.is-revealed {
-    animation: fade-in-up 0.45s ease forwards;
+  /* JSON output snippet */
+  .hero-json-wrap {
+    margin-top: 1rem;
   }
+  .hero-json-wrap summary.demo-label {
+    cursor: pointer;
+    list-style: none; /* remove default triangle in Firefox */
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0;
+    user-select: none;
+  }
+  .hero-json-wrap summary.demo-label::before {
+    content: '▶';
+    font-size: 0.55em;
+    transition: transform 0.2s ease;
+    display: inline-block;
+  }
+  .hero-json-wrap[open] summary.demo-label::before {
+    transform: rotate(90deg);
+  }
+  .hero-json-wrap summary.demo-label::-webkit-details-marker { display: none; }
+  .hero-rating-json {
+    margin-top: 0.35rem;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    background: rgba(0,0,0,0.04);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: 0.72rem;
+    line-height: 1.75;
+    overflow-x: auto;
+    color: var(--ink-muted);
+    font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+  }
+
+  /* Re-rate link beneath result */
+  .hero-rerate {
+    background: none;
+    border: none;
+    padding: 0;
+    margin-top: 1rem;
+    display: inline-block;
+    font-size: 0.82rem;
+    font-family: inherit;
+    color: var(--ink-faint);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    transition: color 0.15s;
+  }
+  .hero-rerate:hover { color: var(--ink); }
 
   .demo-label {
     font-size: 0.68rem;
@@ -215,10 +308,6 @@
     color: var(--ink-faint);
     margin-bottom: 0.5rem;
     font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
-  }
-
-  .hero-demo-item {
-    width: 100%;
   }
 
   /* ── Snippet ──────────────────────────────────────────────── */
@@ -375,7 +464,7 @@
 
   .component-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
     gap: 1.5rem;
   }
 
@@ -586,6 +675,7 @@
     align-self: start;
     border-right: 1px solid var(--border);
     min-height: 80vh;
+    min-width: 0; /* grid item: allow shrinking */
     /* Frosted glass — content scrolls behind the sidebar */
     background: rgba(245, 245, 243, 0.72);
     backdrop-filter: blur(12px);
@@ -662,6 +752,7 @@
   .rp-content {
     padding: 2.5rem clamp(1.5rem, 4vw, 3rem) 4rem;
     max-width: 72ch;
+    min-width: 0; /* grid item: allow shrinking below pre/code min-content width */
   }
 
   /* Full-viewport-width header — gradient bleeds edge-to-edge behind fixed nav */
