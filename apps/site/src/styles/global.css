@@ -399,6 +399,11 @@
     margin-inline: auto;
   }
 
+  .component-card--centered affect-kit-compare {
+    display: block;
+    margin-inline: auto;
+  }
+
   .component-card--centered .component-link {
     margin-top: 1rem;
   }
