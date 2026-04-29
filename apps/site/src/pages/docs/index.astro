@@ -178,6 +178,11 @@ function App() {
                 <td><code>Rating</code></td>
                 <td>On every pointer release from the pad, and on every chip toggle after the first pad placement. Not fired on the initial drag before first release.</td>
               </tr>
+              <tr>
+                <td><code>commit</code></td>
+                <td><code>Rating</code></td>
+                <td>Fired once when the user taps the <em>Done</em> button. Use this as the explicit "I'm finished" signal rather than wiring to every intermediate <code>change</code>. Requires at least one chip to be selected (the button is hidden otherwise).</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -228,7 +233,7 @@ function App() {
           scaled by intensity (level 3 is largest, level 1 is smallest), an optional face glyph,
           and an optional color tint. Designed to pair with <code>&lt;affect-kit-rater&gt;</code>
           but can also be driven from stored data. The face and color always follow
-          <code>rating.pad</code> (the raw drag position), not the label-aggregated coordinates —
+          <code>rating.raw</code> (the pre-verbal pad gesture), not the composite label coordinates —
           preserving the visual signal of the gut feeling even when labels shift the V/A/D values.
         </p>
 
@@ -254,7 +259,7 @@ function App() {
                 <td><code>show-face</code></td>
                 <td>boolean</td>
                 <td><code>false</code></td>
-                <td>Show the face glyph. Face shape and color follow <code>rating.pad</code>, not the label-aggregated V/A.</td>
+                <td>Show the face glyph. Face shape and color follow <code>rating.raw</code>, not the composite label V/A.</td>
               </tr>
               <tr>
                 <td><code>show-labels</code></td>
@@ -558,28 +563,41 @@ cmp.afterRating  = lastWeekRatings;  // Rating[]`}></pre>
 import { createRating, averageRatings }           from 'affect-kit';`}></pre>
 
         <h3>Rating</h3>
-        <p>The central data object. Emitted by <code>change</code> events, consumed by result and compare.</p>
+        <p>
+          The central data object. Emitted by <code>change</code> and <code>commit</code> events,
+          consumed by result and compare. Two VAD sources are preserved separately so researchers
+          can use either or both:
+        </p>
         <pre class="docs-code" set:text={`interface Rating {
-  /** Valence ∈ [-1, 1]. Drives face shape and color. */
-  v: number;
-  /** Arousal ∈ [-1, 1]. Drives face shape and color. */
-  a: number;
-  /** Dominance ∈ [-1, 1]. Not visualized — preserved as analytical metadata. */
-  d: number;
-  /** Raw pad position before label aggregation. */
-  pad: { v: number; a: number };
-  /** True when v/a were aggregated from labels rather than from the pad drag. */
-  fromLabels: boolean;
-  /** Selected emotion words and their intensity. */
-  labels: EmotionLabel[];
   /** Unix timestamp (ms) at commit time. */
   timestamp: number;
+
+  /** Raw pad position — the pre-verbal gut gesture, unaffected by label choice. */
+  raw: { v: number; a: number };
+
+  /** Selected emotion words, each enriched with its lexicon VAD coordinates. */
+  labels: EmotionLabel[];
+
+  /**
+   * Intensity-weighted centroid of selected labels' VAD values.
+   * Novel derivation grounded in affective theory — not independently validated.
+   * null when no labels were selected.
+   */
+  composite: { v: number; a: number; d: number } | null;
+
+  // Rendering shorthands — resolve to composite ?? { v: raw.v, a: raw.a, d: 0 }
+  v: number; // Valence ∈ [-1, 1]
+  a: number; // Arousal ∈ [-1, 1]
+  d: number; // Dominance ∈ [-1, 1]
 }`}></pre>
 
         <h3>EmotionLabel</h3>
         <pre class="docs-code" set:text={`interface EmotionLabel {
-  name: string;  // must be a valid EmotionName from the NRC vocabulary
-  level: number; // 1 | 2 | 3 from rater; widened to number for averaged data
+  name:  string;  // valid EmotionName from the English vocabulary
+  level: number;  // 1 | 2 | 3 from rater; widened to number for averaged data
+  vad?:  { v: number; a: number; d: number };
+  // ^ NRC VAD Lexicon coordinates (Mohammad 2025). Populated automatically
+  //   by buildRating / createRating for known names; absent for unknown names.
 }`}></pre>
 
         <h3>createRating()</h3>
@@ -653,6 +671,12 @@ export function RatingWidget() {
                 <td><code>Rater</code></td>
                 <td><code>onChange</code></td>
                 <td><code>change</code></td>
+                <td><code>CustomEvent&lt;Rating&gt;</code></td>
+              </tr>
+              <tr>
+                <td><code>Rater</code></td>
+                <td><code>onCommit</code></td>
+                <td><code>commit</code></td>
                 <td><code>CustomEvent&lt;Rating&gt;</code></td>
               </tr>
             </tbody>
