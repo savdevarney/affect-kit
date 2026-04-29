@@ -390,6 +390,17 @@
     grid-column: 1 / -1;
   }
 
+  .component-card--centered {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .component-card--centered .component-desc {
+    max-width: 48ch;
+  }
+
   .component-link {
     font-size: 0.8rem;
     font-weight: 600;
