@@ -3,12 +3,10 @@ import 'affect-kit/result';
 import 'affect-kit/face';
 import 'affect-kit/compare';
 import './example-tabs';
-import './recipes/recipe-valence-trend';
 import type { AffectKitFace }    from 'affect-kit/face';
 import type { AffectKitResult }  from 'affect-kit/result';
 import type { AffectKitRater }   from 'affect-kit/rater';
 import type { AffectKitCompare } from 'affect-kit/compare';
-import type { RecipeValenceTrend } from './recipes/recipe-valence-trend';
 import { createRating } from 'affect-kit';
 import type { Rating } from 'affect-kit';
 
@@ -267,27 +265,3 @@ makeToggle('compare-labels-toggle', (on) => {
   compareState.showLabels = on; renderCompareCode();
 });
 
-// ── <recipe-valence-trend> demo ────────────────────────────────────────────
-// 14 sessions with a clear stuck stretch in the middle: positive start,
-// drops into negative for ~5 sessions (inertia), then recovers.
-const trendDay = 86_400_000;
-const trendNow = Date.now();
-const trendSeries: Rating[] = [
-  createRating({ v:  0.4, a:  0.2, labels: [{ name: 'content',     level: 2 }], timestamp: trendNow - 13 * trendDay }),
-  createRating({ v:  0.5, a:  0.3, labels: [{ name: 'hopeful',     level: 2 }], timestamp: trendNow - 12 * trendDay }),
-  createRating({ v:  0.2, a:  0.1, labels: [{ name: 'calm',        level: 1 }], timestamp: trendNow - 11 * trendDay }),
-  createRating({ v: -0.3, a:  0.4, labels: [{ name: 'anxious',     level: 2 }], timestamp: trendNow - 10 * trendDay }),
-  createRating({ v: -0.5, a:  0.5, labels: [{ name: 'overwhelmed', level: 2 }], timestamp: trendNow -  9 * trendDay }),
-  createRating({ v: -0.6, a:  0.3, labels: [{ name: 'frustrated',  level: 3 }], timestamp: trendNow -  8 * trendDay }),
-  createRating({ v: -0.4, a:  0.2, labels: [{ name: 'sad',         level: 2 }], timestamp: trendNow -  7 * trendDay }),
-  createRating({ v: -0.5, a:  0.1, labels: [{ name: 'tired',       level: 2 }], timestamp: trendNow -  6 * trendDay }),
-  createRating({ v: -0.2, a:  0.0, labels: [{ name: 'tired',       level: 1 }], timestamp: trendNow -  5 * trendDay }),
-  createRating({ v:  0.1, a:  0.0, labels: [{ name: 'calm',        level: 1 }], timestamp: trendNow -  4 * trendDay }),
-  createRating({ v:  0.4, a:  0.2, labels: [{ name: 'hopeful',     level: 2 }], timestamp: trendNow -  3 * trendDay }),
-  createRating({ v:  0.5, a:  0.3, labels: [{ name: 'content',     level: 2 }], timestamp: trendNow -  2 * trendDay }),
-  createRating({ v:  0.6, a:  0.4, labels: [{ name: 'grateful',    level: 2 }], timestamp: trendNow -  1 * trendDay }),
-  createRating({ v:  0.4, a:  0.2, labels: [{ name: 'content',     level: 2 }], timestamp: trendNow }),
-];
-
-const trendEl = document.getElementById('demo-trend') as RecipeValenceTrend | null;
-if (trendEl) trendEl.ratings = trendSeries;

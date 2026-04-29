@@ -363,88 +363,91 @@
       </example-tabs>
     </div>
 
-    <!-- recipe-valence-trend — V over time with stuck-stretch shading -->
-    <div class="card" style="grid-column: 1 / -1; margin-top: 1.5rem">
-      <div class="card-header">
-        <p class="card-label">&lt;recipe-valence-trend&gt;</p>
-        <span style="font-size:0.7rem; color:#aaa">recipe — not part of affect-kit's package surface</span>
-      </div>
-      <p class="subtitle" style="margin: -0.5rem 0 1rem">
-        Valence over time. Stretches of <em>≥ 3 consecutive sessions</em>
-        with V &lt; −0.2 are shaded as a "stuck" pattern (Kuppens-style
-        emotional inertia). Sessions, not days — the widget makes no
-        calendar-time claim.
-      </p>
-      <example-tabs>
-        <div slot="demo">
-          <recipe-valence-trend id="demo-trend"></recipe-valence-trend>
-        </div>
-        <pre slot="code"><code>// Recipe — copy ./recipes/recipe-valence-trend.ts into your own app.
-import './recipes/recipe-valence-trend';
-
-const el = document.querySelector('recipe-valence-trend');
-el.ratings = ratings;  // Rating[]
-
-// Hard-coded thresholds (intentionally not attribute-tunable):
-//   stuck-V threshold:   V &lt; -0.2
-//   min stuck streak:    3 consecutive sessions</code></pre>
-      </example-tabs>
-    </div>
-
     <!-- Forward-looking note: how affect-kit could support longitudinal viz. -->
     <div class="card note-card">
       <p class="card-label">Visualizations for tracking progress — where this could go</p>
 
       <p style="font-size:0.85rem; color:#444; line-height:1.6">
         Most health metrics — heart rate, blood pressure, weight — fold into
-        a single number that simply moves up or down. Emotion doesn't.
-        Reducing a person's affective life to a "happiness score" loses what
-        actually matters: which feelings, how clearly named, how varied, and
-        how they connect to events. Tracking emotional progress is more about
-        pattern, vocabulary, and resonance than measurement.
+        a single number that simply moves up or down. Affect doesn't. Reducing
+        a person's emotional life to a "happiness score" loses what actually
+        matters: which feelings, how clearly named, how varied, and how they
+        connect to events. Tracking emotional progress is more about pattern,
+        vocabulary, and resonance than measurement.
       </p>
 
       <p style="font-size:0.85rem; color:#444; line-height:1.6">
-        That said, researchers do generally converge on three patterns that
-        read as "progress" when tracked across many sessions:
+        That said, the affect-dynamics literature does converge on three
+        operationally defined patterns that count as "progress" when tracked
+        across many sessions:
       </p>
       <ul style="font-size:0.85rem; color:#444; line-height:1.6; padding-left: 1.2rem; margin: 0.5rem 0 0.75rem">
-        <li style="margin-bottom:0.4rem">
-          <strong>Inertia</strong> — how much the emotional state moves session to
-          session. Low movement combined with sustained negative affect is the
-          clinical signal of "stuck"; healthier patterns show responsiveness to
-          what's actually happening in life.
+        <li style="margin-bottom:0.5rem">
+          <strong>Emotional inertia</strong> (Kuppens et al., 2010,
+          <em>Psychological Science</em>) — the autocorrelation of affect
+          across consecutive measurements. High inertia, especially in the
+          presence of sustained negative valence, indexes a system that fails
+          to respond to context, and is a robust correlate of depression and
+          rumination. The clinical reading is "stuck", not "stable".
         </li>
-        <li style="margin-bottom:0.4rem">
-          <strong>Resilience</strong> — how reliably the state returns toward
-          baseline after a difficult stretch. Faster, more reliable return is
-          generally healthier; chronic non-recovery is a warning sign.
+        <li style="margin-bottom:0.5rem">
+          <strong>Affective resilience / recovery</strong> (Ong et al., 2006,
+          <em>Journal of Personality &amp; Social Psychology</em>) — the
+          rate at which affect returns toward baseline after a perturbation.
+          Faster, more reliable return is associated with better long-term
+          adaptation; chronic non-recovery is a warning sign.
         </li>
         <li>
-          <strong>Range</strong> — and this one is widely misread. It's <em>not</em>
-          "feel more emotions at all costs" or chasing variety. It's emotional
-          <em>clarity</em>: the capacity to identify and accurately name a wide
-          spectrum of states, including difficult ones. The opposite is
-          alexithymia or flat affect, not contentment.
+          <strong>Affective range / differentiation</strong> (Gruber et al.,
+          2013; Kashdan et al., 2015) — the capacity to identify and accurately
+          name a wide spectrum of states, including difficult ones. Often
+          misread as "feel more emotions at all costs"; the operational measure
+          is the <em>granularity</em> with which a person discriminates among
+          their own states. The construct opposite is alexithymia or flat
+          affect — not contentment.
         </li>
       </ul>
 
       <p style="font-size:0.85rem; color:#444; line-height:1.6">
-        The harder design question is which axis to anchor on. The dimensional
-        model captures three — <strong>valence</strong> (good/bad),
-        <strong>arousal</strong> (calm/intense), and <strong>dominance</strong>
-        (in-control/overwhelmed) — but only valence is universally understood
-        by both users and researchers today. Sustained low valence matters;
-        genuine valence range matters; recovery in valence matters. Future
-        progress-tracking recipes would anchor here first.
+        The harder design question is which axis of the dimensional model
+        (Russell, 1980; Mehrabian &amp; Russell, 1974) to anchor longitudinal
+        recipes on. There are three:
+      </p>
+      <ul style="font-size:0.85rem; color:#444; line-height:1.6; padding-left: 1.2rem; margin: 0.5rem 0 0.75rem">
+        <li style="margin-bottom:0.35rem">
+          <strong>Valence</strong> — positive ↔ negative
+        </li>
+        <li style="margin-bottom:0.35rem">
+          <strong>Arousal</strong> — high ↔ low (energy / activation)
+        </li>
+        <li>
+          <strong>Dominance</strong> — in-control ↔ submissive
+          (sometimes phrased as "out-of-control" in plain language)
+        </li>
+      </ul>
+
+      <p style="font-size:0.85rem; color:#444; line-height:1.6">
+        Of these, <strong>valence</strong> is both the most intuitive for
+        users (everyone reads positive vs. negative) and the dimension on
+        which the field has the most consensus that <em>longitudinal
+        patterns</em> — inertia, resilience, range — can be operationally
+        defined and tracked. Important nuance: the consensus is not that
+        higher valence is "better" in any moral or therapeutic sense, but
+        that valence is the axis against which these patterns have agreed
+        operational definitions. Future progress-tracking recipes in
+        affect-kit would anchor here first.
       </p>
 
       <p style="font-size:0.85rem; color:#444; line-height:1.6">
-        Arousal is meaningful but contested in interpretation: the same high
-        reading can be excitement or anxiety depending on context. Dominance
-        has very little longitudinal research behind it. affect-kit captures
-        both, but defers showing them until there's something defensible to
-        claim. See
+        <strong>Arousal</strong> carries less interpretive consensus over
+        time — the same elevated reading can index excitement, anxiety, or
+        flow depending on context, and the literature has yet to settle
+        on a clean longitudinal use. <strong>Dominance</strong> has very
+        little experience-sampling research behind it; it appears in the
+        original PAD model and in stimulus norming, but rarely as an
+        outcome variable in dynamics work. affect-kit captures both
+        dimensions in every Rating, but defers visualizing them until
+        there is something defensible to claim. See
         <code style="font-size:0.78rem">docs/longitudinal-future.md</code>
         for the design thinking in full.
       </p>
