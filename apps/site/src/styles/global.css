@@ -91,7 +91,6 @@
     display: flex;
     align-items: center;
     gap: 1.75rem;
-    font-size: 0.83rem;
     font-weight: 600;
   }
 
@@ -113,8 +112,7 @@
     .nav-links {
       width: 100%;
       justify-content: center;
-      gap: 0.9rem;
-      font-size: 0.78rem;
+      gap: 1.4rem;
     }
   }
 
@@ -125,6 +123,9 @@
     align-items: center;
     gap: 0.3em;
     transition: opacity 0.15s;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: 0.72rem;
   }
   .nav-links a:hover {
     text-decoration: underline;
