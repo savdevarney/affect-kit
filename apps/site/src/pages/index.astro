@@ -160,7 +160,7 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
             ></affect-kit-compare>
           </div>
 
-          <!-- affect-kit-rater: description only -->
+          <!-- affect-kit-rater: thumbnail -->
           <div class="component-card">
             <p class="component-tag">&lt;affect-kit-rater&gt;</p>
             <p class="component-desc">
@@ -168,10 +168,17 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
               then intensity-rate up to 5 labels from the NRC VAD lexicon. Fires a
               <code>change</code> event on commit.
             </p>
-            <p class="component-hint">Live in the hero above ↑</p>
+            <div class="component-thumb">
+              <affect-kit-face v="0.4" a="0.35" class="thumb-face"></affect-kit-face>
+              <div class="thumb-chips">
+                <span class="thumb-chip">calm</span>
+                <span class="thumb-chip">hopeful</span>
+                <span class="thumb-chip">grateful</span>
+              </div>
+            </div>
           </div>
 
-          <!-- affect-kit-result: description only -->
+          <!-- affect-kit-result: seeded thumbnail -->
           <div class="component-card">
             <p class="component-tag">&lt;affect-kit-result&gt;</p>
             <p class="component-desc">
@@ -179,30 +186,20 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
               and optional color chip. Pair with <code>&lt;affect-kit-rater&gt;</code>
               or drive from stored data.
             </p>
-            <p class="component-hint">Live in the hero above ↑</p>
+            <div class="component-thumb">
+              <affect-kit-result id="card-result" show-face show-labels color-mode></affect-kit-result>
+            </div>
           </div>
 
-          <!-- affect-kit-face: interactive -->
+          <!-- affect-kit-face: seeded thumbnail -->
           <div class="component-card">
             <p class="component-tag">&lt;affect-kit-face&gt;</p>
             <p class="component-desc">
               Standalone face glyph driven by <code>v</code> and <code>a</code> props.
               Any size via CSS. Animates breath + tremor by default.
             </p>
-            <div class="face-demo">
-              <affect-kit-face id="site-face" v="0" a="0" style="width:120px;height:120px"></affect-kit-face>
-              <div class="face-sliders">
-                <div class="slider-row">
-                  <label for="site-v-slider">V</label>
-                  <input type="range" id="site-v-slider" min="-1" max="1" step="0.01" value="0">
-                  <span class="slider-val" id="site-v-val">0.00</span>
-                </div>
-                <div class="slider-row">
-                  <label for="site-a-slider">A</label>
-                  <input type="range" id="site-a-slider" min="-1" max="1" step="0.01" value="0">
-                  <span class="slider-val" id="site-a-val">0.00</span>
-                </div>
-              </div>
+            <div class="component-thumb">
+              <affect-kit-face v="0.65" a="-0.3" class="thumb-face--lg"></affect-kit-face>
             </div>
           </div>
 
@@ -255,7 +252,6 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
     import { createRating } from 'affect-kit';
     import type { AffectKitRater }   from 'affect-kit/rater';
     import type { AffectKitResult }  from 'affect-kit/result';
-    import type { AffectKitFace }    from 'affect-kit/face';
     import type { AffectKitCompare } from 'affect-kit/compare';
 
     // ── Hero: wire rater → result (reveal on first commit) ────
@@ -268,24 +264,15 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
       resultItem?.classList.add('is-revealed');
     });
 
-    // ── Interactive face sliders ───────────────────────────────
-    const face    = document.getElementById('site-face')     as AffectKitFace  | null;
-    const vSlider = document.getElementById('site-v-slider') as HTMLInputElement | null;
-    const aSlider = document.getElementById('site-a-slider') as HTMLInputElement | null;
-    const vVal    = document.getElementById('site-v-val');
-    const aVal    = document.getElementById('site-a-val');
-
-    function updateFace() {
-      if (!face || !vSlider || !aSlider) return;
-      const v = parseFloat(vSlider.value);
-      const a = parseFloat(aSlider.value);
-      face.v = v;
-      face.a = a;
-      if (vVal) vVal.textContent = v.toFixed(2);
-      if (aVal) aVal.textContent = a.toFixed(2);
+    // ── Seed the result card thumbnail ────────────────────────
+    const cardResult = document.getElementById('card-result') as AffectKitResult | null;
+    if (cardResult) {
+      cardResult.rating = createRating({ v: 0.55, a: -0.1, labels: [
+        { name: 'calm',     level: 3 },
+        { name: 'grateful', level: 2 },
+        { name: 'content',  level: 1 },
+      ]});
     }
-    vSlider?.addEventListener('input', updateFace);
-    aSlider?.addEventListener('input', updateFace);
 
     // ── Compare demo data ──────────────────────────────────────
     const yesterday = [

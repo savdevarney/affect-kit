@@ -149,7 +149,7 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 3rem;
-    align-items: center;
+    align-items: start;
     max-width: var(--max-w);
     margin-inline: auto;
     /* Top padding clears the fixed nav + generous breathing room */
@@ -390,11 +390,46 @@
     grid-column: 1 / -1;
   }
 
-  .component-hint {
-    font-size: 0.75rem;
-    color: var(--ink-faint);
-    margin-top: 0.25rem;
-    font-style: italic;
+  /* Thumbnail preview inside component cards */
+  .component-thumb {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: 148px;
+  }
+
+  .thumb-face {
+    width: 60px;
+    height: 60px;
+    display: block;
+  }
+
+  .thumb-face--lg {
+    width: 80px;
+    height: 80px;
+    display: block;
+  }
+
+  .thumb-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    justify-content: center;
+  }
+
+  .thumb-chip {
+    font-size: 0.7rem;
+    color: var(--ink-muted);
+    background: var(--bg);
+    border: 1px solid var(--border-mid);
+    border-radius: 999px;
+    padding: 0.18rem 0.55rem;
   }
 
   .component-tag {
