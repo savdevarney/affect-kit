@@ -7,9 +7,24 @@ import '../styles/global.css';
   <nav class="site-nav">
     <a href="/" class="wordmark">affect-kit</a>
     <div class="nav-links">
-      <a href="/research">Research</a>
-      <a href="https://github.com/savdevarney/affect-kit">GitHub</a>
-      <a href="https://www.npmjs.com/package/affect-kit">npm</a>
+      <a href="/research">
+        <svg width="13" height="13" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+          <path fill-rule="evenodd" d="M8.5 2a.5.5 0 0 0-.5.5V8L4.146 14.16A2 2 0 0 0 5.9 17h8.2a2 2 0 0 0 1.754-2.84L12 8V2.5a.5.5 0 0 0-.5-.5h-3Zm-1 .5V8.5a.5.5 0 0 1-.072.258L5.062 12h9.876l-2.366-3.242A.5.5 0 0 1 12.5 8.5V2.5h-5Z" clip-rule="evenodd"/>
+        </svg>
+        Research
+      </a>
+      <a href="https://github.com/savdevarney/affect-kit" target="_blank" rel="noopener">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+        </svg>
+        GitHub
+      </a>
+      <a href="https://www.npmjs.com/package/affect-kit" target="_blank" rel="noopener">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M4 4h16v12H12v2H8v-2H4V4Zm2 2v8h4v-6h2v6h2V6H6Z"/>
+        </svg>
+        npm
+      </a>
     </div>
   </nav>
 
@@ -75,6 +90,7 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
 
     <!-- ── Face spectrum ──────────────────────────────────────── -->
     <section class="face-spectrum">
+      <div class="face-spectrum-inner">
       <p class="section-eyebrow">The face glyph</p>
       <h2 class="section-heading">One continuous face, not categories</h2>
       <p class="section-note">
@@ -108,6 +124,7 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
           <span class="face-coords">v=0.8, a=0.8</span>
         </div>
       </div>
+      </div><!-- /face-spectrum-inner -->
     </section>
 
     <!-- ── Components ─────────────────────────────────────────── -->
@@ -117,12 +134,12 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
 
         <div class="component-grid">
 
-          <!-- affect-kit-compare: wide card -->
+          <!-- affect-kit-compare: wide card, live demo -->
           <div class="component-card component-card--wide">
             <p class="component-tag">&lt;affect-kit-compare&gt;</p>
             <p class="component-desc">
-              Two snapshots — or two arrays of ratings averaged — shown side-by-side.
-              Same face + word + color language as <code>&lt;affect-kit-result&gt;</code>.
+              Two snapshots side-by-side — or two arrays of ratings averaged.
+              Same face + word + color vocabulary as <code>&lt;affect-kit-result&gt;</code>.
               No comparison metric, no "improvement" claim.
             </p>
             <affect-kit-compare
@@ -133,6 +150,28 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
               before-label="Yesterday"
               after-label="Today"
             ></affect-kit-compare>
+          </div>
+
+          <!-- affect-kit-rater: description only -->
+          <div class="component-card">
+            <p class="component-tag">&lt;affect-kit-rater&gt;</p>
+            <p class="component-desc">
+              The primary input. Drag on the V/A pad to set a gut-feeling position,
+              then intensity-rate up to 5 labels from the NRC VAD lexicon. Fires a
+              <code>change</code> event on commit.
+            </p>
+            <p class="component-hint">Live in the hero above ↑</p>
+          </div>
+
+          <!-- affect-kit-result: description only -->
+          <div class="component-card">
+            <p class="component-tag">&lt;affect-kit-result&gt;</p>
+            <p class="component-desc">
+              Renders a committed <code>Rating</code> as a face glyph, dominant label word,
+              and optional color chip. Pair with <code>&lt;affect-kit-rater&gt;</code>
+              or drive from stored data.
+            </p>
+            <p class="component-hint">Live in the hero above ↑</p>
           </div>
 
           <!-- affect-kit-face: interactive -->
@@ -166,24 +205,17 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
     <!-- ── Research ───────────────────────────────────────────── -->
     <section class="research">
       <div class="research-inner">
-        <p class="section-eyebrow">Research foundations</p>
+        <p class="section-eyebrow">Scientific foundations</p>
         <h2 class="section-heading">Feeling first, naming second</h2>
         <p>
-          The dimensional model treats affect as continuous — valence and arousal have
-          cross-cultural neural signatures more consistent than discrete categories like
-          "happiness" or "fear." The V/A pad captures the gut feeling; labels add nuance.
-          This matches how affect is actually constructed.
+          The dimensional model treats affect as continuous — valence and arousal carry
+          cross-cultural neural signatures more robust than discrete categories like
+          "happiness" or "fear." The V/A pad captures the gut signal first; labels refine
+          it second. Dominance — the sense of agency — is preserved in every
+          <code>Rating</code>, distinguishing <em>frustrated</em> from <em>anxious</em>
+          even when their V/A coordinates look identical.
         </p>
-        <p>
-          Dominance — the sense of agency — is preserved in every Rating even though it
-          isn't visualized. The difference between frustrated (negative, activated,
-          in-control) and anxious (negative, activated, helpless) matters clinically.
-          Vocabulary from the NRC VAD Lexicon (Mohammad 2018), normalized to −1..1.
-        </p>
-        <a
-          href="https://github.com/savdevarney/affect-kit/blob/main/docs/research.md"
-          class="research-link"
-        >Read the full research foundations →</a>
+        <a href="/research" class="research-link">Explore the research foundations →</a>
       </div>
     </section>
 

@@ -19,5 +19,17 @@ const {
 </head>
 <body>
   <slot />
+  <script>
+    // Transparent nav over hero, frosted glass when scrolled
+    const nav = document.querySelector('.site-nav') as HTMLElement | null;
+    const sentinel = document.querySelector('.hero, .rp-header') as HTMLElement | null;
+    if (nav && sentinel) {
+      const obs = new IntersectionObserver(
+        ([entry]) => nav.classList.toggle('is-scrolled', !entry.isIntersecting),
+        { threshold: 0.05 }
+      );
+      obs.observe(sentinel);
+    }
+  </script>
 </body>
 </html>

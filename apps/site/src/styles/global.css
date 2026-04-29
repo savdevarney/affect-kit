@@ -66,46 +66,56 @@
     position: sticky;
     top: 0;
     z-index: 10;
-    background: rgba(245, 245, 243, 0.88);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid var(--border);
-    padding: 0.75rem var(--px);
+    padding: 1.1rem var(--px);
     display: flex;
     align-items: center;
     justify-content: space-between;
+    /* No background — gradient shows through from underlying section */
   }
 
   .wordmark {
     font-weight: 800;
-    font-size: 1rem;
-    letter-spacing: -0.03em;
+    font-size: 0.95rem;
+    letter-spacing: -0.04em;
     text-decoration: none;
-    /* Four-quadrant gradient — the V/A color system lives in the wordmark */
-    background: linear-gradient(105deg,
-      var(--color-pink)  0%,
-      var(--color-gold)  35%,
-      var(--color-green) 68%,
-      var(--color-blue)  100%
-    );
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--ink);
+    font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
   }
 
   .nav-links {
     display: flex;
     align-items: center;
-    gap: 1.5rem;
-    font-size: 0.82rem;
+    gap: 1.75rem;
+    font-size: 0.83rem;
+    font-weight: 600;
   }
 
   .nav-links a {
     text-decoration: none;
-    color: var(--ink-muted);
-    transition: color 0.15s;
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    transition: opacity 0.15s;
   }
-  .nav-links a:hover { color: var(--ink); }
+  .nav-links a:hover {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .nav-links a[aria-current="page"] {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .nav-links svg { flex-shrink: 0; }
+
+  /* Frosted glass once scrolled past hero — transparent over gradient */
+  .site-nav.is-scrolled {
+    background: rgba(245, 245, 243, 0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s, border-color 0.2s;
+  }
 
   .site-footer {
     border-top: 1px solid var(--border);
@@ -272,9 +282,16 @@
 
   /* ── Face spectrum ────────────────────────────────────────── */
   .face-spectrum {
-    padding: clamp(2.5rem, 5vw, 4rem) var(--px);
+    /* Subtle horizontal gradient: calm-blue left → joy-green right */
+    background:
+      radial-gradient(ellipse 60% 80% at 0% 50%, color-mix(in srgb, var(--color-blue) 7%, transparent), transparent),
+      radial-gradient(ellipse 60% 80% at 100% 50%, color-mix(in srgb, var(--color-green) 7%, transparent), transparent);
+  }
+
+  .face-spectrum-inner {
     max-width: var(--max-w);
     margin-inline: auto;
+    padding: clamp(2.5rem, 5vw, 4rem) var(--px);
   }
 
   .section-eyebrow {
@@ -366,6 +383,13 @@
     grid-column: 1 / -1;
   }
 
+  .component-hint {
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+    margin-top: 0.25rem;
+    font-style: italic;
+  }
+
   .component-tag {
     font-size: 0.82rem;
     font-weight: 600;
@@ -419,12 +443,21 @@
 
   /* ── Research ─────────────────────────────────────────────── */
   .research {
-    padding: clamp(2.5rem, 5vw, 4rem) var(--px);
-    max-width: var(--max-w);
-    margin-inline: auto;
+    /* Four-corner gradient echoes the hero */
+    background:
+      radial-gradient(ellipse 60% 70% at 0%   0%,  color-mix(in srgb, var(--color-gold)  8%, transparent), transparent),
+      radial-gradient(ellipse 60% 70% at 100% 0%,  color-mix(in srgb, var(--color-green) 8%, transparent), transparent),
+      radial-gradient(ellipse 60% 70% at 100% 100%, color-mix(in srgb, var(--color-blue)  8%, transparent), transparent),
+      radial-gradient(ellipse 60% 70% at 0%   100%, color-mix(in srgb, var(--color-pink)  8%, transparent), transparent);
   }
 
   .research-inner {
+    max-width: var(--max-w);
+    margin-inline: auto;
+    padding: clamp(2.5rem, 5vw, 4rem) var(--px);
+  }
+
+  .research-inner > * {
     max-width: 62ch;
   }
 
