@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-85 -85 170 170">
+  <!-- joy face: v=0.8, a=0.8 — raised brows, wide eyes, big smile -->
+
+  <!-- brows: raised outer corners for joy -->
+  <path stroke="#1a1a1a" stroke-width="4.5" stroke-linecap="round" fill="none"
+    d="M -42 -39 Q -27 -36 -12 -35"/>
+  <path stroke="#1a1a1a" stroke-width="4.5" stroke-linecap="round" fill="none"
+    d="M 12 -35 Q 27 -36 42 -39"/>
+
+  <!-- eyes: wide open with Duchenne arch (joy) -->
+  <path stroke="#1a1a1a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"
+    d="M -36 -12 C -34 -23 -22 -23 -20 -12 Q -28 -6 -36 -12 Z"/>
+  <path stroke="#1a1a1a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"
+    d="M 36 -12 C 34 -23 22 -23 20 -12 Q 28 -6 36 -12 Z"/>
+
+  <!-- nose -->
+  <path stroke="#1a1a1a" stroke-width="2.8" stroke-linecap="round" fill="none"
+    d="M -3 5 Q 0 9 3 5"/>
+
+  <!-- mouth: big upward smile with open mouth -->
+  <path fill="#1a1a1a" stroke="#1a1a1a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"
+    d="M -24 23 Q 0 44 24 23 Q 0 50 -24 23 Z"/>
+</svg>

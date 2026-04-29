@@ -1,0 +1,289 @@
+---
+import Base from '../layouts/Base.astro';
+import '../styles/global.css';
+---
+<Base title="affect-kit — Dimensional emotion rating for the web">
+
+  <nav class="site-nav">
+    <a href="/" class="wordmark">affect-kit</a>
+    <div class="nav-links">
+      <a href="https://github.com/savdevarney/affect-kit">GitHub</a>
+      <a href="https://www.npmjs.com/package/affect-kit">npm</a>
+    </div>
+  </nav>
+
+  <main>
+
+    <!-- ── Hero ──────────────────────────────────────────────── -->
+    <section class="hero">
+      <div class="hero-text">
+        <h1>Dimensional emotion rating for the web.</h1>
+        <p class="hero-tagline">
+          Open-source web components grounded in affective science.
+          Framework-agnostic. MIT licensed.
+        </p>
+        <div class="install-chip">npm install affect-kit</div>
+      </div>
+
+      <div class="hero-demo">
+        <div class="hero-demo-item">
+          <p class="demo-label">&lt;affect-kit-rater&gt;</p>
+          <affect-kit-rater id="hero-rater" show-vad color-mode></affect-kit-rater>
+        </div>
+        <div class="hero-demo-item hero-result-wrapper" id="hero-result-item">
+          <p class="demo-label">&lt;affect-kit-result&gt;</p>
+          <affect-kit-result id="hero-result" show-face show-labels color-mode></affect-kit-result>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Code snippet ───────────────────────────────────────── -->
+    <section class="snippet-section">
+      <div class="snippet-inner">
+        <pre class="code-block"><code>import 'affect-kit/rater';
+import 'affect-kit/result';
+
+// In your HTML:
+// &lt;affect-kit-rater&gt;&lt;/affect-kit-rater&gt;
+// &lt;affect-kit-result show-face show-labels color-mode&gt;&lt;/affect-kit-result&gt;
+
+const rater = document.querySelector('affect-kit-rater');
+const result = document.querySelector('affect-kit-result');
+rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pre>
+      </div>
+    </section>
+
+    <!-- ── Pillars ────────────────────────────────────────────── -->
+    <section class="pillars">
+      <div class="pillar">
+        <span class="pillar-accent" style="background: var(--color-blue)"></span>
+        <h3>Web-standard</h3>
+        <p>Built with Lit. Custom elements that work in React, Vue, Angular, SvelteKit, or plain HTML — no framework required.</p>
+      </div>
+      <div class="pillar">
+        <span class="pillar-accent" style="background: var(--color-gold)"></span>
+        <h3>Science-grounded</h3>
+        <p>Valence × arousal × dominance from the NRC VAD Lexicon. Minimal FACS face glyph — no skin tone, no gender encoding.</p>
+      </div>
+      <div class="pillar">
+        <span class="pillar-accent" style="background: var(--color-green)"></span>
+        <h3>Logbook-faithful</h3>
+        <p>A substrate for capturing and rendering emotion ratings — not a diagnostic tool. No interpretation, no "wellness scores."</p>
+      </div>
+    </section>
+
+    <!-- ── Face spectrum ──────────────────────────────────────── -->
+    <section class="face-spectrum">
+      <p class="section-eyebrow">The face glyph</p>
+      <h2 class="section-heading">One continuous face, not categories</h2>
+      <p class="section-note">
+        Driven by valence (positive ↔ negative) and arousal (energized ↔ calm).
+        Based on FACS action units cross-culturally validated in 17 cultures.
+      </p>
+      <div class="face-row">
+        <div class="face-item">
+          <affect-kit-face v="-0.8" a="0.8"></affect-kit-face>
+          <span class="face-word">anger</span>
+          <span class="face-coords">v=−0.8, a=0.8</span>
+        </div>
+        <div class="face-item">
+          <affect-kit-face v="-0.4" a="0.5"></affect-kit-face>
+          <span class="face-word">anxious</span>
+          <span class="face-coords">v=−0.4, a=0.5</span>
+        </div>
+        <div class="face-item">
+          <affect-kit-face v="0" a="0"></affect-kit-face>
+          <span class="face-word">neutral</span>
+          <span class="face-coords">v=0, a=0</span>
+        </div>
+        <div class="face-item">
+          <affect-kit-face v="0.6" a="-0.5"></affect-kit-face>
+          <span class="face-word">content</span>
+          <span class="face-coords">v=0.6, a=−0.5</span>
+        </div>
+        <div class="face-item">
+          <affect-kit-face v="0.8" a="0.8"></affect-kit-face>
+          <span class="face-word">joy</span>
+          <span class="face-coords">v=0.8, a=0.8</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Components ─────────────────────────────────────────── -->
+    <section class="components">
+      <div class="components-inner">
+        <h2 class="section-heading">Four components</h2>
+
+        <div class="component-grid">
+
+          <!-- affect-kit-compare: wide card -->
+          <div class="component-card component-card--wide">
+            <p class="component-tag">&lt;affect-kit-compare&gt;</p>
+            <p class="component-desc">
+              Two snapshots — or two arrays of ratings averaged — shown side-by-side.
+              Same face + word + color language as <code>&lt;affect-kit-result&gt;</code>.
+              No comparison metric, no "improvement" claim.
+            </p>
+            <affect-kit-compare
+              id="site-compare"
+              show-face
+              color-mode
+              show-labels
+              before-label="Yesterday"
+              after-label="Today"
+            ></affect-kit-compare>
+          </div>
+
+          <!-- affect-kit-face: interactive -->
+          <div class="component-card">
+            <p class="component-tag">&lt;affect-kit-face&gt;</p>
+            <p class="component-desc">
+              Standalone face glyph driven by <code>v</code> and <code>a</code> props.
+              Any size via CSS. Animates breath + tremor by default.
+            </p>
+            <div class="face-demo">
+              <affect-kit-face id="site-face" v="0" a="0" style="width:120px;height:120px"></affect-kit-face>
+              <div class="face-sliders">
+                <div class="slider-row">
+                  <label for="site-v-slider">V</label>
+                  <input type="range" id="site-v-slider" min="-1" max="1" step="0.01" value="0">
+                  <span class="slider-val" id="site-v-val">0.00</span>
+                </div>
+                <div class="slider-row">
+                  <label for="site-a-slider">A</label>
+                  <input type="range" id="site-a-slider" min="-1" max="1" step="0.01" value="0">
+                  <span class="slider-val" id="site-a-val">0.00</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Research ───────────────────────────────────────────── -->
+    <section class="research">
+      <div class="research-inner">
+        <p class="section-eyebrow">Research foundations</p>
+        <h2 class="section-heading">Feeling first, naming second</h2>
+        <p>
+          The dimensional model treats affect as continuous — valence and arousal have
+          cross-cultural neural signatures more consistent than discrete categories like
+          "happiness" or "fear." The V/A pad captures the gut feeling; labels add nuance.
+          This matches how affect is actually constructed.
+        </p>
+        <p>
+          Dominance — the sense of agency — is preserved in every Rating even though it
+          isn't visualized. The difference between frustrated (negative, activated,
+          in-control) and anxious (negative, activated, helpless) matters clinically.
+          Vocabulary from the NRC VAD Lexicon (Mohammad 2018), normalized to −1..1.
+        </p>
+        <a
+          href="https://github.com/savdevarney/affect-kit/blob/main/docs/research.md"
+          class="research-link"
+        >Read the full research foundations →</a>
+      </div>
+    </section>
+
+    <!-- ── CTA ────────────────────────────────────────────────── -->
+    <section class="cta">
+      <h2>Get started</h2>
+      <div class="cta-row">
+        <span class="cta-chip">npm install affect-kit</span>
+        <a href="https://github.com/savdevarney/affect-kit" class="cta-link">
+          View on GitHub →
+        </a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      affect-kit · MIT License ·
+      <a href="https://github.com/savdevarney/affect-kit">github.com/savdevarney/affect-kit</a>
+    </p>
+  </footer>
+
+  <script>
+    import 'affect-kit/rater';
+    import 'affect-kit/result';
+    import 'affect-kit/face';
+    import 'affect-kit/compare';
+    import { createRating } from 'affect-kit';
+    import type { AffectKitRater }   from 'affect-kit/rater';
+    import type { AffectKitResult }  from 'affect-kit/result';
+    import type { AffectKitFace }    from 'affect-kit/face';
+    import type { AffectKitCompare } from 'affect-kit/compare';
+
+    // ── Hero: wire rater → result (reveal on first commit) ────
+    const rater      = document.getElementById('hero-rater')    as AffectKitRater  | null;
+    const result     = document.getElementById('hero-result')   as AffectKitResult | null;
+    const resultItem = document.getElementById('hero-result-item');
+
+    rater?.addEventListener('change', (e) => {
+      if (result) result.rating = (e as CustomEvent).detail;
+      resultItem?.classList.add('is-revealed');
+    });
+
+    // ── Interactive face sliders ───────────────────────────────
+    const face    = document.getElementById('site-face')     as AffectKitFace  | null;
+    const vSlider = document.getElementById('site-v-slider') as HTMLInputElement | null;
+    const aSlider = document.getElementById('site-a-slider') as HTMLInputElement | null;
+    const vVal    = document.getElementById('site-v-val');
+    const aVal    = document.getElementById('site-a-val');
+
+    function updateFace() {
+      if (!face || !vSlider || !aSlider) return;
+      const v = parseFloat(vSlider.value);
+      const a = parseFloat(aSlider.value);
+      face.v = v;
+      face.a = a;
+      if (vVal) vVal.textContent = v.toFixed(2);
+      if (aVal) aVal.textContent = a.toFixed(2);
+    }
+    vSlider?.addEventListener('input', updateFace);
+    aSlider?.addEventListener('input', updateFace);
+
+    // ── Compare demo data ──────────────────────────────────────
+    const yesterday = [
+      createRating({ v: -0.4, a:  0.5, labels: [
+        { name: 'overwhelmed', level: 3 },
+        { name: 'anxious',     level: 2 },
+        { name: 'tired',       level: 1 },
+      ]}),
+      createRating({ v: -0.5, a:  0.4, labels: [
+        { name: 'frustrated',  level: 2 },
+        { name: 'tired',       level: 2 },
+      ]}),
+      createRating({ v: -0.3, a:  0.3, labels: [
+        { name: 'overwhelmed', level: 2 },
+        { name: 'sad',         level: 1 },
+      ]}),
+    ];
+
+    const today = [
+      createRating({ v:  0.5, a:  0.3, labels: [
+        { name: 'calm',     level: 2 },
+        { name: 'grateful', level: 1 },
+      ]}),
+      createRating({ v:  0.7, a:  0.5, labels: [
+        { name: 'joy',     level: 3 },
+        { name: 'hopeful', level: 2 },
+      ]}),
+      createRating({ v:  0.6, a:  0.2, labels: [
+        { name: 'content',  level: 2 },
+        { name: 'grateful', level: 2 },
+        { name: 'calm',     level: 1 },
+      ]}),
+    ];
+
+    const compareEl = document.getElementById('site-compare') as AffectKitCompare | null;
+    if (compareEl) {
+      compareEl.beforeRating = yesterday;
+      compareEl.afterRating  = today;
+    }
+  </script>
+
+</Base>
