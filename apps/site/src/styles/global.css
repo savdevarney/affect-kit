@@ -78,8 +78,10 @@
     -webkit-backdrop-filter: blur(12px);
     /* Same gradient structure as .is-scrolled, fully transparent — so browser can interpolate */
     background:
-      radial-gradient(ellipse 55% 600% at 5%   0%, transparent, transparent),
-      radial-gradient(ellipse 55% 600% at 95%  0%, transparent, transparent),
+      radial-gradient(ellipse 35% 600% at 0%   0%, transparent, transparent),
+      radial-gradient(ellipse 35% 600% at 33%  0%, transparent, transparent),
+      radial-gradient(ellipse 35% 600% at 67%  0%, transparent, transparent),
+      radial-gradient(ellipse 35% 600% at 100% 0%, transparent, transparent),
       rgba(245, 245, 243, 0);
     transition: background 0.4s ease, border-color 0.4s ease;
   }
@@ -145,11 +147,13 @@
   }
   .nav-links svg { flex-shrink: 0; }
 
-  /* Frosted glass + rainbow tint once scrolled past hero */
+  /* Frosted glass + all-four rainbow tint once scrolled past hero */
   .site-nav.is-scrolled {
     background:
-      radial-gradient(ellipse 55% 600% at 5%   0%, color-mix(in srgb, var(--color-pink) 22%, transparent), transparent),
-      radial-gradient(ellipse 55% 600% at 95%  0%, color-mix(in srgb, var(--color-gold) 22%, transparent), transparent),
+      radial-gradient(ellipse 35% 600% at 0%   0%, color-mix(in srgb, var(--color-pink)  22%, transparent), transparent),
+      radial-gradient(ellipse 35% 600% at 33%  0%, color-mix(in srgb, var(--color-gold)  18%, transparent), transparent),
+      radial-gradient(ellipse 35% 600% at 67%  0%, color-mix(in srgb, var(--color-green) 18%, transparent), transparent),
+      radial-gradient(ellipse 35% 600% at 100% 0%, color-mix(in srgb, var(--color-blue)  22%, transparent), transparent),
       rgba(245, 245, 243, 0.82);
     border-bottom: 1px solid var(--border);
   }
