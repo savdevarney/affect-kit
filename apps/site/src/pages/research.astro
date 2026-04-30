@@ -333,29 +333,31 @@ import '../styles/global.css';
 
       <!-- ── 2: Interaction model ────────────────────────── -->
       <section id="interaction-model" class="rp-section">
-        <h2>2. The interaction model: rate, then refine</h2>
+        <h2>2. The interaction model: orient, refine, commit</h2>
 
-        <h3>2.1 The two-step flow</h3>
+        <h3>2.1 The three-step flow</h3>
         <p>
-          The fundamental flow is <strong>rate, then refine</strong>:
+          A capture has three steps. They are deliberately distinct so each one does
+          a single thing well:
         </p>
         <ol class="rp-steps">
           <li>
-            <strong>Drag the face on the V/A pad.</strong> This is the primary,
-            pre-verbal rating. The user places their gut feeling somewhere in the V/A
-            space — the face glyph and background color update in real-time to mirror
-            the position. No words required.
+            <strong>Orient.</strong> Drag the face to indicate roughly where you feel
+            you are in V/A space. The face mirrors your placement and the color tints
+            in real time; the 55 emotion words sort themselves so the most relevant
+            rise to the top. This step is a <em>gesture</em>, not a measurement —
+            your body knows it's <em>here</em> before you have a word for it.
           </li>
           <li>
-            <strong>Settle and select labels.</strong> When the user releases the pad,
-            the 55 emotion chips rearrange themselves by proximity to the pad position
-            in V/A space — words that match the gut feeling rise to the top. The user
-            taps chips to select them at intensities 1, 2, or 3.
+            <strong>Refine.</strong> Tap the words that fit, up to five, at three
+            intensity levels. Each word carries lexicon-validated VAD coordinates,
+            and the intensity-weighted composite of your selections is the
+            measurement.
           </li>
           <li>
-            <strong>Commit.</strong> The committed rating carries both the raw pad
-            position <em>and</em> the label-derived V/A/D coordinates. These are
-            preserved separately.
+            <strong>Commit.</strong> Tap <em>Done</em> to finalize. The rating
+            preserves both the pre-verbal placement (<code>face</code>) and the
+            composite VAD from your words (<code>composite</code>), separately.
           </li>
         </ol>
 
@@ -366,82 +368,82 @@ import '../styles/global.css';
           <li>
             Feeling precedes naming (Damasio 1999 <a href="#ref-16" class="rp-cite">[16]</a>;
             Barrett 2017 <a href="#ref-6" class="rp-cite">[6]</a>). Pre-verbal somatic
-            awareness is more accurate for in-the-moment state.
+            awareness is real and distinct from verbal categorization.
           </li>
           <li>
             Labeling emotions reduces their intensity — "affect labeling" (Lieberman
-            et al. 2007 <a href="#ref-9" class="rp-cite">[9]</a>) — so labeling
-            <em>after</em> initial assessment avoids contaminating the primary rating.
+            et al. 2007 <a href="#ref-9" class="rp-cite">[9]</a>) — so naming
+            <em>after</em> the gesture avoids contaminating the somatic signal.
           </li>
           <li>
-            The face provides immediate nonjudgmental feedback: it is a mirror of the
-            user's state, not an evaluation of it.
+            The face provides immediate non-judgmental feedback: it is a mirror of
+            the user's state, not an evaluation of it.
           </li>
         </ul>
 
-        <h3>2.2 The pad as a sorting mechanism</h3>
+        <h3>2.2 Why the gesture is not the measurement</h3>
         <p>
-          This is the most important design insight to understand:
-          <strong>the V/A pad drag is not the final scientific measurement</strong>.
-          It serves three purposes, exactly:
+          The orientation step might feel like a rating, but mechanically it isn't.
+          The gesture does three things, and exactly three:
         </p>
         <ol>
-          <li>Drive the face glyph expression in real-time</li>
-          <li>Drive the background color interpolation</li>
-          <li>Sort the NRC VAD Lexicon chips by Euclidean distance from the pad
-            position in V/A space, surfacing the most relevant words first</li>
+          <li>Drives the face glyph expression in real time</li>
+          <li>Drives the color tint interpolation</li>
+          <li>Sorts the NRC VAD Lexicon by Euclidean distance from the gesture
+            position so the most relevant words rise to the top</li>
         </ol>
         <p>
-          The pad position is an <em>affordance for navigation</em> through a
-          55-word vocabulary — an intuitive, pre-verbal entry point into the lexicon.
-          A user who drags toward the upper-left (negative V, positive A) sees anger,
-          panic, and frustration rise to the top; a user who drags toward the
-          lower-right sees calm, peaceful, and serene. The pad replaces what would
-          otherwise be a flat, overwhelming list.
+          The gesture is an <em>affordance for navigation</em> through a 55-word
+          vocabulary — an intuitive, pre-verbal entry point into the lexicon. A user
+          who drags toward the upper-left (negative V, positive A) sees anger, panic,
+          and frustration rise to the top; a user who drags toward the lower-right
+          sees calm, peaceful, and serene. The gesture replaces what would otherwise
+          be a flat, overwhelming list.
         </p>
 
-        <h3>2.3 Labels compose the final V/A/D rating</h3>
+        <h3>2.3 Words compose the V/A/D measurement</h3>
         <p>
-          The final scientific measurement comes from the <strong>selected emotion
-          labels and their intensity levels</strong>, using the NRC VAD Lexicon
-          coordinates for each word:
+          The validated measurement comes from the <strong>selected words and their
+          intensity levels</strong>, weighted using each word's NRC VAD Lexicon
+          coordinates:
         </p>
 
         <div class="rp-formula">
-          <p class="rp-formula-label">For each selected label at intensity <em>level</em> ∈ {1, 2, 3}:</p>
-          <pre class="rp-formula-code">weight  = level / 3         // 0.33, 0.67, or 1.0
+          <p class="rp-formula-label">For each selected word at intensity <em>level</em> ∈ {1, 2, 3}:</p>
+          <pre class="rp-formula-code">weight = level / 3                       // 0.33, 0.67, or 1.0
 
-final V = Σ(emotion.v × weight) / Σ(weight)
-final A = Σ(emotion.a × weight) / Σ(weight)
-final D = Σ(emotion.d × weight) / Σ(weight)</pre>
+composite.v = Σ(word.v × weight) / Σ(weight)
+composite.a = Σ(word.a × weight) / Σ(weight)
+composite.d = Σ(word.d × weight) / Σ(weight)</pre>
           <p class="rp-formula-note">
-            If no labels are selected, the rating falls back to the pad's
-            <code>(padV, padA)</code> with D=0. This preserves the gut-feeling
-            signal even when the user doesn't refine further.
+            If no words are selected, <code>composite</code> is <code>null</code> —
+            the rating falls back to the gesture position with <code>d=0</code>.
+            This preserves the somatic signal even when the user doesn't refine further.
           </p>
         </div>
 
         <p>
-          This design is why affect-kit can produce <strong>genuine D values</strong>
-          despite showing only a 2D pad: D enters the rating through the lexicon. A user
-          who taps "frustrated" at level 3 gets the NRC lexicon's D value for
-          "frustrated" (−0.49, low-control). A user who taps "anger" gets D=+0.31
-          (higher-control). The face pad alone cannot distinguish these states; the
-          label selection step does.
+          This design is why affect-kit can produce <strong>genuine dominance values</strong>
+          despite showing only a 2D gesture surface: dominance enters the rating through
+          the lexicon. A user who taps <em>frustrated</em> (NRC d=−0.49, low-control)
+          versus <em>anger</em> (d=+0.31, agentic) generates structurally different
+          ratings. The gesture alone cannot make this distinction; the words can.
         </p>
 
-        <h3>2.4 The pad-vs-label gap as a signal</h3>
+        <h3>2.4 The face-vs-composite gap as a signal</h3>
         <p>
-          The <code>Rating</code> object preserves both the pad position
+          Even though the gesture isn't the formal measurement, it carries real signal —
+          and the rating object preserves it separately. The
+          <code>Rating</code> object holds both the pre-verbal placement
           (<code>rating.face</code>) and the label-aggregated composite coordinates
-          (<code>rating.composite</code>). The gap between them is itself a research signal.
+          (<code>rating.composite</code>). The gap between them is itself research data.
         </p>
         <p>
-          Research on emotional granularity (Barrett 2001; Kashdan, Barrett &amp; McKnight
+          Work on emotional granularity (Barrett 2001; Kashdan, Barrett &amp; McKnight
           2015 <a href="#ref-8" class="rp-cite">[8]</a>) links the ability to make
           fine-grained distinctions between similar emotions to mental health outcomes.
-          Large, persistent gaps between where a user drags and what they eventually label
-          are operationally close to measures of <em>alexithymia</em> — difficulty
+          Large, persistent gaps between where a user gestures and what they eventually
+          label are operationally close to measures of <em>alexithymia</em> — difficulty
           identifying or describing one's own feelings. Longitudinal tracking of this
           gap is a future research use case for the package.
         </p>
