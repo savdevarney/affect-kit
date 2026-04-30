@@ -76,6 +76,7 @@
     /* Always blurred so text beneath doesn't bleed through */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    transition: background 0.25s ease, border-color 0.25s ease;
   }
 
   .wordmark {
@@ -85,6 +86,7 @@
     text-decoration: none;
     color: var(--ink);
     font-family: 'SF Mono', 'Fira Code', ui-monospace, monospace;
+    transition: opacity 0.25s ease;
   }
 
   .nav-links {
@@ -107,6 +109,7 @@
     .wordmark {
       width: 100%;
       text-align: center;
+      font-size: 1.2rem;
     }
 
     .nav-links {
@@ -122,7 +125,7 @@
     display: inline-flex;
     align-items: center;
     gap: 0.3em;
-    transition: opacity 0.15s;
+    transition: opacity 0.25s ease, color 0.25s ease;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     font-size: 0.72rem;
@@ -140,10 +143,7 @@
   /* Frosted glass once scrolled past hero — transparent over gradient */
   .site-nav.is-scrolled {
     background: rgba(245, 245, 243, 0.82);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
-    transition: background 0.2s, border-color 0.2s;
   }
 
   .site-footer {
