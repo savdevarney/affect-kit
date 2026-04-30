@@ -794,19 +794,21 @@
     .rp-toc-list {
       flex-direction: row;
       flex-wrap: wrap;
-      gap: 0.15rem 0.5rem;
+      gap: 0.35rem 1.1rem;
       justify-content: center;
     }
     .rp-toc-list li { white-space: nowrap; }
-    .rp-toc-list a { font-weight: 600; }
   }
 
   .rp-toc-list a {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
     color: var(--ink-muted);
     text-decoration: none;
     display: block;
-    padding: 0.25rem 0 0.25rem 0.6rem;
+    padding: 0.3rem 0 0.3rem 0.6rem;
     border-left: 2px solid transparent;
     transition: color 0.15s, border-color 0.15s;
   }
