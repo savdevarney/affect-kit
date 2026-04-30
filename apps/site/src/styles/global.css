@@ -792,9 +792,50 @@
       z-index: 5;
       border-right: none;
       border-bottom: 1px solid var(--border);
-      padding: 0.75rem 1.5rem;
+      padding: 0;
       max-height: none;
       overflow: visible;
+    }
+  }
+
+  /* Desktop: summary is hidden, list is always visible */
+  .rp-toc-details > .rp-toc-summary { display: none; }
+  .rp-toc-details > nav { display: block; }
+
+  /* Narrow: show the disclosure summary, list collapsed by default */
+  @media (max-width: 860px) {
+    .rp-toc-details {
+      width: 100%;
+    }
+    .rp-toc-details > .rp-toc-summary {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      list-style: none;
+      padding: 0.85rem 1.5rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      user-select: none;
+    }
+    .rp-toc-details > .rp-toc-summary::-webkit-details-marker { display: none; }
+    .rp-toc-details > .rp-toc-summary::before {
+      content: '▶';
+      font-size: 0.55em;
+      transition: transform 0.2s ease;
+      color: var(--ink-faint);
+    }
+    .rp-toc-details[open] > .rp-toc-summary::before {
+      transform: rotate(90deg);
+    }
+    .rp-toc-details > nav {
+      padding: 0.25rem 1.5rem 1rem;
+      border-top: 1px solid var(--border);
+      max-height: 50vh;
+      overflow-y: auto;
     }
   }
 

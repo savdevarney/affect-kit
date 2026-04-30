@@ -30,6 +30,25 @@ const {
       );
       obs.observe(sentinel);
     }
+
+    // ToC: open on wide screens (always visible), collapsed by default on narrow
+    // (where it would otherwise eat the screen). Resize-aware.
+    const tocDetails = document.querySelector<HTMLDetailsElement>('.rp-toc-details');
+    if (tocDetails) {
+      const mq = window.matchMedia('(max-width: 860px)');
+      const sync = () => {
+        if (mq.matches) tocDetails.removeAttribute('open');
+        else tocDetails.setAttribute('open', '');
+      };
+      sync();
+      mq.addEventListener('change', sync);
+      // Auto-close after picking a link on narrow so the user can read content.
+      tocDetails.addEventListener('click', (e) => {
+        if (mq.matches && (e.target as HTMLElement).closest('a')) {
+          tocDetails.removeAttribute('open');
+        }
+      });
+    }
   </script>
 </body>
 </html>
