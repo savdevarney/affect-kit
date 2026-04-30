@@ -817,6 +817,7 @@
     .rp-toc-details > .rp-toc-summary {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 0.5rem;
       cursor: pointer;
       list-style: none;
