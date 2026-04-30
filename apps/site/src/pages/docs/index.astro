@@ -233,7 +233,7 @@ function App() {
           scaled by intensity (level 3 is largest, level 1 is smallest), an optional face glyph,
           and an optional color tint. Designed to pair with <code>&lt;affect-kit-rater&gt;</code>
           but can also be driven from stored data. The face and color always follow
-          <code>rating.raw</code> (the pre-verbal pad gesture), not the composite label coordinates —
+          <code>rating.face</code> (the pre-verbal pad gesture), not the composite label coordinates —
           preserving the visual signal of the gut feeling even when labels shift the V/A/D values.
         </p>
 
@@ -259,7 +259,7 @@ function App() {
                 <td><code>show-face</code></td>
                 <td>boolean</td>
                 <td><code>false</code></td>
-                <td>Show the face glyph. Face shape and color follow <code>rating.raw</code>, not the composite label V/A.</td>
+                <td>Show the face glyph. Face shape and color follow <code>rating.face</code>, not the composite label V/A.</td>
               </tr>
               <tr>
                 <td><code>show-labels</code></td>
@@ -572,10 +572,10 @@ import { createRating, averageRatings }           from 'affect-kit';`}></pre>
   /** Unix timestamp (ms) at commit time. */
   timestamp: number;
 
-  /** Raw pad position — the pre-verbal gut gesture, unaffected by label choice. */
-  raw: { v: number; a: number };
+  /** Pad position that drives the face glyph and color. The pre-verbal gut gesture. */
+  face: { v: number; a: number };
 
-  /** Selected emotion words, each enriched with its lexicon VAD coordinates. */
+  /** Selected emotion words, each carrying its lexicon VAD coordinates. */
   labels: EmotionLabel[];
 
   /**
@@ -584,29 +584,28 @@ import { createRating, averageRatings }           from 'affect-kit';`}></pre>
    * null when no labels were selected.
    */
   composite: { v: number; a: number; d: number } | null;
+}
 
-  // Rendering shorthands — resolve to composite ?? { v: raw.v, a: raw.a, d: 0 }
-  v: number; // Valence ∈ [-1, 1]
-  a: number; // Arousal ∈ [-1, 1]
-  d: number; // Dominance ∈ [-1, 1]
-}`}></pre>
+// To get a single resolved VAD vector:
+//   rating.composite ?? { v: rating.face.v, a: rating.face.a, d: 0 }`}></pre>
 
         <h3>EmotionLabel</h3>
         <pre class="docs-code" set:text={`interface EmotionLabel {
-  name:  string;  // valid EmotionName from the English vocabulary
-  level: number;  // 1 | 2 | 3 from rater; widened to number for averaged data
-  vad?:  { v: number; a: number; d: number };
-  // ^ NRC VAD Lexicon coordinates (Mohammad 2025). Populated automatically
-  //   by buildRating / createRating for known names; absent for unknown names.
+  name:  EmotionName; // strict — must be in the validated vocabulary
+  level: number;      // 1 | 2 | 3 from rater; widened to number for averaged data
+  vad:   { v: number; a: number; d: number };
+  // ^ Per-word NRC VAD Lexicon coordinates (Mohammad 2025).
+  //   Pre-aggregate — direct lookup, identical for every rating that contains
+  //   this name. Aggregation across labels happens only at Rating.composite.
 }`}></pre>
 
         <h3>createRating()</h3>
-        <p>Construct a <code>Rating</code> from a pad position and optional labels. Useful for seeding demos and tests:</p>
+        <p>Construct a <code>Rating</code> from a face position and optional labels. Throws on any label name not in the validated vocabulary:</p>
         <pre class="docs-code" set:text={`import { createRating } from 'affect-kit';
 
 const r = createRating({
-  v: 0.5, a: 0.3,           // pad position (required)
-  labels: [                  // optional
+  face: { v: 0.5, a: 0.3 },  // pad position (required)
+  labels: [                   // optional
     { name: 'calm',     level: 2 },
     { name: 'grateful', level: 1 },
   ],
@@ -722,7 +721,7 @@ const ref = useRef<AffectKitRater>(null);
     });
 
     // Pre-seed the result with a sample rating so it isn't blank
-    const seed = createRating({ v: 0.55, a: 0.2, labels: [
+    const seed = createRating({ face: { v: 0.55, a: 0.2 }, labels: [
       { name: 'content',  level: 3 },
       { name: 'grateful', level: 2 },
       { name: 'calm',     level: 1 },
@@ -749,12 +748,12 @@ const ref = useRef<AffectKitRater>(null);
 
     // Pre-seed compare
     const before = [
-      createRating({ v: -0.5, a: 0.5, labels: [{ name: 'overwhelmed', level: 3 }, { name: 'anxious', level: 2 }] }),
-      createRating({ v: -0.4, a: 0.4, labels: [{ name: 'frustrated', level: 2 }, { name: 'tired', level: 2 }] }),
+      createRating({ face: { v: -0.5, a: 0.5 }, labels: [{ name: 'overwhelmed', level: 3 }, { name: 'anxious', level: 2 }] }),
+      createRating({ face: { v: -0.4, a: 0.4 }, labels: [{ name: 'frustrated', level: 2 }, { name: 'tired', level: 2 }] }),
     ];
     const after = [
-      createRating({ v:  0.6, a: 0.3, labels: [{ name: 'calm', level: 2 }, { name: 'hopeful', level: 2 }] }),
-      createRating({ v:  0.7, a: 0.4, labels: [{ name: 'joy', level: 3 }, { name: 'grateful', level: 1 }] }),
+      createRating({ face: { v:  0.6, a: 0.3 }, labels: [{ name: 'calm', level: 2 }, { name: 'hopeful', level: 2 }] }),
+      createRating({ face: { v:  0.7, a: 0.4 }, labels: [{ name: 'joy', level: 3 }, { name: 'grateful', level: 1 }] }),
     ];
     const cmp = document.getElementById('docs-compare') as AffectKitCompare | null;
     if (cmp) { cmp.beforeRating = before; cmp.afterRating = after; }

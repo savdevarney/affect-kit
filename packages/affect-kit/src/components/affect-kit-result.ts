@@ -277,11 +277,11 @@ export class AffectKitResult extends LitElement {
     const r = this.rating;
     if (!r) return nothing;
 
-    // Face shape and color always follow the raw pad gesture, not the
-    // label-aggregated v/a — the visual represents WHERE the user placed
-    // their feeling, not what words they chose afterward.
-    const padV = r.raw.v;
-    const padA = r.raw.a;
+    // Face shape and color always follow the pre-verbal pad gesture, not the
+    // label composite — the visual represents WHERE the user placed their
+    // feeling, not what words they chose afterward.
+    const padV = r.face.v;
+    const padA = r.face.a;
     const [cr, cg, cb] = colorForVA(padV, padA);
     const glowStyle = this.colorMode
       ? `background: rgb(${cr},${cg},${cb})`
@@ -327,13 +327,19 @@ export class AffectKitResult extends LitElement {
             </div>
           ` : nothing}
 
-          ${this.showVad ? html`
-            <div class="vad">
-              <span>V ${r.v.toFixed(2)}</span>
-              <span>A ${r.a.toFixed(2)}</span>
-              <span>D ${r.d.toFixed(2)}</span>
-            </div>
-          ` : nothing}
+          ${this.showVad ? (() => {
+            // Resolved VAD: composite (when labels selected) ?? face fallback with d=0.
+            const v = r.composite?.v ?? r.face.v;
+            const a = r.composite?.a ?? r.face.a;
+            const d = r.composite?.d ?? 0;
+            return html`
+              <div class="vad">
+                <span>V ${v.toFixed(2)}</span>
+                <span>A ${a.toFixed(2)}</span>
+                <span>D ${d.toFixed(2)}</span>
+              </div>
+            `;
+          })() : nothing}
 
         </div>
       </div>

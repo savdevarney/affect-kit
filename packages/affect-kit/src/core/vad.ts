@@ -1,105 +1,100 @@
 // Pure module: aggregate selected emotion labels into a VAD vector,
 // then build the canonical Rating object. No DOM, no Lit, no state.
 
-import type { EmotionLabel, Rating } from './types';
-import type { EmotionName } from '../vocabulary/en';
+import type { EmotionLabel, Rating, EmotionName } from './types';
 import { EMOTIONS_BY_NAME } from '../vocabulary/en';
 
-/** @internal Aggregated V/A/D after label weighting. */
-export interface AggregatedVad {
-  v: number;
-  a: number;
-  d: number;
-  /** Intensity-weighted centroid of label NRC VAD values; null when no labels. */
-  composite: { v: number; a: number; d: number } | null;
+/**
+ * @internal Strict validation: names must come from the validated vocabulary.
+ * Throws on unknown — the package never silently accepts unvalidated labels.
+ */
+function lookupEmotion(name: string) {
+  const emotion = EMOTIONS_BY_NAME.get(name);
+  if (!emotion) {
+    throw new Error(
+      `Unknown emotion name: "${name}". Names must come from the validated vocabulary.`
+    );
+  }
+  return emotion;
 }
 
 /**
  * @internal
  * Aggregate VAD from active labels weighted by intensity level (1/3, 2/3, 3/3).
- * Returns pad V/A with d=0 and composite=null when the label list is empty.
- * Unknown emotion names are silently skipped.
+ * Returns `null` when the label list is empty. Caller is responsible for
+ * falling back to `face` when the composite is null.
  */
-export function computeVAD(padV: number, padA: number, labels: EmotionLabel[]): AggregatedVad {
+export function computeComposite(
+  labels: EmotionLabel[]
+): { v: number; a: number; d: number } | null {
   let totalW = 0, vSum = 0, aSum = 0, dSum = 0;
 
-  for (const { name, level } of labels) {
-    const emotion = EMOTIONS_BY_NAME.get(name);
-    if (!emotion) continue;
+  for (const { vad, level } of labels) {
     const weight = level / 3;
-    vSum   += emotion.v * weight;
-    aSum   += emotion.a * weight;
-    dSum   += emotion.d * weight;
+    vSum   += vad.v * weight;
+    aSum   += vad.a * weight;
+    dSum   += vad.d * weight;
     totalW += weight;
   }
 
-  const composite = totalW === 0
-    ? null
-    : { v: vSum / totalW, a: aSum / totalW, d: dSum / totalW };
-
-  return {
-    v: composite?.v ?? padV,
-    a: composite?.a ?? padA,
-    d: composite?.d ?? 0,
-    composite,
-  };
+  if (totalW === 0) return null;
+  return { v: vSum / totalW, a: aSum / totalW, d: dSum / totalW };
 }
 
 /**
  * @internal
  * Build the canonical Rating object at commit time.
- * Labels are enriched with their NRC VAD coordinates from the vocabulary.
- * `now` is injectable for testing; defaults to `Date.now`.
+ * Each input label is validated against the vocabulary and enriched with its
+ * lexicon VAD coordinates. `now` is injectable for testing; defaults to `Date.now`.
  */
 export function buildRating(args: {
-  padV: number;
-  padA: number;
-  labels: EmotionLabel[];
+  face: { v: number; a: number };
+  labels: Array<{ name: EmotionName; level: number }>;
   now?: () => number;
 }): Rating {
-  const { padV, padA, labels, now = Date.now } = args;
+  const { face, labels, now = Date.now } = args;
 
-  // Enrich labels with NRC VAD coordinates where the name is known.
+  // Validate + enrich every label with its NRC VAD coordinates.
   const enrichedLabels: EmotionLabel[] = labels.map(l => {
-    const emotion = EMOTIONS_BY_NAME.get(l.name);
-    if (!emotion) return l;
-    return { ...l, vad: { v: emotion.v, a: emotion.a, d: emotion.d } };
+    const emotion = lookupEmotion(l.name);
+    return {
+      name:  emotion.name as EmotionName,
+      level: l.level,
+      vad:   { v: emotion.v, a: emotion.a, d: emotion.d },
+    };
   });
 
-  const vad = computeVAD(padV, padA, enrichedLabels);
   return {
     timestamp: now(),
-    raw:       { v: padV, a: padA },
+    face:      { v: face.v, a: face.a },
     labels:    enrichedLabels,
-    composite: vad.composite,
-    v:         vad.v,
-    a:         vad.a,
-    d:         vad.d,
+    composite: computeComposite(enrichedLabels),
   };
 }
 
 /**
- * Public helper — construct a {@link Rating} from a V/A pad position and
- * optional emotion labels. Use this when building ratings programmatically
- * rather than via `<affect-kit-rater>`.
+ * Public helper — construct a {@link Rating} from a pad position and optional
+ * emotion labels. Use this when building ratings programmatically rather than
+ * via `<affect-kit-rater>`.
+ *
+ * Throws if any label name is not in the validated vocabulary.
  *
  * ```ts
  * import { createRating } from 'affect-kit';
  *
  * const r = createRating({
- *   v: 0.6, a: 0.4,
+ *   face: { v: 0.6, a: 0.4 },
  *   labels: [{ name: 'joy', level: 3 }],
  * });
  * ```
  */
 export function createRating(args: {
-  v: number;
-  a: number;
+  face: { v: number; a: number };
   labels?: Array<{ name: EmotionName; level: number }>;
   timestamp?: number;
 }): Rating {
-  const { v, a, labels = [], timestamp } = args;
-  const opts: Parameters<typeof buildRating>[0] = { padV: v, padA: a, labels };
+  const { face, labels = [], timestamp } = args;
+  const opts: Parameters<typeof buildRating>[0] = { face, labels };
   if (timestamp != null) opts.now = () => timestamp;
   return buildRating(opts);
 }
@@ -108,34 +103,26 @@ export function createRating(args: {
  * Collapse a series of {@link Rating}s into one synthetic averaged Rating
  * suitable for `<affect-kit-result>` to render as a longitudinal summary.
  *
- * - `v` / `a` / `d` are simple means of the rendering shorthands.
- * - `raw` is the mean of each rating's raw pad position.
- * - `composite` is the mean of all non-null composites; `null` if none present.
+ * - `face` is the simple mean of each rating's face position.
+ * - `composite` is the mean of all non-null composites; `null` if no rating
+ *   in the series had labels selected.
  * - Labels are aggregated by name: each emotion's level is its mean level
  *   across the sessions it appeared in, frequency-boosted so something said
  *   often-and-strongly outranks a one-off.
  * - The synthetic rating's `timestamp` is the latest input timestamp.
  *
  * Returns `null` when the input is empty.
- *
- * ```ts
- * import { averageRatings } from 'affect-kit';
- *
- * resultEl.rating = averageRatings(history); // history: Rating[]
- * ```
  */
 export function averageRatings(ratings: Rating[]): Rating | null {
   if (ratings.length === 0) return null;
   const n = ratings.length;
 
-  let vSum = 0, aSum = 0, dSum = 0;
-  let rawVSum = 0, rawASum = 0;
+  let faceVSum = 0, faceASum = 0;
   for (const r of ratings) {
-    vSum    += r.v; aSum    += r.a; dSum    += r.d;
-    rawVSum += r.raw.v; rawASum += r.raw.a;
+    faceVSum += r.face.v;
+    faceASum += r.face.a;
   }
 
-  // Average non-null composites; null if no ratings had labels.
   const withComposite = ratings.filter(r => r.composite !== null);
   const composite = withComposite.length === 0 ? null : {
     v: withComposite.reduce((s, r) => s + r.composite!.v, 0) / withComposite.length,
@@ -143,7 +130,7 @@ export function averageRatings(ratings: Rating[]): Rating | null {
     d: withComposite.reduce((s, r) => s + r.composite!.d, 0) / withComposite.length,
   };
 
-  const byName = new Map<string, { sum: number; count: number }>();
+  const byName = new Map<EmotionName, { sum: number; count: number }>();
   for (const r of ratings) {
     for (const l of r.labels) {
       const e = byName.get(l.name) ?? { sum: 0, count: 0 };
@@ -162,22 +149,19 @@ export function averageRatings(ratings: Rating[]): Rating | null {
   for (const [name, { sum, count }] of byName) {
     const avgLevel  = sum / count;
     const freqBoost = 0.6 + 0.4 * (count / maxCount);
-    const emotion   = EMOTIONS_BY_NAME.get(name);
-    const label: EmotionLabel = { name, level: avgLevel * freqBoost };
-    if (emotion) label.vad = { v: emotion.v, a: emotion.a, d: emotion.d };
-    labels.push(label);
+    const emotion   = lookupEmotion(name); // safe: names came from validated Ratings
+    labels.push({
+      name,
+      level: avgLevel * freqBoost,
+      vad:   { v: emotion.v, a: emotion.a, d: emotion.d },
+    });
   }
   labels.sort((a, b) => b.level - a.level);
 
-  const v = vSum / n;
-  const a = aSum / n;
   return {
     timestamp: ratings[ratings.length - 1]!.timestamp,
-    raw:       { v: rawVSum / n, a: rawASum / n },
+    face:      { v: faceVSum / n, a: faceASum / n },
     labels,
     composite,
-    v,
-    a,
-    d: dSum / n,
   };
 }

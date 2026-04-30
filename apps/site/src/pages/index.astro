@@ -304,14 +304,14 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
       if (jsonEl) {
         const round = (x: number) => +x.toFixed(3);
         jsonEl.textContent = JSON.stringify({
-          raw: { v: round(rating.raw.v), a: round(rating.raw.a) },
+          face: { v: round(rating.face.v), a: round(rating.face.a) },
           composite: rating.composite
             ? { v: round(rating.composite.v), a: round(rating.composite.a), d: round(rating.composite.d) }
             : null,
-          labels: rating.labels.map((l: { name: string; level: number; vad?: { v: number; a: number; d: number } }) => ({
+          labels: rating.labels.map((l: { name: string; level: number; vad: { v: number; a: number; d: number } }) => ({
             name:  l.name,
             level: l.level,
-            vad:   l.vad ? { v: round(l.vad.v), a: round(l.vad.a), d: round(l.vad.d) } : undefined,
+            vad:   { v: round(l.vad.v), a: round(l.vad.a), d: round(l.vad.d) },
           })),
         }, null, 2);
       }
@@ -339,31 +339,31 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
 
     // ── Compare demo data ──────────────────────────────────────
     const yesterday = [
-      createRating({ v: -0.4, a:  0.5, labels: [
+      createRating({ face: { v: -0.4, a:  0.5 }, labels: [
         { name: 'overwhelmed', level: 3 },
         { name: 'anxious',     level: 2 },
         { name: 'tired',       level: 1 },
       ]}),
-      createRating({ v: -0.5, a:  0.4, labels: [
+      createRating({ face: { v: -0.5, a:  0.4 }, labels: [
         { name: 'frustrated',  level: 2 },
         { name: 'tired',       level: 2 },
       ]}),
-      createRating({ v: -0.3, a:  0.3, labels: [
+      createRating({ face: { v: -0.3, a:  0.3 }, labels: [
         { name: 'overwhelmed', level: 2 },
         { name: 'sad',         level: 1 },
       ]}),
     ];
 
     const today = [
-      createRating({ v:  0.5, a:  0.3, labels: [
+      createRating({ face: { v:  0.5, a:  0.3 }, labels: [
         { name: 'calm',     level: 2 },
         { name: 'grateful', level: 1 },
       ]}),
-      createRating({ v:  0.7, a:  0.5, labels: [
+      createRating({ face: { v:  0.7, a:  0.5 }, labels: [
         { name: 'joy',     level: 3 },
         { name: 'hopeful', level: 2 },
       ]}),
-      createRating({ v:  0.6, a:  0.2, labels: [
+      createRating({ face: { v:  0.6, a:  0.2 }, labels: [
         { name: 'content',  level: 2 },
         { name: 'grateful', level: 2 },
         { name: 'calm',     level: 1 },

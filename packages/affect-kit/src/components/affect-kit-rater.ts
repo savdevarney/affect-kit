@@ -3,7 +3,7 @@ import { customElement, property, state, query } from 'lit/decorators.js';
 import { colorForVA, darkerForChips, surfaceIsLight, type Rgb } from '../core/color';
 import { buildRating } from '../core/vad';
 import { EMOTIONS } from '../vocabulary/en';
-import type { Rating, EmotionLabel } from '../core/types';
+import type { Rating, EmotionName } from '../core/types';
 import './affect-kit-face';
 import type { AffectKitFace } from './affect-kit-face';
 
@@ -353,8 +353,8 @@ export class AffectKitRater extends LitElement {
    * Reveals chips immediately and sets the pad + label state from the rating.
    */
   setRating(rating: Rating): void {
-    this._padV = rating.raw.v;
-    this._padA = rating.raw.a;
+    this._padV = rating.face.v;
+    this._padA = rating.face.a;
     const levels = new Map<string, 0 | 1 | 2 | 3>();
     // Rating.level is `number` to support averaged longitudinal data, but the
     // rater itself only renders integer chip levels — round and clamp on prefill.
@@ -365,8 +365,8 @@ export class AffectKitRater extends LitElement {
     }
     this._levels = levels;
     this._revealed = true;
-    this._ghostX = (rating.raw.v + 1) / 2;
-    this._ghostY = (1 - rating.raw.a) / 2;
+    this._ghostX = (rating.face.v + 1) / 2;
+    this._ghostY = (1 - rating.face.a) / 2;
     this._sortOrder = this._computeSortOrder();
     this._hasFlippedOnce = true;
     this._updateColorVars();
@@ -538,11 +538,11 @@ export class AffectKitRater extends LitElement {
   // ── Change event ─────────────────────────────────────────────────────────
 
   private _emitChange() {
-    const labels: EmotionLabel[] = [];
+    const labels: Array<{ name: EmotionName; level: number }> = [];
     for (const [name, level] of this._levels) {
-      if (level > 0) labels.push({ name, level: level as 1 | 2 | 3 });
+      if (level > 0) labels.push({ name: name as EmotionName, level: level as 1 | 2 | 3 });
     }
-    const rating = buildRating({ padV: this._padV, padA: this._padA, labels });
+    const rating = buildRating({ face: { v: this._padV, a: this._padA }, labels });
     this.dispatchEvent(new CustomEvent<Rating>('change', {
       detail: rating,
       bubbles: true,
@@ -553,11 +553,11 @@ export class AffectKitRater extends LitElement {
   // ── Commit (explicit submit) ──────────────────────────────────────────────
 
   private _onSubmit() {
-    const labels: EmotionLabel[] = [];
+    const labels: Array<{ name: EmotionName; level: number }> = [];
     for (const [name, level] of this._levels) {
-      if (level > 0) labels.push({ name, level: level as 1 | 2 | 3 });
+      if (level > 0) labels.push({ name: name as EmotionName, level: level as 1 | 2 | 3 });
     }
-    const rating = buildRating({ padV: this._padV, padA: this._padA, labels });
+    const rating = buildRating({ face: { v: this._padV, a: this._padA }, labels });
     this.dispatchEvent(new CustomEvent<Rating>('commit', {
       detail: rating,
       bubbles: true,
@@ -579,9 +579,9 @@ export class AffectKitRater extends LitElement {
     const [r, g, b] = colorForVA(this._padV, this._padA) as Rgb;
     const glowBg = `rgb(${r},${g},${b})`;
 
-    const activeLabels: EmotionLabel[] = [];
+    const activeLabels: Array<{ name: EmotionName; level: number }> = [];
     for (const [name, level] of this._levels) {
-      if (level > 0) activeLabels.push({ name, level: level as 1 | 2 | 3 });
+      if (level > 0) activeLabels.push({ name: name as EmotionName, level: level as 1 | 2 | 3 });
     }
     const hasLabels = activeLabels.length > 0;
     const vad = hasLabels
@@ -647,11 +647,11 @@ export class AffectKitRater extends LitElement {
     `;
   }
 
-  private _computeDisplayVAD(labels: EmotionLabel[]) {
-    // Inline the weighted average here to avoid importing the full computeVAD
-    // (which is already used in buildRating — this is just for the readout).
-    const rating = buildRating({ padV: this._padV, padA: this._padA, labels });
-    return { v: rating.v, a: rating.a, d: rating.d };
+  private _computeDisplayVAD(labels: Array<{ name: EmotionName; level: number }>) {
+    // Resolved VAD for the debug readout: composite when labels are selected,
+    // otherwise the raw face position with d=0.
+    const rating = buildRating({ face: { v: this._padV, a: this._padA }, labels });
+    return rating.composite ?? { v: rating.face.v, a: rating.face.a, d: 0 };
   }
 }
 

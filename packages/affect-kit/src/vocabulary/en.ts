@@ -9,7 +9,7 @@
 import type { Emotion } from './types';
 
 /** @internal */
-export const EMOTIONS: readonly Emotion[] = [
+export const EMOTIONS = [
   // ── High arousal, negative valence ── anger zone ──────────────────────
   { name: 'anger',        v: -0.666, a:  0.730, d:  0.314, source: 'NRC' },
   { name: 'fear',         v: -0.854, a:  0.680, d: -0.414, source: 'NRC' },
@@ -74,7 +74,7 @@ export const EMOTIONS: readonly Emotion[] = [
   // ── Cross-quadrant ─────────────────────────────────────────────────────
   { name: 'nostalgic',    v: -0.084, a: -0.298, d: -0.632, source: 'NRC' },
   { name: 'bittersweet',  v: -0.062, a:  0.138, d: -0.052, source: 'NRC' },
-];
+] as const satisfies readonly Emotion[];
 
 // Index by name for O(1) lookup in computeVAD.
 /** @internal */

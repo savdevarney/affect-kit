@@ -269,8 +269,8 @@ export class AffectKitCompare extends LitElement {
 
     // Gradient end-stops. Fall back to a low-saturation neutral if a side
     // is null so the gradient still produces something sensible.
-    const lc = left  ? colorForVA(left.raw.v,  left.raw.a)  : [240, 240, 240] as const;
-    const rc = right ? colorForVA(right.raw.v, right.raw.a) : [240, 240, 240] as const;
+    const lc = left  ? colorForVA(left.face.v,  left.face.a)  : [240, 240, 240] as const;
+    const rc = right ? colorForVA(right.face.v, right.face.a) : [240, 240, 240] as const;
     const gradientStyle =
       `--_from: rgb(${lc[0]},${lc[1]},${lc[2]});` +
       `--_to: rgb(${rc[0]},${rc[1]},${rc[2]});`;
