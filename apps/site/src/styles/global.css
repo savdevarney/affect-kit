@@ -69,7 +69,7 @@
     left: 0;
     right: 0;
     z-index: 10;
-    padding: 1.1rem var(--px);
+    padding: 1.2rem var(--px);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -99,7 +99,7 @@
 
   /* Two-row nav at very small screens so links don't overflow at 280px */
   @media (max-width: 520px) {
-    :root { --nav-h: 4rem; }
+    :root { --nav-h: 4.5rem; }
 
     .site-nav {
       flex-wrap: wrap;
