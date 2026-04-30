@@ -76,7 +76,12 @@
     /* Always blurred so text beneath doesn't bleed through */
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    transition: background 0.25s ease, border-color 0.25s ease;
+    /* Same gradient structure as .is-scrolled, fully transparent — so browser can interpolate */
+    background:
+      radial-gradient(ellipse 55% 600% at 5%   0%, transparent, transparent),
+      radial-gradient(ellipse 55% 600% at 95%  0%, transparent, transparent),
+      rgba(245, 245, 243, 0);
+    transition: background 0.4s ease, border-color 0.4s ease;
   }
 
   .wordmark {
@@ -140,9 +145,12 @@
   }
   .nav-links svg { flex-shrink: 0; }
 
-  /* Frosted glass once scrolled past hero — transparent over gradient */
+  /* Frosted glass + rainbow tint once scrolled past hero */
   .site-nav.is-scrolled {
-    background: rgba(245, 245, 243, 0.82);
+    background:
+      radial-gradient(ellipse 55% 600% at 5%   0%, color-mix(in srgb, var(--color-pink) 22%, transparent), transparent),
+      radial-gradient(ellipse 55% 600% at 95%  0%, color-mix(in srgb, var(--color-gold) 22%, transparent), transparent),
+      rgba(245, 245, 243, 0.82);
     border-bottom: 1px solid var(--border);
   }
 
