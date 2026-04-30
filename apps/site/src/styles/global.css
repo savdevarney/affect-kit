@@ -769,13 +769,15 @@
   }
 
   .rp-toc {
+    position: -webkit-sticky;
     position: sticky;
     top: var(--nav-h);
-    padding: 2.5rem 1.5rem 2rem 2rem;
+    padding: 1.25rem 1.5rem 1.5rem 2rem;
     align-self: start;
     border-right: 1px solid var(--border);
-    min-height: 80vh;
     min-width: 0; /* grid item: allow shrinking */
+    max-height: calc(100vh - var(--nav-h));
+    overflow-y: auto;
     /* Frosted glass — content scrolls behind the sidebar */
     background: rgba(245, 245, 243, 0.72);
     backdrop-filter: blur(12px);
