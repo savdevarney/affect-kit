@@ -110,21 +110,19 @@ export class AffectKitResult extends LitElement {
 
     /*
      * Continuous level scaling for the word-cloud effect. --_level is set
-     * inline per-word and clamped into [1, 3]. The size curve is a smooth
-     * quadratic that hits these three anchor points so averaged
-     * (non-integer) levels read meaningfully between them:
+     * inline per-word and clamped into [1, 3]. Linear scale anchored at:
      *
-     *   level 1 (small)  → 0.50em   ─┐
-     *   level 2 (medium) → 1.00em    ├─  f(L) = 0.25·L² − 0.25·L + 0.5
-     *   level 3 (large)  → 2.00em   ─┘
+     *   level 1 → 1em (100%)   ← base
+     *   level 2 → 2em (200%)
+     *   level 3 → 3em (300%)
      *
-     * Opacity follows a complementary curve so heavier weight reads more
-     * prominent without needing a separate color. Family inherits.
+     * Averaged (non-integer) levels interpolate continuously.
+     * Family inherits; opacity climbs gently with level.
      */
     .word {
-      --_lv: clamp(1, var(--_level, 2), 3);
-      font-size: calc((0.25 * var(--_lv) * var(--_lv) - 0.25 * var(--_lv) + 0.5) * 1em);
-      opacity:   calc(0.55 + (var(--_lv) - 1) * 0.225);
+      --_lv: clamp(1, var(--_level, 1), 3);
+      font-size: calc(var(--_lv) * 1em);
+      opacity:   calc(0.6 + (var(--_lv) - 1) * 0.2);
       font-family: inherit;
       letter-spacing: -0.01em;
       color: var(--affect-kit-ink, #1a1a1a);
@@ -133,8 +131,8 @@ export class AffectKitResult extends LitElement {
        --_word-color is set inline per-word from EMOTIONS_BY_NAME. */
     :host([color-mode="words"]) .word {
       color: var(--_word-color, var(--affect-kit-ink, #1a1a1a));
-      /* Boost opacity floor in words mode so light-V/A words stay legible. */
-      opacity: calc(0.75 + (var(--_lv) - 1) * 0.125);
+      /* Bias opacity higher in words mode so light-V/A words stay legible. */
+      opacity: calc(0.78 + (var(--_lv) - 1) * 0.11);
     }
 
     .align-center .words { justify-content: center; }

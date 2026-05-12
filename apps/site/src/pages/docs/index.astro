@@ -149,13 +149,9 @@ function App() {
             <button class="docs-toggle" id="docs-rater-animated" type="button" aria-pressed="true"></button>
             animated
           </label>
-          <label class="docs-ctrl">
-            <button class="docs-toggle" id="docs-rater-vad" type="button" aria-pressed="true"></button>
-            show-vad
-          </label>
         </div>
         <div class="docs-demo">
-          <affect-kit-rater id="docs-rater" show-vad color-mode="background"></affect-kit-rater>
+          <affect-kit-rater id="docs-rater" color-mode="background"></affect-kit-rater>
         </div>
 
         <h3>Attributes / props</h3>
@@ -280,10 +276,6 @@ function App() {
           <label class="docs-ctrl">
             <button class="docs-toggle" id="docs-result-labels" type="button" aria-pressed="true"></button>
             show-labels
-          </label>
-          <label class="docs-ctrl">
-            <button class="docs-toggle" id="docs-result-vad" type="button" aria-pressed="false"></button>
-            show-vad
           </label>
           <label class="docs-ctrl">
             <span class="docs-ctrl-label">align</span>
@@ -814,7 +806,6 @@ const ref = useRef<AffectKitRater>(null);
     });
     seg('docs-rater-color',          (m) => { if (rater) rater.colorMode = m; });
     toggle('docs-rater-animated',    (v) => { if (rater) rater.animated  = v; });
-    toggle('docs-rater-vad',         (v) => { if (rater) rater.showVad   = v; });
 
     // ── Result pre-seed + controls ────────────────────────────────────
     const seed = createRating({ face: { v: 0.55, a: 0.2 }, labels: [
@@ -826,7 +817,6 @@ const ref = useRef<AffectKitRater>(null);
     seg('docs-result-color',         (m) => { if (result) result.colorMode  = m; });
     toggle('docs-result-face',       (v) => { if (result) result.showFace   = v; });
     toggle('docs-result-labels',     (v) => { if (result) result.showLabels = v; });
-    toggle('docs-result-vad',        (v) => { if (result) result.showVad    = v; });
     (document.getElementById('docs-result-align')   as HTMLSelectElement | null)
       ?.addEventListener('change', (e) => { if (result) result.align   = (e.target as HTMLSelectElement).value as 'left' | 'center' | 'right'; });
     (document.getElementById('docs-result-variant') as HTMLSelectElement | null)
