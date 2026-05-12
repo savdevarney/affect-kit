@@ -30,15 +30,20 @@ export type ColorMode = 'background' | 'words';
  * across many sessions) can be passed straight to `<affect-kit-result>` for
  * rendering — the display interpolates size, weight, and opacity continuously.
  *
- * `vad` holds the NRC VAD Lexicon coordinates (National Research Council Canada,
- * Mohammad 2025) for this specific word. It is the **per-label, pre-aggregate**
- * value — direct from the lexicon, identical for every rating that contains
- * this name. Aggregation across labels happens only at `Rating.composite`.
+ * `vad` (optional) holds the NRC VAD Lexicon coordinates (NRC v2.1,
+ * Mohammad 2025) for this specific word. When present it's the
+ * **per-label, pre-aggregate** value — direct from the lexicon, identical
+ * for every rating that contains this name.
+ *
+ * The rater always emits with `vad` inline so a captured Rating is a
+ * complete snapshot. **For persistence**, consumers typically drop `vad`
+ * (it's a deterministic function of `name`) and rehydrate on read from
+ * {@link EMOTION_LABELS}. See `stripVad()` and `rehydrate()`.
  */
 export interface EmotionLabel {
   name: EmotionName;
   level: number;
-  vad: { v: number; a: number; d: number };
+  vad?: { v: number; a: number; d: number };
 }
 
 /**

@@ -29,4 +29,5 @@ if (!customElements.get('affect-kit-compare')) customElements.define('affect-kit
 export { AffectKitRater, AffectKitResult, AffectKitFace, AffectKitCompare };
 
 export type { ColorMode, Rating, EmotionLabel, EmotionName } from './core/types';
-export { createRating, averageRatings } from './core/vad';
+export { createRating, averageRatings, stripVad, rehydrate } from './core/vad';
+export { EMOTION_LABELS } from './vocabulary/en';

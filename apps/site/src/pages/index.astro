@@ -290,7 +290,7 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
     import 'affect-kit/result';
     import 'affect-kit/face';
     import 'affect-kit/compare';
-    import { createRating } from 'affect-kit';
+    import { createRating, averageRatings } from 'affect-kit';
     import type { AffectKitRater }   from 'affect-kit/rater';
     import type { AffectKitResult }  from 'affect-kit/result';
     import type { AffectKitCompare } from 'affect-kit/compare';
@@ -378,8 +378,9 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
 
     const compareEl = document.getElementById('site-compare') as AffectKitCompare | null;
     if (compareEl) {
-      compareEl.beforeRating = yesterday;
-      compareEl.afterRating  = today;
+      // Compare accepts a single Rating per side; average the series upstream.
+      compareEl.beforeRating = averageRatings(yesterday);
+      compareEl.afterRating  = averageRatings(today);
     }
   </script>
 

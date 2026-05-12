@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { computeComposite, buildRating, createRating } from '../../src/core/vad';
+import { computeComposite, buildRating, createRating, stripVad, rehydrate } from '../../src/core/vad';
+import type { Rating } from '../../src/core/types';
 
 describe('computeComposite', () => {
   it('returns null when no labels are active', () => {
@@ -64,7 +65,7 @@ describe('buildRating', () => {
     expect(rating.composite).not.toBeNull();
     expect(rating.composite!.v).toBeCloseTo(0.750, 3); // calm's v (NRC v2.1)
     // Label is enriched with VAD coordinates
-    expect(rating.labels[0]!.vad.v).toBeCloseTo(0.750, 3);
+    expect(rating.labels[0]!.vad!.v).toBeCloseTo(0.750, 3);
   });
 
   it('throws on unknown emotion names', () => {
@@ -103,5 +104,47 @@ describe('createRating', () => {
         labels: [{ name: 'not-a-real-emotion', level: 1 }],
       })
     ).toThrow(/unknown emotion name/i);
+  });
+});
+
+describe('stripVad / rehydrate', () => {
+  const full: Rating = createRating({
+    face: { v: 0.5, a: 0.3 },
+    labels: [
+      { name: 'joy',     level: 3 },
+      { name: 'hopeful', level: 2 },
+    ],
+  });
+
+  it('stripVad removes vad from every label', () => {
+    const lean = stripVad(full);
+    expect(lean.labels).toHaveLength(2);
+    expect(lean.labels.every(l => l.vad === undefined)).toBe(true);
+    expect(lean.labels[0]!.name).toBe('joy');
+    expect(lean.labels[0]!.level).toBe(3);
+    // Other fields untouched
+    expect(lean.face).toEqual(full.face);
+    expect(lean.timestamp).toBe(full.timestamp);
+    expect(lean.composite).toEqual(full.composite);
+  });
+
+  it('rehydrate fills vad back from the lexicon', () => {
+    const lean = stripVad(full);
+    const round = rehydrate(lean);
+    expect(round.labels[0]!.vad).toEqual(full.labels[0]!.vad);
+    expect(round.labels[1]!.vad).toEqual(full.labels[1]!.vad);
+  });
+
+  it('rehydrate is a no-op for labels that already have vad', () => {
+    const round = rehydrate(full);
+    expect(round.labels[0]!.vad).toEqual(full.labels[0]!.vad);
+    // Same reference passes through when already hydrated
+    expect(round.labels[0]).toBe(full.labels[0]);
+  });
+
+  it('computeComposite tolerates labels without inline vad', () => {
+    const lean = stripVad(full).labels;
+    const composite = computeComposite(lean);
+    expect(composite).toEqual(full.composite);
   });
 });
