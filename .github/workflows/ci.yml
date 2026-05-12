@@ -30,10 +30,12 @@ jobs:
               - 'apps/site/**'
               - 'packages/affect-kit/**'
               - 'pnpm-lock.yaml'
-            # Package surface — affects publish + dependent harnesses + the site.
+            # Package surface — anything that can change what gets published
+            # (source, transitive deps via lockfile, or a pending changeset).
             pkg:
               - 'packages/affect-kit/**'
               - 'packages/react/**'
+              - '.changeset/*.md'
               - 'pnpm-lock.yaml'
 
   # ───────────────────────────────────────────────────────────────────────

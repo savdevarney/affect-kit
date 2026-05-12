@@ -13,6 +13,10 @@ name: Release
 on:
   push:
     branches: [main]
+  # Manual trigger from the Actions tab. Forces both deploy-site and
+  # release-npm to run regardless of path-filter detection — useful for
+  # bootstrapping the first release or recovering after a failed deploy.
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -40,8 +44,13 @@ jobs:
               - 'apps/site/**'
               - 'packages/affect-kit/**'
               - 'pnpm-lock.yaml'
+            # Anything that can change what gets published: package source,
+            # the lockfile (transitive dep bumps), OR a pending changeset
+            # that describes the next version bump.
             pkg:
               - 'packages/affect-kit/**'
+              - 'packages/react/**'
+              - '.changeset/*.md'
               - 'pnpm-lock.yaml'
 
   # ───────────────────────────────────────────────────────────────────────
@@ -51,7 +60,7 @@ jobs:
     name: Site → Cloudflare Pages production
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.site == 'true'
+    if: needs.changes.outputs.site == 'true' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -80,7 +89,7 @@ jobs:
     name: npm publish (Changesets)
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.pkg == 'true'
+    if: needs.changes.outputs.pkg == 'true' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
         with:

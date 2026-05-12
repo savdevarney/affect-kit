@@ -45,6 +45,7 @@ jobs:
               - 'pnpm-lock.yaml'
             pkg:
               - 'packages/affect-kit/**'
+              - '.changeset/*.md'
               - 'pnpm-lock.yaml'
 
   # ───────────────────────────────────────────────────────────────────────
