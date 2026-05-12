@@ -97,8 +97,10 @@ export class AffectKitFace extends LitElement {
    * Scales all animation amplitude (breath + tremor). Range 0..1, default 1.
    * The rater sets this to ~0.2 while the user is actively dragging so the
    * face stays readable during interaction, then restores it to 1.0 on release.
+   *
+   * @internal
    */
-  @property({ type: Number }) motionScale = 1;
+  @property({ type: Number, attribute: false }) motionScale = 1;
 
   private _current: FaceParams = computeTarget(0, 0);
   private _target: FaceParams = computeTarget(0, 0);

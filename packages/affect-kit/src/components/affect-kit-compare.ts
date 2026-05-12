@@ -1,8 +1,9 @@
 import { LitElement, html, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import type { Rating } from '../core/types';
+import type { ColorMode, Rating } from '../core/types';
 import { averageRatings } from '../core/vad';
 import { colorForVA } from '../core/color';
+import { colorModeConverter } from '../core/color-mode';
 import './affect-kit-result'; // ensure result element is registered
 
 /**
@@ -54,7 +55,8 @@ export class AffectKitCompare extends LitElement {
     :host {
       display: block;
       container-type: inline-size;
-      font-size: 1rem;
+      font-family: inherit;
+      font-size: var(--affect-kit-font-size, 1rem);
       /* Cap so the widget doesn't stretch ugly in wide layouts. Override
          via the custom property if you need something different. */
       max-width: var(--affect-kit-compare-max-width, 880px);
@@ -142,7 +144,8 @@ export class AffectKitCompare extends LitElement {
       align-self: center;  /* STACKED default — centered above each half */
       background: white;
       color: #1a1a1a;
-      font-size: 0.62rem;
+      font-family: inherit;
+      font-size: 0.62em;
       font-weight: 600;
       letter-spacing: 0.06em;
       text-transform: uppercase;
@@ -152,8 +155,21 @@ export class AffectKitCompare extends LitElement {
       margin: 0;
     }
 
-    /* Inner result — STACKED default flows column-then-mirror. */
+    /*
+     * Inner result — STACKED default flows column-then-mirror.
+     * Compare's gradient panel is the visible card, so we suppress each
+     * inner result's chrome and glow via the result's documented CSS
+     * custom properties (no public prop on result needed).
+     */
     affect-kit-result {
+      --_panel-bg: transparent;
+      --_panel-padding: 0;
+      --_panel-shadow: none;
+      --_panel-radius: 0;
+      --_panel-overflow: visible;
+      --_glow-display: none;
+      max-width: none;
+
       --_face-dir: column;
       --_face-align: stretch;
       --_face-gap: 0;
@@ -161,7 +177,8 @@ export class AffectKitCompare extends LitElement {
       --_face-mb: 0.5em;
       --_face-mt: 0;
     }
-    affect-kit-result[mirror] {
+    /* Right side mirrors so each face sits on the outer edge. */
+    .side.right affect-kit-result {
       --_face-dir: column-reverse;
       --_face-mb: 0;
       --_face-mt: 0.5em;
@@ -192,7 +209,7 @@ export class AffectKitCompare extends LitElement {
         --_face-mb: 0;
         --_face-mt: 0;
       }
-      affect-kit-result[mirror] { --_face-dir: row-reverse; }
+      .side.right affect-kit-result { --_face-dir: row-reverse; }
     }
 
     /* Light content (face OR labels off) — unlock side-by-side at 380px.
@@ -215,7 +232,7 @@ export class AffectKitCompare extends LitElement {
           --_face-mb: 0;
           --_face-mt: 0;
         }
-        & affect-kit-result[mirror] { --_face-dir: row-reverse; }
+        & .side.right affect-kit-result { --_face-dir: row-reverse; }
       }
     }
   `;
@@ -246,11 +263,15 @@ export class AffectKitCompare extends LitElement {
   showFace = false;
 
   /**
-   * When on, the card background is a gradient from the left rating's
-   * V/A color to the right rating's V/A color.
+   * Color treatment. See {@link ColorMode}.
+   * - `'background'` — card is a gradient between the two ratings' V/A colors.
+   * - `'words'` — outer card stays neutral; each word inside picks up its
+   *   own lexicon color. Useful when averaging many ratings would wash the
+   *   background to gray.
+   * - `null` — no color.
    */
-  @property({ type: Boolean, attribute: 'color-mode', reflect: true })
-  colorMode = false;
+  @property({ converter: colorModeConverter, attribute: 'color-mode', reflect: true })
+  colorMode: ColorMode | null = null;
 
   /** Forwarded to each `<affect-kit-result>`. Defaults true. Reflected
       so CSS rules can branch on which content types are visible. */
@@ -267,23 +288,29 @@ export class AffectKitCompare extends LitElement {
     const left  = this._resolve(this.beforeRating);
     const right = this._resolve(this.afterRating);
 
-    // Gradient end-stops. Fall back to a low-saturation neutral if a side
-    // is null so the gradient still produces something sensible.
+    // Outer gradient only paints in 'background' mode. In 'words' mode the
+    // color story lives on the individual labels, so the card stays neutral.
+    const showGradient = this.colorMode === 'background';
     const lc = left  ? colorForVA(left.face.v,  left.face.a)  : [240, 240, 240] as const;
     const rc = right ? colorForVA(right.face.v, right.face.a) : [240, 240, 240] as const;
-    const gradientStyle =
-      `--_from: rgb(${lc[0]},${lc[1]},${lc[2]});` +
-      `--_to: rgb(${rc[0]},${rc[1]},${rc[2]});`;
+    const gradientStyle = showGradient
+      ? `--_from: rgb(${lc[0]},${lc[1]},${lc[2]});--_to: rgb(${rc[0]},${rc[1]},${rc[2]});`
+      : '';
+
+    // Each inner result also gets the words/background/null mode. We pass
+    // it as a string attribute so the inner result's CSS attribute selectors
+    // (`:host([color-mode="words"])`) trigger.
+    const innerColorMode = this.colorMode;
 
     return html`
       <div class="panel">
-        <div class="gradient" style=${gradientStyle}></div>
+        ${showGradient ? html`<div class="gradient" style=${gradientStyle}></div>` : ''}
         <div class="row">
           <div class="side left">
             <p class="caption">${this.beforeLabel}</p>
             <affect-kit-result
-              bare
               .rating=${left}
+              .colorMode=${innerColorMode}
               ?show-face=${this.showFace}
               ?show-labels=${this.showLabels}
             ></affect-kit-result>
@@ -291,9 +318,8 @@ export class AffectKitCompare extends LitElement {
           <div class="side right">
             <p class="caption">${this.afterLabel}</p>
             <affect-kit-result
-              bare
-              mirror
               .rating=${right}
+              .colorMode=${innerColorMode}
               ?show-face=${this.showFace}
               ?show-labels=${this.showLabels}
             ></affect-kit-result>

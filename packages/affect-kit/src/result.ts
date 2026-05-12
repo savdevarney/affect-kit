@@ -3,4 +3,4 @@
 import './components/affect-kit-result';
 
 export { AffectKitResult } from './components/affect-kit-result';
-export type { Rating, EmotionLabel } from './core/types';
+export type { ColorMode, Rating, EmotionLabel } from './core/types';

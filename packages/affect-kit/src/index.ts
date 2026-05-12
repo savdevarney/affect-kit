@@ -20,5 +20,5 @@ export { AffectKitResult }  from './components/affect-kit-result';
 export { AffectKitFace }    from './components/affect-kit-face';
 export { AffectKitCompare } from './components/affect-kit-compare';
 
-export type { Rating, EmotionLabel, EmotionName } from './core/types';
+export type { ColorMode, Rating, EmotionLabel, EmotionName } from './core/types';
 export { createRating, averageRatings } from './core/vad';

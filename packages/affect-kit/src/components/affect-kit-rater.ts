@@ -1,9 +1,10 @@
 import { LitElement, html, css, nothing, type PropertyValues } from 'lit';
 import { customElement, property, state, query } from 'lit/decorators.js';
 import { colorForVA, darkerForChips, surfaceIsLight, type Rgb } from '../core/color';
+import { colorModeConverter } from '../core/color-mode';
 import { buildRating } from '../core/vad';
 import { EMOTIONS } from '../vocabulary/en';
-import type { Rating, EmotionName } from '../core/types';
+import type { ColorMode, Rating, EmotionName } from '../core/types';
 import './affect-kit-face';
 import type { AffectKitFace } from './affect-kit-face';
 
@@ -35,6 +36,11 @@ export class AffectKitRater extends LitElement {
     :host {
       display: block;
       container-type: inline-size;
+      /* Inherit family; base font-size from --affect-kit-font-size.
+         All internal sizing is em-based off this so consumers can scale
+         the whole component with one variable. */
+      font-family: inherit;
+      font-size: var(--affect-kit-font-size, 1rem);
       /* Cap so the widget doesn't stretch ugly in wide layouts. Override
          via the custom property if you need something different. */
       max-width: var(--affect-kit-rater-max-width, 640px);
@@ -68,9 +74,9 @@ export class AffectKitRater extends LitElement {
       position: relative;
       flex: 0 0 auto;
       width: 100%;
-      max-width: 240px;
+      max-width: 200px;
       aspect-ratio: 1;
-      margin: 8px auto;
+      margin: 4px auto 0;
       cursor: grab;
       touch-action: none;
       user-select: none;
@@ -82,8 +88,8 @@ export class AffectKitRater extends LitElement {
       position: absolute;
       inset: 0;
       margin: auto;
-      width: 90%;
-      height: 90%;
+      width: 94%;
+      height: 94%;
       pointer-events: none;
       filter: drop-shadow(0 10px 28px rgba(0,0,0,0.14));
     }
@@ -106,7 +112,7 @@ export class AffectKitRater extends LitElement {
       flex: 1 1 auto;
       padding: 4px 22px 14px;
       z-index: 1;
-      min-height: 460px;
+      min-height: 380px;
       overflow: hidden;
       transition:
         opacity 0.65s ease,
@@ -135,13 +141,13 @@ export class AffectKitRater extends LitElement {
     }
 
     .chip {
-      padding: 6px 13px;
+      padding: 0.38em 0.85em;
       background: rgba(0,0,0,0.05);
       color: rgba(0,0,0,0.55);
       border: none;
       border-radius: 999px;
       font-family: inherit;
-      font-size: 12px;
+      font-size: 0.78em;
       font-weight: 500;
       cursor: pointer;
       transition:
@@ -158,15 +164,15 @@ export class AffectKitRater extends LitElement {
     /* Mono: greyscale by intensity */
     .chip.level-1 {
       background: rgba(0,0,0,0.16); color: rgba(0,0,0,0.85);
-      font-weight: 600; font-size: 12.5px; padding: 6px 14px;
+      font-weight: 600; font-size: 0.81em; padding: 0.38em 0.91em;
     }
     .chip.level-2 {
       background: #4a4a4a; color: white;
-      font-weight: 600; font-size: 13px; padding: 7px 15px;
+      font-weight: 600; font-size: 0.84em; padding: 0.44em 0.97em;
     }
     .chip.level-3 {
       background: #1a1a1a; color: white;
-      font-weight: 700; font-size: 14px; padding: 8px 17px;
+      font-weight: 700; font-size: 0.91em; padding: 0.5em 1.1em;
     }
 
     /* Color mode: unselected chips adapt to surface lightness */
@@ -185,7 +191,7 @@ export class AffectKitRater extends LitElement {
         calc(0.30 + var(--_surface-is-light) * 0.30)
       );
       color: rgba(0,0,0,0.88);
-      font-weight: 600; font-size: 12.5px; padding: 6px 14px;
+      font-weight: 600; font-size: 0.81em; padding: 0.38em 0.91em;
       box-shadow: 0 1px 2px rgba(0,0,0,0.08);
     }
     :host([color-mode]) .chip.level-2 {
@@ -194,31 +200,50 @@ export class AffectKitRater extends LitElement {
         calc(0.65 + var(--_surface-is-light) * 0.20)
       );
       color: rgba(0,0,0,0.94);
-      font-weight: 600; font-size: 13px; padding: 7px 15px;
+      font-weight: 600; font-size: 0.84em; padding: 0.44em 0.97em;
       box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 1px 1px rgba(0,0,0,0.06);
     }
     :host([color-mode]) .chip.level-3 {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
       color: var(--_text-l3, rgba(0,0,0,0.95));
-      font-weight: 700; font-size: 14px; padding: 8px 17px;
+      font-weight: 700; font-size: 0.91em; padding: 0.5em 1.1em;
       box-shadow: 0 2px 6px rgba(0,0,0,0.16), 0 1px 2px rgba(0,0,0,0.10);
     }
 
+    /*
+     * 'words' mode: unselected chips get a faint tint of their OWN
+     * emotion color (the per-chip --_l3-{r,g,b} are set inline in render).
+     * Selected chips already absorb the color via the level rules above.
+     */
+    :host([color-mode="words"]) .chip {
+      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.14);
+      color: rgba(0,0,0,0.68);
+    }
+    :host([color-mode="words"]) .chip:hover {
+      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.24);
+      color: rgba(0,0,0,0.9);
+    }
+
     .vad-readout {
-      margin-top: 18px;
-      padding-top: 14px;
+      margin-top: 1.1em;
+      padding-top: 0.88em;
       border-top: 1px solid rgba(0,0,0,0.06);
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
-      font-size: 10px;
+      font-family: inherit;
+      font-size: 0.625em;
       color: #6b7280;
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
 
-    /* ── Chip header (hint + submit) ─────────────────────── */
+    /* ── Chip header (hint + submit, stacked, crossfade in place) ── */
     .chip-header {
+      display: grid;
+      grid-template-areas: "stack";
+      min-height: 2.6em;
+      margin-bottom: 0.75em;
       transition: opacity 0.25s ease;
     }
+    .chip-header > * { grid-area: stack; }
     .chip-header.dragging {
       opacity: 0;
       pointer-events: none;
@@ -226,66 +251,55 @@ export class AffectKitRater extends LitElement {
 
     /* ── Prompt hint ──────────────────────────────────────── */
     .chips-hint {
-      margin-top: 4px;
-      margin-bottom: 12px;
-      font-size: 11px;
+      align-self: center;
+      margin: 0;
+      font-family: inherit;
+      font-size: 0.69em;
       color: rgba(0,0,0,0.35);
       text-align: center;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      max-height: 40px;
-      overflow: hidden;
       pointer-events: none;
-      transition:
-        max-height  0.4s cubic-bezier(0.4, 0, 0.2, 1),
-        opacity     0.3s ease,
-        margin-top  0.35s cubic-bezier(0.4, 0, 0.2, 1),
-        margin-bottom 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: opacity 0.25s ease;
     }
     .chips-hint.gone {
-      max-height: 0;
       opacity: 0;
-      margin-top: 0;
-      margin-bottom: 0;
     }
 
     /* ── Submit button ────────────────────────────────────── */
     .submit-btn {
-      margin-top: 0;
-      margin-bottom: 14px;
+      align-self: stretch;
+      margin: 0;
       display: block;
       width: 100%;
-      padding: 11px 16px;
+      padding: 0.69em 1em;
       background: rgba(0,0,0,0.88);
       color: rgba(255,255,255,0.96);
       border: none;
-      border-radius: 14px;
+      border-radius: 0.88em;
       font-family: inherit;
-      font-size: 13px;
+      font-size: 0.81em;
       font-weight: 600;
       letter-spacing: 0.01em;
       cursor: pointer;
       opacity: 0;
-      transform: translateY(8px);
       transition:
-        opacity    0.4s ease,
-        transform  0.4s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity    0.3s ease,
         background 0.15s ease;
       pointer-events: none;
     }
     .submit-btn.visible {
       opacity: 1;
-      transform: none;
       pointer-events: auto;
     }
     .submit-btn:hover  { background: rgba(0,0,0,0.72); }
     .submit-btn:active { transform: scale(0.98); }
 
-    :host([color-mode]) .submit-btn {
+    :host([color-mode="background"]) .submit-btn {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
       color: var(--_text-l3, rgba(0,0,0,0.95));
     }
-    :host([color-mode]) .submit-btn:hover {
+    :host([color-mode="background"]) .submit-btn:hover {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.82);
     }
 
@@ -315,9 +329,16 @@ export class AffectKitRater extends LitElement {
     }
   `;
 
-  /** Colored surface tint vs monochrome paper. */
-  @property({ type: Boolean, attribute: 'color-mode', reflect: true })
-  colorMode = false;
+  /**
+   * Color treatment. See {@link ColorMode}.
+   * - `'background'` — surface tints with the pad's V/A (legacy default
+   *   when the attribute is present with no value).
+   * - `'words'` — surface stays neutral; each chip carries its own lexicon
+   *   color, so the picker reads as a constellation.
+   * - `null` — fully monochrome.
+   */
+  @property({ converter: colorModeConverter, attribute: 'color-mode', reflect: true })
+  colorMode: ColorMode | null = null;
 
   /**
    * Breath + tremor animation. Defaults `true`.
@@ -568,6 +589,11 @@ export class AffectKitRater extends LitElement {
   // ── Lifecycle ─────────────────────────────────────────────────────────────
 
   protected override updated(changed: PropertyValues) {
+    // Color vars feed both modes:
+    //  - 'background' uses them to paint the surface glow and selected chips.
+    //  - 'words' uses them for the submit button (the only thing that still
+    //    pulls a host-level color in that mode); each chip overrides via
+    //    inline `--_l3-{r,g,b}` from its own emotion's V/A.
     if (changed.has('colorMode') && this.colorMode) {
       this._updateColorVars();
     }
@@ -578,6 +604,10 @@ export class AffectKitRater extends LitElement {
   override render() {
     const [r, g, b] = colorForVA(this._padV, this._padA) as Rgb;
     const glowBg = `rgb(${r},${g},${b})`;
+    // Surface glow only paints in 'background' mode. In 'words' mode the
+    // color story lives on the chips, so the surface stays neutral.
+    const glowOn = this.colorMode === 'background';
+    const wordsMode = this.colorMode === 'words';
 
     const activeLabels: Array<{ name: EmotionName; level: number }> = [];
     for (const [name, level] of this._levels) {
@@ -591,7 +621,7 @@ export class AffectKitRater extends LitElement {
     return html`
       <div class="surface">
         <div
-          class="glow${this.colorMode ? ' on' : ''}"
+          class="glow${glowOn ? ' on' : ''}"
           style="background: ${glowBg}"
         ></div>
 
@@ -627,11 +657,20 @@ export class AffectKitRater extends LitElement {
             ${EMOTIONS.map(emotion => {
               const level = this._levels.get(emotion.name) ?? 0;
               const order = this._sortOrder.indexOf(emotion.name);
+              // 'words' mode: each chip carries its own emotion's color
+              // via inline --_l3-{r,g,b}, which shadows the host-level
+              // (pad-V/A-derived) variables so the existing chip rules
+              // resolve to the per-emotion color.
+              let chipStyle = `order:${order}`;
+              if (wordsMode) {
+                const [cr, cg, cb] = darkerForChips(colorForVA(emotion.v, emotion.a));
+                chipStyle += `;--_l3-r:${cr};--_l3-g:${cg};--_l3-b:${cb}`;
+              }
               return html`
                 <button
                   class="chip${level > 0 ? ` level-${level}` : ''}"
                   data-name="${emotion.name}"
-                  style="order:${order}"
+                  style="${chipStyle}"
                   @click=${() => this._cycleChip(emotion.name)}
                 >${emotion.name}</button>
               `;

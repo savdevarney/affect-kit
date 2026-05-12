@@ -5,6 +5,20 @@ import type { EmotionName } from '../vocabulary/en';
 export type { EmotionName };
 
 /**
+ * Whether and how V/A color is applied.
+ *
+ * - `'background'` — tints the component surface (or panel glow) by the
+ *   averaged V/A position. With many ratings of varied affect this can
+ *   wash to gray; use `'words'` to avoid that.
+ * - `'words'` — each emotion word picks up its own V/A color from the
+ *   NRC lexicon (a "rainbow constellation"). The background stays neutral.
+ *
+ * Set via the `color-mode` HTML attribute. The attribute also accepts
+ * legacy boolean-style usage (`<el color-mode>` → `'background'`).
+ */
+export type ColorMode = 'background' | 'words';
+
+/**
  * A single emotion label attached to a rating, with intensity level in [1, 3].
  *
  * `name` is strictly typed to {@link EmotionName} — only words from the validated

@@ -8,7 +8,9 @@
 
 import type { Emotion } from './types';
 
-/** @internal */
+// Not re-exported from any public entry. EmotionName below derives from
+// typeof EMOTIONS, so the dts bundler needs to see the value; we cannot
+// tag it /** @internal */ without breaking the derived public type.
 export const EMOTIONS = [
   // ── High arousal, negative valence ── anger zone ──────────────────────
   { name: 'anger',        v: -0.666, a:  0.730, d:  0.314, source: 'NRC' },

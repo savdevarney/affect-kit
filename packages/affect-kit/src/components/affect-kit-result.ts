@@ -1,7 +1,9 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { colorForVA } from '../core/color';
-import type { Rating } from '../core/types';
+import { colorForVA, darkerForChips } from '../core/color';
+import { colorModeConverter } from '../core/color-mode';
+import type { ColorMode, Rating } from '../core/types';
+import { EMOTIONS_BY_NAME } from '../vocabulary/en';
 import './affect-kit-face'; // ensure face element is registered
 
 const animateConverter = {
@@ -33,37 +35,31 @@ export class AffectKitResult extends LitElement {
     :host {
       display: block;
       container-type: inline-size;
-      font-size: 1rem;
+      /* Inherit family from the host; consumers can override at any
+         ancestor. Base font-size comes from --affect-kit-font-size so
+         consumers can scale the whole component up or down with a
+         single variable. All internal sizing is em-based off this. */
+      font-family: inherit;
+      font-size: var(--affect-kit-font-size, 1rem);
       /* Cap so the widget doesn't stretch ugly in wide layouts. Override
          via the custom property if you need something different. */
       max-width: var(--affect-kit-result-max-width, 640px);
     }
+    /*
+     * Panel chrome is driven by CSS custom properties so a parent widget
+     * (e.g. affect-kit-compare) can suppress it from the outside without
+     * needing a dedicated prop on this element.
+     */
     .panel {
       position: relative;
-      background: white;
-      border-radius: 1.5em;
-      padding: 2.4em 3em;
-      overflow: hidden;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+      background: var(--_panel-bg, white);
+      border-radius: var(--_panel-radius, 1.5em);
+      padding: var(--_panel-padding, 2.4em 3em);
+      overflow: var(--_panel-overflow, hidden);
+      box-shadow: var(--_panel-shadow, 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04));
     }
-    .panel.compact { padding: 1.4em 1.75em; }
-    .panel.with-face { padding: 1.6em 2em; }
-
-    /*
-     * The 'bare' attribute strips panel chrome and the color glow so the
-     * host widget (e.g. affect-kit-compare) can manage its own card and
-     * its own background. Words and face still render normally.
-     */
-    :host([bare]) .panel {
-      background: transparent;
-      padding: 0;
-      box-shadow: none;
-      border-radius: 0;
-      overflow: visible;
-    }
-    :host([bare]) .glow { display: none; }
-    /* In bare mode the host widget controls sizing — lift our cap. */
-    :host([bare]) { max-width: none; }
+    .panel.compact  { padding: var(--_panel-padding, 1.4em 1.75em); }
+    .panel.with-face { padding: var(--_panel-padding, 1.6em 2em); }
 
     .glow {
       position: absolute;
@@ -71,6 +67,7 @@ export class AffectKitResult extends LitElement {
       pointer-events: none;
       opacity: 0;
       z-index: 0;
+      display: var(--_glow-display, block);
       transition: opacity 0.5s ease, background 50ms linear;
     }
     .glow.on { opacity: 0.85; }
@@ -112,18 +109,32 @@ export class AffectKitResult extends LitElement {
     }
 
     /*
-     * Continuous level scaling. --_level is set inline per-word and clamped
-     * into [1, 3]. --_level-step controls the size growth per integer step
-     * (the row-with-face layout below shrinks it so level 3 caps at 2em).
+     * Continuous level scaling for the word-cloud effect. --_level is set
+     * inline per-word and clamped into [1, 3]. The size curve is a smooth
+     * quadratic that hits these three anchor points so averaged
+     * (non-integer) levels read meaningfully between them:
+     *
+     *   level 1 (small)  → 0.50em   ─┐
+     *   level 2 (medium) → 1.00em    ├─  f(L) = 0.25·L² − 0.25·L + 0.5
+     *   level 3 (large)  → 2.00em   ─┘
+     *
+     * Opacity follows a complementary curve so heavier weight reads more
+     * prominent without needing a separate color. Family inherits.
      */
     .word {
-      --_lv: clamp(1, var(--_level, 1), 3);
-      font-size: calc(1em + (var(--_lv) - 1) * var(--_level-step, 0.75em));
+      --_lv: clamp(1, var(--_level, 2), 3);
+      font-size: calc((0.25 * var(--_lv) * var(--_lv) - 0.25 * var(--_lv) + 0.5) * 1em);
       opacity:   calc(0.55 + (var(--_lv) - 1) * 0.225);
-    }
-    .word.display {
-      font-family: var(--affect-kit-font-display, 'DM Serif Display', Georgia, serif);
+      font-family: inherit;
       letter-spacing: -0.01em;
+      color: var(--affect-kit-ink, #1a1a1a);
+    }
+    /* Words mode: each label picks up its own V/A color from the lexicon.
+       --_word-color is set inline per-word from EMOTIONS_BY_NAME. */
+    :host([color-mode="words"]) .word {
+      color: var(--_word-color, var(--affect-kit-ink, #1a1a1a));
+      /* Boost opacity floor in words mode so light-V/A words stay legible. */
+      opacity: calc(0.75 + (var(--_lv) - 1) * 0.125);
     }
 
     .align-center .words { justify-content: center; }
@@ -135,7 +146,7 @@ export class AffectKitResult extends LitElement {
       margin-top: 1.6em;
       padding-top: 1em;
       border-top: 1px solid rgba(0,0,0,0.06);
-      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-family: inherit;
       font-size: 0.625em;
       color: #6b7280;
       letter-spacing: 0.08em;
@@ -186,16 +197,6 @@ export class AffectKitResult extends LitElement {
       margin-bottom: var(--_face-mb, 0.5em);
     }
 
-    /* Standalone mirror — flips column to column-reverse and swaps the
-       face margin so the face sits below the words. */
-    :host([mirror]) .content.has-face {
-      flex-direction: var(--_face-dir, column-reverse);
-    }
-    :host([mirror]) .content.has-face .face-zone {
-      margin-top: var(--_face-mt, 0.5em);
-      margin-bottom: var(--_face-mb, 0);
-    }
-
     /* Standalone wide (host >= 360px) — face left, words right. */
     @container (min-width: 360px) {
       .content.has-face {
@@ -209,10 +210,6 @@ export class AffectKitResult extends LitElement {
         margin-bottom: var(--_face-mb, 0);
       }
       .content.has-face .words { flex: 1 1 auto; min-width: 0; }
-
-      :host([mirror]) .content.has-face {
-        flex-direction: var(--_face-dir, row-reverse);
-      }
     }
   `;
 
@@ -228,9 +225,16 @@ export class AffectKitResult extends LitElement {
   @property({ type: Boolean, attribute: 'show-labels' })
   showLabels = true;
 
-  /** Apply a color tint matching the rating's V/A position. */
-  @property({ type: Boolean, attribute: 'color-mode', reflect: true })
-  colorMode = false;
+  /**
+   * Whether and how V/A color is applied. See {@link ColorMode}.
+   * - `'background'` — tints the panel by the face V/A (legacy default
+   *   when the attribute is present with no value).
+   * - `'words'` — each emotion word picks up its own V/A color from
+   *   the NRC lexicon. Background stays neutral.
+   * - `null` — no color anywhere.
+   */
+  @property({ converter: colorModeConverter, attribute: 'color-mode', reflect: true })
+  colorMode: ColorMode | null = null;
 
   /** Show the raw V/A/D readout (debug). */
   @property({ type: Boolean, attribute: 'show-vad' })
@@ -245,30 +249,14 @@ export class AffectKitResult extends LitElement {
   variant: 'default' | 'compact' = 'default';
 
   /**
-   * Strip panel chrome (background, padding, shadow, radius) and the color
-   * glow. Use when embedding this widget inside another that manages its
-   * own card chrome — e.g. `<affect-kit-compare>`.
-   */
-  @property({ type: Boolean, reflect: true })
-  bare = false;
-
-  /**
-   * Flip face / words order. In row mode → face right, words left.
-   * In column mode → face bottom, words above. Useful for paired-comparison
-   * hosts so each face sits on the outer edge of its half.
-   *
-   * For non-standard layouts a parent can also override the flow via the
-   * `--_face-dir` / `--_face-align` / `--_face-gap` / `--_face-step` /
-   * `--_face-mb` / `--_face-mt` custom properties — these pierce the
-   * shadow DOM and let an outer container query drive the inner layout
-   * without JS.
-   */
-  @property({ type: Boolean, reflect: true })
-  mirror = false;
-
-  /**
    * Breath animation on the face glyph. Defaults `true`.
    * Respects `prefers-reduced-motion: reduce` automatically.
+   *
+   * A parent widget can also drive layout from the outside via the
+   * `--_face-dir` / `--_face-align` / `--_face-gap` / `--_face-step` /
+   * `--_face-mb` / `--_face-mt` custom properties, and suppress panel
+   * chrome via `--_panel-bg` / `--_panel-padding` / `--_panel-shadow` /
+   * `--_panel-radius` / `--_panel-overflow` / `--_glow-display`.
    */
   @property({ converter: animateConverter, reflect: true })
   animated = true;
@@ -283,7 +271,8 @@ export class AffectKitResult extends LitElement {
     const padV = r.face.v;
     const padA = r.face.a;
     const [cr, cg, cb] = colorForVA(padV, padA);
-    const glowStyle = this.colorMode
+    const glowOn = this.colorMode === 'background';
+    const glowStyle = glowOn
       ? `background: rgb(${cr},${cg},${cb})`
       : '';
 
@@ -293,7 +282,7 @@ export class AffectKitResult extends LitElement {
     return html`
       <div class="panel${this.variant === 'compact' ? ' compact' : ''}${this.showFace ? ' with-face' : ''}">
         <div
-          class="glow${this.colorMode ? ' on' : ''}"
+          class="glow${glowOn ? ' on' : ''}"
           style="${glowStyle}"
         ></div>
         <div class="content align-${this.align}${this.showFace ? ' has-face' : ''}${faceOnly ? ' face-only' : ''}">
@@ -312,15 +301,24 @@ export class AffectKitResult extends LitElement {
             <div class="words">
               ${[...r.labels].sort((a, b) => b.level - a.level).map(l => {
                 const lv = Math.max(1, Math.min(3, l.level));
-                // Triangle weight: peaks at lv=2 (500), drops to 400 at lv=1 and lv=3.
-                // The display serif at high levels carries weight on its own; the
-                // body sans needs the boost in the middle.
-                const weight = Math.round(400 + 100 * (1 - Math.abs(lv - 2)));
-                const isDisplay = lv >= 2.5;
+                // Weight ramps gently with intensity. The dominant signal is
+                // size (continuous via --_level → quadratic font-size); weight
+                // adds emphasis without competing.
+                const weight = Math.round(400 + 100 * (lv - 1));
+                // In 'words' mode each label picks up its own NRC V/A color,
+                // darkened to keep type legible against the panel background.
+                let extraStyle = '';
+                if (this.colorMode === 'words') {
+                  const e = EMOTIONS_BY_NAME.get(l.name);
+                  if (e) {
+                    const [wr, wg, wb] = darkerForChips(colorForVA(e.v, e.a));
+                    extraStyle = `;--_word-color: rgb(${wr},${wg},${wb})`;
+                  }
+                }
                 return html`
                   <span
-                    class="word${isDisplay ? ' display' : ''}"
-                    style="--_level:${lv};font-weight:${weight}"
+                    class="word"
+                    style="--_level:${lv};font-weight:${weight}${extraStyle}"
                   >${l.name}</span>
                 `;
               })}
