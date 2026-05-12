@@ -26,7 +26,8 @@ import { AffectKitResult }  from 'affect-kit/result';
 import { AffectKitFace }    from 'affect-kit/face';
 import { AffectKitCompare } from 'affect-kit/compare';
 
-export type { Rating, EmotionLabel, EmotionName } from 'affect-kit';
+export type { Rating, EmotionLabel, EmotionName, ColorMode } from 'affect-kit';
+export { useAverageRatings } from './useAverageRatings';
 
 /**
  * `<affect-kit-rater>` as a React component.
@@ -65,7 +66,9 @@ export const Face = createComponent({
 
 /**
  * `<affect-kit-compare>` as a React component.
- * `beforeRating` / `afterRating` accept `Rating | Rating[] | null`.
+ * `beforeRating` / `afterRating` accept a single `Rating | null`.
+ * For time-series comparisons, average upstream — `useAverageRatings()`
+ * is the memoized React-idiomatic helper.
  */
 export const Compare = createComponent({
   react: React,

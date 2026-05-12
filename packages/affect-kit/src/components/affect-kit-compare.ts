@@ -1,7 +1,6 @@
 import { LitElement, html, css } from 'lit';
 import { property } from 'lit/decorators.js';
 import type { ColorMode, Rating } from '../core/types';
-import { averageRatings } from '../core/vad';
 import { colorForVA } from '../core/color';
 import { colorModeConverter } from '../core/color-mode';
 
@@ -21,10 +20,12 @@ import { colorModeConverter } from '../core/color-mode';
  * compare's own stacking and there is no "middle state" where compare is
  * side-by-side but each half is internally stacked.
  *
- * Each of `beforeRating` / `afterRating` accepts either a single `Rating`
- * (rendered as-is) or a `Rating[]` (averaged with `averageRatings()` for
- * you). Useful for both literal before/after pairs ("session start vs
- * session end") and windowed comparisons ("last month vs last week").
+ * Each of `beforeRating` / `afterRating` accepts a single `Rating`. For
+ * time-series comparisons ("last month vs last week"), call
+ * `averageRatings()` upstream and pass the result. The component never
+ * aggregates internally — averaging on every render is a perf footgun
+ * for large arrays, and consumers have the context (windowing,
+ * memoization) the component doesn't.
  *
  * Property names are `beforeRating` / `afterRating` because `before` and
  * `after` are reserved on `Element`. Captions are controlled separately
@@ -39,9 +40,11 @@ import { colorModeConverter } from '../core/color-mode';
  *
  * <script type="module">
  *   import 'affect-kit/compare';
+ *   import { averageRatings } from 'affect-kit';
+ *
  *   const cmp = document.querySelector('affect-kit-compare');
- *   cmp.beforeRating = firstWeekRatings;  // Rating | Rating[]
- *   cmp.afterRating  = lastWeekRatings;   // Rating | Rating[]
+ *   cmp.beforeRating = averageRatings(firstWeekRatings);
+ *   cmp.afterRating  = averageRatings(lastWeekRatings);
  * </script>
  * ```
  *
@@ -236,16 +239,17 @@ export class AffectKitCompare extends LitElement {
   `;
 
   /**
-   * Left side. A single `Rating` (rendered as-is) or a `Rating[]`
-   * (averaged via `averageRatings()`). Property is `beforeRating` because
-   * `before` is reserved on `Element`.
+   * Left side. A single `Rating` to render. For time-series, call
+   * `averageRatings()` upstream and pass the result here — the component
+   * never aggregates internally (would re-run on every render).
+   * Property is `beforeRating` because `before` is reserved on `Element`.
    */
   @property({ attribute: false })
-  beforeRating: Rating | Rating[] | null = null;
+  beforeRating: Rating | null = null;
 
   /** Right side. Same shape as {@link beforeRating}. */
   @property({ attribute: false })
-  afterRating: Rating | Rating[] | null = null;
+  afterRating: Rating | null = null;
 
   /** Caption above the left rating. */
   @property({ type: String, attribute: 'before-label' })
@@ -276,15 +280,9 @@ export class AffectKitCompare extends LitElement {
   @property({ type: Boolean, attribute: 'show-labels', reflect: true })
   showLabels = true;
 
-  private _resolve(input: Rating | Rating[] | null): Rating | null {
-    if (!input) return null;
-    if (Array.isArray(input)) return averageRatings(input);
-    return input;
-  }
-
   override render() {
-    const left  = this._resolve(this.beforeRating);
-    const right = this._resolve(this.afterRating);
+    const left  = this.beforeRating;
+    const right = this.afterRating;
 
     // Outer gradient only paints in 'background' mode. In 'words' mode the
     // color story lives on the individual labels, so the card stays neutral.

@@ -23,14 +23,20 @@ function lookupEmotion(name: string) {
  * Aggregate VAD from active labels weighted by intensity level (1/3, 2/3, 3/3).
  * Returns `null` when the label list is empty. Caller is responsible for
  * falling back to `face` when the composite is null.
+ *
+ * Tolerant of labels missing inline `vad` — falls back to the lexicon
+ * lookup via `EMOTION_LABELS[name]`. This means consumers persisting the
+ * minimal `{ name, level }` shape can hand stripped Ratings to
+ * `computeComposite` directly without rehydrating first.
  */
 export function computeComposite(
   labels: EmotionLabel[]
 ): { v: number; a: number; d: number } | null {
   let totalW = 0, vSum = 0, aSum = 0, dSum = 0;
 
-  for (const { vad, level } of labels) {
-    const weight = level / 3;
+  for (const label of labels) {
+    const weight = label.level / 3;
+    const vad = label.vad ?? lookupEmotion(label.name);
     vSum   += vad.v * weight;
     aSum   += vad.a * weight;
     dSum   += vad.d * weight;
@@ -163,5 +169,56 @@ export function averageRatings(ratings: Rating[]): Rating | null {
     face:      { v: faceVSum / n, a: faceASum / n },
     labels,
     composite,
+  };
+}
+
+/**
+ * Return a copy of a Rating with `vad` removed from every label.
+ *
+ * The minimal storage form for time-series persistence: VAD coordinates
+ * are a deterministic function of `name`, so storing them per-row is
+ * redundant. Strip on insert, rehydrate on read with `rehydrate()`.
+ *
+ * ```ts
+ * import { stripVad } from 'affect-kit';
+ *
+ * const lean = stripVad(rating);
+ * // lean.labels[i] is { name, level }  — no vad
+ * db.ratings.insert(lean);
+ * ```
+ */
+export function stripVad(rating: Rating): Rating {
+  return {
+    ...rating,
+    labels: rating.labels.map(({ name, level }) => ({ name, level })),
+  };
+}
+
+/**
+ * Return a copy of a Rating with `vad` filled in from the lexicon for
+ * every label that's missing it. The inverse of `stripVad`.
+ *
+ * Labels that already have `vad` inline pass through unchanged — useful
+ * when working with mixed inputs (e.g. some snapshot Ratings + some
+ * stripped Ratings from a DB).
+ *
+ * Throws if any label name is not in the validated vocabulary.
+ *
+ * ```ts
+ * import { rehydrate } from 'affect-kit';
+ *
+ * const full = rehydrate(rowFromDb);
+ * // full.labels[i] now has { name, level, vad }
+ * result.rating = full;
+ * ```
+ */
+export function rehydrate(rating: Rating): Rating {
+  return {
+    ...rating,
+    labels: rating.labels.map(l => {
+      if (l.vad) return l;
+      const e = lookupEmotion(l.name);
+      return { name: l.name, level: l.level, vad: { v: e.v, a: e.a, d: e.d } };
+    }),
   };
 }

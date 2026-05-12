@@ -545,13 +545,13 @@ function App() {
             <tbody>
               <tr>
                 <td><code>beforeRating</code> <span class="docs-prop-tag">prop only</span></td>
-                <td><code>Rating | Rating[] | null</code></td>
+                <td><code>Rating | null</code></td>
                 <td><code>null</code></td>
-                <td>Left side. A single <code>Rating</code> (rendered as-is) or a <code>Rating[]</code> (averaged via <code>averageRatings()</code>). Property is <code>beforeRating</code> because <code>before</code> is reserved on <code>Element</code>.</td>
+                <td>Left side. For time-series, average upstream with <code>averageRatings()</code> and pass the result. Property is <code>beforeRating</code> because <code>before</code> is reserved on <code>Element</code>.</td>
               </tr>
               <tr>
                 <td><code>afterRating</code> <span class="docs-prop-tag">prop only</span></td>
-                <td><code>Rating | Rating[] | null</code></td>
+                <td><code>Rating | null</code></td>
                 <td><code>null</code></td>
                 <td>Right side. Same shape as <code>beforeRating</code>.</td>
               </tr>
@@ -605,17 +605,24 @@ function App() {
           </table>
         </div>
 
-        <h3>Averaging arrays</h3>
+        <h3>Comparing time series</h3>
         <p>
-          Pass a <code>Rating[]</code> to either side and the widget averages it automatically.
-          Useful for windowed comparisons (e.g. last month vs last week):
+          For windowed comparisons (last month vs last week), call
+          <code>averageRatings()</code> upstream and pass the result. Compare takes a
+          single <code>Rating</code> per side — averaging on every render is a perf
+          footgun for large arrays, and consumers have the windowing/memoization
+          context the component doesn't.
         </p>
         <pre class="docs-code" set:text={`import 'affect-kit/compare';
-import { createRating } from 'affect-kit';
+import { averageRatings } from 'affect-kit';
 
 const cmp = document.querySelector('affect-kit-compare');
-cmp.beforeRating = lastMonthRatings; // Rating[]
-cmp.afterRating  = lastWeekRatings;  // Rating[]`}></pre>
+cmp.beforeRating = averageRatings(lastMonthRatings);
+cmp.afterRating  = averageRatings(lastWeekRatings);`}></pre>
+        <p>
+          React consumers: <code>useAverageRatings()</code> in <code>@affect-kit/react</code>
+          memoizes by array reference for free.
+        </p>
       </section>
 
       <!-- ── 6: TypeScript types ────────────────────────── -->
@@ -637,7 +644,7 @@ import { createRating, averageRatings }           from 'affect-kit';`}></pre>
   /** Pad position that drives the face glyph and color. The pre-verbal gut gesture. */
   face: { v: number; a: number };
 
-  /** Selected emotion words, each carrying its lexicon VAD coordinates. */
+  /** Selected emotion words; each optionally carries its lexicon VAD coordinates. */
   labels: EmotionLabel[];
 
   /**
@@ -655,11 +662,41 @@ import { createRating, averageRatings }           from 'affect-kit';`}></pre>
         <pre class="docs-code" set:text={`interface EmotionLabel {
   name:  EmotionName; // strict — must be in the validated vocabulary
   level: number;      // 1 | 2 | 3 from rater; widened to number for averaged data
-  vad:   { v: number; a: number; d: number };
-  // ^ Per-word NRC VAD Lexicon coordinates (Mohammad 2025).
-  //   Pre-aggregate — direct lookup, identical for every rating that contains
-  //   this name. Aggregation across labels happens only at Rating.composite.
+  vad?:  { v: number; a: number; d: number };
+  // ^ Optional per-word NRC VAD Lexicon coordinates (NRC v2.1, Mohammad 2025).
+  //   The rater always emits with vad inline (Rating is a self-describing
+  //   snapshot). For DB persistence, strip vad before insert — it's a
+  //   deterministic function of \`name\`. Rehydrate on read via
+  //   \`rehydrate(rating)\` or by reading \`EMOTION_LABELS[name]\`.
 }`}></pre>
+
+        <h3>EMOTION_LABELS</h3>
+        <p>
+          Canonical V/A/D coordinates for every word in the vocabulary, as a
+          plain Record keyed by name. Useful for rehydrating stripped Ratings
+          from a database, or for any consumer code that needs the coordinate
+          of a known emotion without going through the rater.
+        </p>
+        <pre class="docs-code" set:text={`import { EMOTION_LABELS } from 'affect-kit';
+
+const { v, a, d } = EMOTION_LABELS['joy'];
+// → { v: 0.96, a: 0.65, d: 0.59 }  (NRC v2.1)`}></pre>
+
+        <h3>stripVad() / rehydrate()</h3>
+        <p>
+          Helpers for the DB-persistence flow. <code>stripVad()</code> drops
+          the redundant coordinates before insert; <code>rehydrate()</code>
+          fills them back on read.
+        </p>
+        <pre class="docs-code" set:text={`import { stripVad, rehydrate } from 'affect-kit';
+
+// Persist
+const lean = stripVad(rating);          // labels: { name, level }
+db.ratings.insert(lean);
+
+// Read
+const fromDb = await db.ratings.get(id);
+result.rating = rehydrate(fromDb);      // labels: { name, level, vad }`}></pre>
 
         <h3>createRating()</h3>
         <p>Construct a <code>Rating</code> from a face position and optional labels. Throws on any label name not in the validated vocabulary:</p>
@@ -744,6 +781,21 @@ export function RatingWidget() {
           </table>
         </div>
 
+        <h3>useAverageRatings()</h3>
+        <p>
+          Hook that wraps <code>averageRatings()</code> with <code>useMemo</code> keyed by
+          array reference. Useful when passing time-series data to <code>&lt;Compare&gt;</code>,
+          which takes a single <code>Rating</code> per side — without memoization, a fresh
+          inline array literal would re-average on every render.
+        </p>
+        <pre class="docs-code" set:text={`import { Compare, useAverageRatings } from '@affect-kit/react';
+
+function WeekComparison({ lastWeek, thisWeek }) {
+  const before = useAverageRatings(lastWeek);
+  const after  = useAverageRatings(thisWeek);
+  return <Compare beforeRating={before} afterRating={after} showFace colorMode="background" />;
+}`}></pre>
+
         <h3>Refs</h3>
         <p>Pass a <code>ref</code> to access the underlying element and call instance methods:</p>
         <pre class="docs-code" set:text={`import { useRef } from 'react';
@@ -769,7 +821,7 @@ const ref = useRef<AffectKitRater>(null);
     import 'affect-kit/result';
     import 'affect-kit/face';
     import 'affect-kit/compare';
-    import { createRating } from 'affect-kit';
+    import { createRating, averageRatings } from 'affect-kit';
     import type { ColorMode } from 'affect-kit';
     import type { AffectKitRater }   from 'affect-kit/rater';
     import type { AffectKitResult }  from 'affect-kit/result';
@@ -850,7 +902,10 @@ const ref = useRef<AffectKitRater>(null);
       createRating({ face: { v:  0.7, a: 0.4 }, labels: [{ name: 'joy', level: 3 }, { name: 'grateful', level: 1 }] }),
     ];
     const cmp = document.getElementById('docs-compare') as AffectKitCompare | null;
-    if (cmp) { cmp.beforeRating = before; cmp.afterRating = after; }
+    if (cmp) {
+      cmp.beforeRating = averageRatings(before);
+      cmp.afterRating  = averageRatings(after);
+    }
     seg('docs-compare-color',        (m) => { if (cmp) cmp.colorMode  = m; });
     toggle('docs-compare-face',      (v) => { if (cmp) cmp.showFace   = v; });
     toggle('docs-compare-labels',    (v) => { if (cmp) cmp.showLabels = v; });

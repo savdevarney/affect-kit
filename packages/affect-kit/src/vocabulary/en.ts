@@ -94,3 +94,25 @@ export const EMOTIONS_BY_NAME: ReadonlyMap<string, (typeof EMOTIONS)[number]> =
  * ```
  */
 export type EmotionName = (typeof EMOTIONS)[number]['name'];
+
+/**
+ * Canonical V/A/D coordinates for each emotion in the English vocabulary,
+ * as a plain JSON-serializable Record keyed by name.
+ *
+ * Use this for any lookup that doesn't need the `source` field — most
+ * consumer code does:
+ *
+ * ```ts
+ * import { EMOTION_LABELS } from 'affect-kit';
+ * const { v, a, d } = EMOTION_LABELS['joy'];
+ * ```
+ *
+ * Database persistence pattern: store `{ name, level }` only, then
+ * rehydrate by reading `EMOTION_LABELS[name]` on display — or use the
+ * `rehydrate()` helper for whole Rating objects. The values here are
+ * versioned with this package; bumping affect-kit can update them.
+ */
+export const EMOTION_LABELS: Readonly<Record<EmotionName, { v: number; a: number; d: number }>> =
+  Object.freeze(
+    Object.fromEntries(EMOTIONS.map(e => [e.name, Object.freeze({ v: e.v, a: e.a, d: e.d })])),
+  ) as Readonly<Record<EmotionName, { v: number; a: number; d: number }>>;

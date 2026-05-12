@@ -7,7 +7,7 @@ import type { AffectKitFace }    from 'affect-kit/face';
 import type { AffectKitResult }  from 'affect-kit/result';
 import type { AffectKitRater }   from 'affect-kit/rater';
 import type { AffectKitCompare } from 'affect-kit/compare';
-import { createRating } from 'affect-kit';
+import { createRating, averageRatings } from 'affect-kit';
 import type { ColorMode, Rating } from 'affect-kit';
 
 // ── Element refs ───────────────────────────────────────────────────────────
@@ -262,8 +262,9 @@ const today: Rating[] = [
 
 const compareEl = document.getElementById('demo-compare') as AffectKitCompare | null;
 if (compareEl) {
-  compareEl.beforeRating = yesterday;
-  compareEl.afterRating  = today;
+  // Compare takes a single Rating per side; average the time series first.
+  compareEl.beforeRating = averageRatings(yesterday);
+  compareEl.afterRating  = averageRatings(today);
 }
 
 // Dynamic code snippet — mirrors the toggle state and shows the same data
@@ -308,16 +309,16 @@ function renderCompareCode() {
 
   codeCompare.textContent =
     `import 'affect-kit/compare';\n` +
-    `import { createRating } from 'affect-kit';\n` +
+    `import { createRating, averageRatings } from 'affect-kit';\n` +
     `\n` +
     fmtRatings('yesterday', yesterday) + `\n\n` +
     fmtRatings('today', today) + `\n\n` +
     `// In your HTML:\n` +
     html + `\n\n` +
-    `// Wire it up:\n` +
+    `// Compare takes one Rating per side — average time series upstream:\n` +
     `const cmp = document.querySelector('affect-kit-compare');\n` +
-    `cmp.beforeRating = yesterday;\n` +
-    `cmp.afterRating  = today;`;
+    `cmp.beforeRating = averageRatings(yesterday);\n` +
+    `cmp.afterRating  = averageRatings(today);`;
 }
 
 renderCompareCode();
