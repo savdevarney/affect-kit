@@ -88,6 +88,63 @@
     }
     .toggle-switch[aria-pressed="true"] .toggle-thumb { transform: translateX(14px); }
 
+    /* Tri-state segmented control for color-mode (off / background / words) */
+    .seg {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      color: #aaa;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .seg-group {
+      display: inline-flex;
+      border: 1px solid rgba(0,0,0,0.10);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fafaf8;
+    }
+    .seg-btn {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      padding: 4px 10px;
+      font: inherit;
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #999;
+      cursor: pointer;
+    }
+    .seg-btn + .seg-btn { border-left: 1px solid rgba(0,0,0,0.08); }
+    .seg-btn[aria-pressed="true"] { background: #1a1a1a; color: white; }
+
+    /* Plain inline select for align/variant choices */
+    .select-item { display: inline-flex; align-items: center; gap: 6px; font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; }
+    .select-item select {
+      font: inherit;
+      font-size: 0.7rem;
+      padding: 3px 6px;
+      border: 1px solid rgba(0,0,0,0.10);
+      border-radius: 6px;
+      background: white;
+      color: #1a1a1a;
+      cursor: pointer;
+    }
+
+    .text-item { display: inline-flex; align-items: center; gap: 6px; font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; }
+    .text-item input {
+      font: inherit;
+      font-size: 0.72rem;
+      padding: 3px 6px;
+      border: 1px solid rgba(0,0,0,0.10);
+      border-radius: 6px;
+      width: 7ch;
+      background: white;
+      color: #1a1a1a;
+    }
+
     /* Face grid */
     .face-row {
       display: flex;
@@ -169,12 +226,14 @@
       <div class="card-header">
         <p class="card-label">&lt;affect-kit-rater&gt;</p>
         <div class="toggles">
-          <label class="toggle-item">
-            <button class="toggle-switch" id="rater-color-toggle" type="button" aria-pressed="false">
-              <span class="toggle-thumb"></span>
-            </button>
+          <span class="seg">
             color
-          </label>
+            <span class="seg-group" data-seg="rater-color" data-value="off">
+              <button class="seg-btn" type="button" data-val="off"        aria-pressed="true">off</button>
+              <button class="seg-btn" type="button" data-val="background" aria-pressed="false">bg</button>
+              <button class="seg-btn" type="button" data-val="words"      aria-pressed="false">words</button>
+            </span>
+          </span>
           <label class="toggle-item">
             <button class="toggle-switch" id="rater-animated-toggle" type="button" aria-pressed="true">
               <span class="toggle-thumb" style="transform:translateX(14px)"></span>
@@ -186,6 +245,10 @@
               <span class="toggle-thumb" style="transform:translateX(14px)"></span>
             </button>
             vad
+          </label>
+          <label class="text-item">
+            submit
+            <input type="text" id="rater-submit-input" value="Done" maxlength="14">
           </label>
           <button class="reset-btn" id="reset-btn" type="button">reset</button>
         </div>
@@ -203,12 +266,14 @@
       <div class="card-header">
         <p class="card-label">&lt;affect-kit-result&gt;</p>
         <div class="toggles">
-          <label class="toggle-item">
-            <button class="toggle-switch" id="result-color-toggle" type="button" aria-pressed="true">
-              <span class="toggle-thumb" style="transform:translateX(14px)"></span>
-            </button>
+          <span class="seg">
             color
-          </label>
+            <span class="seg-group" data-seg="result-color" data-value="background">
+              <button class="seg-btn" type="button" data-val="off"        aria-pressed="false">off</button>
+              <button class="seg-btn" type="button" data-val="background" aria-pressed="true">bg</button>
+              <button class="seg-btn" type="button" data-val="words"      aria-pressed="false">words</button>
+            </span>
+          </span>
           <label class="toggle-item">
             <button class="toggle-switch" id="result-face-toggle" type="button" aria-pressed="true">
               <span class="toggle-thumb" style="transform:translateX(14px)"></span>
@@ -233,11 +298,26 @@
             </button>
             vad
           </label>
+          <label class="select-item">
+            align
+            <select id="result-align-select">
+              <option value="left">left</option>
+              <option value="center" selected>center</option>
+              <option value="right">right</option>
+            </select>
+          </label>
+          <label class="select-item">
+            variant
+            <select id="result-variant-select">
+              <option value="default" selected>default</option>
+              <option value="compact">compact</option>
+            </select>
+          </label>
         </div>
       </div>
       <example-tabs>
         <div slot="demo">
-          <affect-kit-result id="result" show-face show-labels color-mode></affect-kit-result>
+          <affect-kit-result id="result" show-face show-labels color-mode="background"></affect-kit-result>
         </div>
         <pre slot="code"><code id="code-result"></code></pre>
       </example-tabs>
@@ -324,12 +404,14 @@
       <div class="card-header">
         <p class="card-label">&lt;affect-kit-compare&gt;</p>
         <div class="toggles">
-          <label class="toggle-item">
-            <button class="toggle-switch" id="compare-color-toggle" type="button" aria-pressed="true">
-              <span class="toggle-thumb" style="transform:translateX(14px)"></span>
-            </button>
+          <span class="seg">
             color
-          </label>
+            <span class="seg-group" data-seg="compare-color" data-value="background">
+              <button class="seg-btn" type="button" data-val="off"        aria-pressed="false">off</button>
+              <button class="seg-btn" type="button" data-val="background" aria-pressed="true">bg</button>
+              <button class="seg-btn" type="button" data-val="words"      aria-pressed="false">words</button>
+            </span>
+          </span>
           <label class="toggle-item">
             <button class="toggle-switch" id="compare-face-toggle" type="button" aria-pressed="true">
               <span class="toggle-thumb" style="transform:translateX(14px)"></span>
@@ -342,19 +424,30 @@
             </button>
             labels
           </label>
+          <label class="text-item">
+            before
+            <input type="text" id="compare-before-input" value="Yesterday" maxlength="20" style="width:9ch">
+          </label>
+          <label class="text-item">
+            after
+            <input type="text" id="compare-after-input" value="Today" maxlength="20" style="width:9ch">
+          </label>
         </div>
       </div>
       <p class="subtitle" style="margin: -0.5rem 0 1rem">
         Two ratings (or two rating series, averaged) shown side-by-side. Same
         words+face+color language as <code>&lt;affect-kit-result&gt;</code>;
         no comparison metric, no "improvement" claim — just two snapshots.
+        With many ratings <code>color-mode="background"</code> averages toward
+        gray; <code>color-mode="words"</code> keeps each label its own lexicon
+        color (rainbow constellation).
       </p>
       <example-tabs>
         <div slot="demo">
           <affect-kit-compare
             id="demo-compare"
             show-face
-            color-mode
+            color-mode="background"
             before-label="Yesterday"
             after-label="Today"
           ></affect-kit-compare>

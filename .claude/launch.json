@@ -9,8 +9,8 @@
     },
     {
       "name": "playground",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--workspace=playground"],
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--filter", "playground", "dev", "--", "--port", "5173"],
       "port": 5173
     },
     {

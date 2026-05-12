@@ -136,8 +136,26 @@ function App() {
           placement fires a <code>change</code> event with a <code>Rating</code> object.
         </p>
 
+        <div class="docs-controls" data-controls-for="docs-rater">
+          <span class="docs-ctrl">
+            <span class="docs-ctrl-label">color-mode</span>
+            <span class="docs-seg-group" data-seg="docs-rater-color" data-value="background">
+              <button class="docs-seg-btn" type="button" data-val="off"        aria-pressed="false">off</button>
+              <button class="docs-seg-btn" type="button" data-val="background" aria-pressed="true">bg</button>
+              <button class="docs-seg-btn" type="button" data-val="words"      aria-pressed="false">words</button>
+            </span>
+          </span>
+          <label class="docs-ctrl">
+            <button class="docs-toggle" id="docs-rater-animated" type="button" aria-pressed="true"></button>
+            animated
+          </label>
+          <label class="docs-ctrl">
+            <button class="docs-toggle" id="docs-rater-vad" type="button" aria-pressed="true"></button>
+            show-vad
+          </label>
+        </div>
         <div class="docs-demo">
-          <affect-kit-rater id="docs-rater" show-vad color-mode></affect-kit-rater>
+          <affect-kit-rater id="docs-rater" show-vad color-mode="background"></affect-kit-rater>
         </div>
 
         <h3>Attributes / props</h3>
@@ -149,9 +167,9 @@ function App() {
             <tbody>
               <tr>
                 <td><code>color-mode</code></td>
-                <td>boolean</td>
-                <td><code>false</code></td>
-                <td>Tints the surface with the current V/A quadrant color. Chips automatically adapt their contrast to the surface lightness.</td>
+                <td><code>'background' | 'words' | null</code></td>
+                <td><code>null</code></td>
+                <td>How V/A color is applied. <code>'background'</code> tints the surface; chips adapt their contrast. <code>'words'</code> paints each chip with its own NRC lexicon color (rainbow constellation). Legacy boolean usage (<code>&lt;... color-mode&gt;</code>) maps to <code>'background'</code>.</td>
               </tr>
               <tr>
                 <td><code>animated</code></td>
@@ -164,6 +182,12 @@ function App() {
                 <td>boolean</td>
                 <td><code>false</code></td>
                 <td>Shows a debug readout of the current V / A / D values below the chip list.</td>
+              </tr>
+              <tr>
+                <td><code>submit-label</code></td>
+                <td>string</td>
+                <td><code>'Done'</code></td>
+                <td>Label for the commit button shown once at least one chip is selected.</td>
               </tr>
             </tbody>
           </table>
@@ -240,8 +264,45 @@ function App() {
           preserving the visual signal of the gut feeling even when labels shift the V/A/D values.
         </p>
 
+        <div class="docs-controls" data-controls-for="docs-result">
+          <span class="docs-ctrl">
+            <span class="docs-ctrl-label">color-mode</span>
+            <span class="docs-seg-group" data-seg="docs-result-color" data-value="background">
+              <button class="docs-seg-btn" type="button" data-val="off"        aria-pressed="false">off</button>
+              <button class="docs-seg-btn" type="button" data-val="background" aria-pressed="true">bg</button>
+              <button class="docs-seg-btn" type="button" data-val="words"      aria-pressed="false">words</button>
+            </span>
+          </span>
+          <label class="docs-ctrl">
+            <button class="docs-toggle" id="docs-result-face" type="button" aria-pressed="true"></button>
+            show-face
+          </label>
+          <label class="docs-ctrl">
+            <button class="docs-toggle" id="docs-result-labels" type="button" aria-pressed="true"></button>
+            show-labels
+          </label>
+          <label class="docs-ctrl">
+            <button class="docs-toggle" id="docs-result-vad" type="button" aria-pressed="false"></button>
+            show-vad
+          </label>
+          <label class="docs-ctrl">
+            <span class="docs-ctrl-label">align</span>
+            <select class="docs-select" id="docs-result-align">
+              <option value="left">left</option>
+              <option value="center" selected>center</option>
+              <option value="right">right</option>
+            </select>
+          </label>
+          <label class="docs-ctrl">
+            <span class="docs-ctrl-label">variant</span>
+            <select class="docs-select" id="docs-result-variant">
+              <option value="default" selected>default</option>
+              <option value="compact">compact</option>
+            </select>
+          </label>
+        </div>
         <div class="docs-demo">
-          <affect-kit-result id="docs-result" show-face show-labels color-mode></affect-kit-result>
+          <affect-kit-result id="docs-result" show-face show-labels color-mode="background"></affect-kit-result>
           <p class="docs-demo-hint">← Rate something on the rater above to see it here, or this is pre-seeded.</p>
         </div>
 
@@ -272,9 +333,9 @@ function App() {
               </tr>
               <tr>
                 <td><code>color-mode</code></td>
-                <td>boolean</td>
-                <td><code>false</code></td>
-                <td>Apply a V/A color tint to the panel background.</td>
+                <td><code>'background' | 'words' | null</code></td>
+                <td><code>null</code></td>
+                <td><code>'background'</code> paints a V/A glow on the panel; <code>'words'</code> colors each word by its own NRC lexicon V/A (background stays neutral — useful when averaging many ratings would wash out a single tint). Legacy boolean attribute maps to <code>'background'</code>.</td>
               </tr>
               <tr>
                 <td><code>show-vad</code></td>
@@ -293,18 +354,6 @@ function App() {
                 <td><code>'default' | 'compact'</code></td>
                 <td><code>'default'</code></td>
                 <td>Sizing preset. <code>'compact'</code> reduces padding for tight layouts.</td>
-              </tr>
-              <tr>
-                <td><code>bare</code></td>
-                <td>boolean</td>
-                <td><code>false</code></td>
-                <td>Strips the panel chrome (background, padding, shadow, radius) and color glow. Use when embedding inside a parent that manages its own card, e.g. <code>&lt;affect-kit-compare&gt;</code>.</td>
-              </tr>
-              <tr>
-                <td><code>mirror</code></td>
-                <td>boolean</td>
-                <td><code>false</code></td>
-                <td>Flips the face / words order. In row mode → face right, words left. In column mode → face below words. Useful in paired layouts.</td>
               </tr>
               <tr>
                 <td><code>animated</code></td>
@@ -329,9 +378,9 @@ function App() {
                 <td>Maximum width of the widget.</td>
               </tr>
               <tr>
-                <td><code>--affect-kit-font-display</code></td>
-                <td><code>'DM Serif Display', Georgia, serif</code></td>
-                <td>Display serif used for high-intensity emotion words (level ≥ 2.5).</td>
+                <td><code>--affect-kit-font-size</code></td>
+                <td><code>1rem</code></td>
+                <td>Base font size. Every internal size is <code>em</code>-relative to this — scale the whole widget with one variable.</td>
               </tr>
               <tr>
                 <td><code>--affect-kit-ink</code></td>
@@ -466,11 +515,29 @@ function App() {
           comparison means — interpretation belongs to the user.
         </p>
 
+        <div class="docs-controls" data-controls-for="docs-compare">
+          <span class="docs-ctrl">
+            <span class="docs-ctrl-label">color-mode</span>
+            <span class="docs-seg-group" data-seg="docs-compare-color" data-value="background">
+              <button class="docs-seg-btn" type="button" data-val="off"        aria-pressed="false">off</button>
+              <button class="docs-seg-btn" type="button" data-val="background" aria-pressed="true">bg</button>
+              <button class="docs-seg-btn" type="button" data-val="words"      aria-pressed="false">words</button>
+            </span>
+          </span>
+          <label class="docs-ctrl">
+            <button class="docs-toggle" id="docs-compare-face" type="button" aria-pressed="true"></button>
+            show-face
+          </label>
+          <label class="docs-ctrl">
+            <button class="docs-toggle" id="docs-compare-labels" type="button" aria-pressed="true"></button>
+            show-labels
+          </label>
+        </div>
         <div class="docs-demo">
           <affect-kit-compare
             id="docs-compare"
             show-face
-            color-mode
+            color-mode="background"
             show-labels
             before-label="Last week"
             after-label="This week"
@@ -522,9 +589,9 @@ function App() {
               </tr>
               <tr>
                 <td><code>color-mode</code></td>
-                <td>boolean</td>
-                <td><code>false</code></td>
-                <td>When on, the card background is a gradient between the two V/A colors.</td>
+                <td><code>'background' | 'words' | null</code></td>
+                <td><code>null</code></td>
+                <td><code>'background'</code> paints a card gradient between the two ratings' V/A colors. <code>'words'</code> drops the gradient and colors each label in each half by its own lexicon V/A — keeps individual labels distinct even when averaging many ratings would otherwise wash the gradient to gray. Legacy boolean attribute maps to <code>'background'</code>.</td>
               </tr>
             </tbody>
           </table>
@@ -711,27 +778,61 @@ const ref = useRef<AffectKitRater>(null);
     import 'affect-kit/face';
     import 'affect-kit/compare';
     import { createRating } from 'affect-kit';
+    import type { ColorMode } from 'affect-kit';
     import type { AffectKitRater }   from 'affect-kit/rater';
     import type { AffectKitResult }  from 'affect-kit/result';
     import type { AffectKitFace }    from 'affect-kit/face';
     import type { AffectKitCompare } from 'affect-kit/compare';
 
-    // Wire the docs rater to the docs result
+    // ── Control helpers ────────────────────────────────────────────────
+    function toggle(id: string, on: (next: boolean) => void) {
+      const btn = document.getElementById(id) as HTMLButtonElement | null;
+      btn?.addEventListener('click', () => {
+        const next = btn.getAttribute('aria-pressed') !== 'true';
+        btn.setAttribute('aria-pressed', String(next));
+        on(next);
+      });
+    }
+    function seg(name: string, on: (value: ColorMode | null) => void) {
+      const group = document.querySelector<HTMLElement>(`[data-seg="${name}"]`);
+      const btns  = group ? [...group.querySelectorAll<HTMLButtonElement>('.docs-seg-btn')] : [];
+      btns.forEach(b => {
+        b.addEventListener('click', () => {
+          const value = b.dataset.val ?? 'off';
+          if (group) group.dataset.value = value;
+          btns.forEach(o => o.setAttribute('aria-pressed', String(o === b)));
+          on(value === 'background' ? 'background' : value === 'words' ? 'words' : null);
+        });
+      });
+    }
+
+    // ── Rater ─────────────────────────────────────────────────────────
     const rater  = document.getElementById('docs-rater')  as AffectKitRater  | null;
     const result = document.getElementById('docs-result') as AffectKitResult | null;
     rater?.addEventListener('change', (e) => {
       if (result) result.rating = (e as CustomEvent).detail;
     });
+    seg('docs-rater-color',          (m) => { if (rater) rater.colorMode = m; });
+    toggle('docs-rater-animated',    (v) => { if (rater) rater.animated  = v; });
+    toggle('docs-rater-vad',         (v) => { if (rater) rater.showVad   = v; });
 
-    // Pre-seed the result with a sample rating so it isn't blank
+    // ── Result pre-seed + controls ────────────────────────────────────
     const seed = createRating({ face: { v: 0.55, a: 0.2 }, labels: [
       { name: 'content',  level: 3 },
       { name: 'grateful', level: 2 },
       { name: 'calm',     level: 1 },
     ]});
     if (result) result.rating = seed;
+    seg('docs-result-color',         (m) => { if (result) result.colorMode  = m; });
+    toggle('docs-result-face',       (v) => { if (result) result.showFace   = v; });
+    toggle('docs-result-labels',     (v) => { if (result) result.showLabels = v; });
+    toggle('docs-result-vad',        (v) => { if (result) result.showVad    = v; });
+    (document.getElementById('docs-result-align')   as HTMLSelectElement | null)
+      ?.addEventListener('change', (e) => { if (result) result.align   = (e.target as HTMLSelectElement).value as 'left' | 'center' | 'right'; });
+    (document.getElementById('docs-result-variant') as HTMLSelectElement | null)
+      ?.addEventListener('change', (e) => { if (result) result.variant = (e.target as HTMLSelectElement).value as 'default' | 'compact'; });
 
-    // Face sliders
+    // ── Face sliders ──────────────────────────────────────────────────
     const face    = document.getElementById('docs-face')     as AffectKitFace  | null;
     const vSlider = document.getElementById('docs-v-slider') as HTMLInputElement | null;
     const aSlider = document.getElementById('docs-a-slider') as HTMLInputElement | null;
@@ -749,7 +850,7 @@ const ref = useRef<AffectKitRater>(null);
     vSlider?.addEventListener('input', updateFace);
     aSlider?.addEventListener('input', updateFace);
 
-    // Pre-seed compare
+    // ── Compare pre-seed + controls ───────────────────────────────────
     const before = [
       createRating({ face: { v: -0.5, a: 0.5 }, labels: [{ name: 'overwhelmed', level: 3 }, { name: 'anxious', level: 2 }] }),
       createRating({ face: { v: -0.4, a: 0.4 }, labels: [{ name: 'frustrated', level: 2 }, { name: 'tired', level: 2 }] }),
@@ -760,6 +861,9 @@ const ref = useRef<AffectKitRater>(null);
     ];
     const cmp = document.getElementById('docs-compare') as AffectKitCompare | null;
     if (cmp) { cmp.beforeRating = before; cmp.afterRating = after; }
+    seg('docs-compare-color',        (m) => { if (cmp) cmp.colorMode  = m; });
+    toggle('docs-compare-face',      (v) => { if (cmp) cmp.showFace   = v; });
+    toggle('docs-compare-labels',    (v) => { if (cmp) cmp.showLabels = v; });
   </script>
 
 </Base>
@@ -874,5 +978,85 @@ const ref = useRef<AffectKitRater>(null);
     margin-left: 0.2em;
     letter-spacing: 0;
     text-transform: none;
+  }
+
+  /* ── Interactive prop controls above each demo ─────────────────── */
+  .docs-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 1.1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    margin: 0 0 0.9rem;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .docs-ctrl       { display: inline-flex; align-items: center; gap: 0.4rem; user-select: none; }
+  .docs-ctrl-label { color: var(--ink-faint); }
+
+  /* Tri-state segmented control (color-mode) */
+  .docs-seg-group {
+    display: inline-flex;
+    border: 1px solid var(--border-mid);
+    border-radius: 7px;
+    overflow: hidden;
+    background: white;
+  }
+  .docs-seg-btn {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    padding: 0.25rem 0.6rem;
+    font: inherit;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    cursor: pointer;
+  }
+  .docs-seg-btn + .docs-seg-btn { border-left: 1px solid var(--border); }
+  .docs-seg-btn[aria-pressed="true"] { background: var(--ink, #1a1a1a); color: white; }
+
+  /* Toggle switch */
+  .docs-toggle {
+    width: 28px; height: 16px;
+    border-radius: 8px;
+    background: var(--border-mid, rgba(0,0,0,0.15));
+    border: none;
+    position: relative;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+  }
+  .docs-toggle[aria-pressed="true"] { background: var(--ink, #1a1a1a); }
+  .docs-toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px; left: 2px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: white;
+    transition: transform 0.2s ease;
+  }
+  .docs-toggle[aria-pressed="true"]::after { transform: translateX(12px); }
+
+  /* Select */
+  .docs-select {
+    font: inherit;
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border: 1px solid var(--border-mid);
+    border-radius: 5px;
+    background: white;
+    color: var(--ink, #1a1a1a);
+    text-transform: none;
+    letter-spacing: 0;
+    cursor: pointer;
   }
 </style>

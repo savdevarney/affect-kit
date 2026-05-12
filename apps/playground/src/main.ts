@@ -8,33 +8,30 @@ import type { AffectKitResult }  from 'affect-kit/result';
 import type { AffectKitRater }   from 'affect-kit/rater';
 import type { AffectKitCompare } from 'affect-kit/compare';
 import { createRating } from 'affect-kit';
-import type { Rating } from 'affect-kit';
+import type { ColorMode, Rating } from 'affect-kit';
 
 // ── Element refs ───────────────────────────────────────────────────────────
 const rater      = document.getElementById('rater')      as AffectKitRater  | null;
 const resultEl   = document.getElementById('result')     as AffectKitResult | null;
 
 // ── Seed result with a test rating on load ─────────────────────────────────
-const testRating = {
-  v: 0.76, a: 0.48, d: 0.35,
-  pad: { v: 0.76, a: 0.48 },
-  fromLabels: true,
+const seed: Rating = createRating({
+  face: { v: 0.76, a: 0.48 },
   labels: [
-    { name: 'joy',     level: 3 as const },
-    { name: 'excited', level: 2 as const },
-    { name: 'hopeful', level: 1 as const },
+    { name: 'joy',     level: 3 },
+    { name: 'excited', level: 2 },
+    { name: 'hopeful', level: 1 },
   ],
-  timestamp: Date.now(),
-};
-if (resultEl) resultEl.rating = testRating;
+});
+if (resultEl) resultEl.rating = seed;
 
 // ── Rater → result wiring ──────────────────────────────────────────────────
 rater?.addEventListener('change', (e) => {
-  const rating = (e as CustomEvent).detail;
+  const rating = (e as CustomEvent<Rating>).detail;
   if (resultEl) resultEl.rating = rating;
 });
 
-// ── Toggle helper ──────────────────────────────────────────────────────────
+// ── Toggle helper (boolean two-state switch) ──────────────────────────────
 function makeToggle(
   id: string,
   onChange: (on: boolean) => void,
@@ -50,19 +47,60 @@ function makeToggle(
   });
 }
 
+// ── Segmented control helper for `color-mode` (off / background / words) ──
+function makeSeg(
+  name: string,
+  onChange: (value: ColorMode | null) => void,
+) {
+  const group = document.querySelector<HTMLElement>(`[data-seg="${name}"]`);
+  if (!group) return;
+  const btns = [...group.querySelectorAll<HTMLButtonElement>('.seg-btn')];
+  btns.forEach(b => {
+    b.addEventListener('click', () => {
+      const value = b.dataset.val ?? 'off';
+      group.dataset.value = value;
+      btns.forEach(other => other.setAttribute('aria-pressed', String(other === b)));
+      const mode: ColorMode | null =
+        value === 'background' ? 'background'
+        : value === 'words'    ? 'words'
+        : null;
+      onChange(mode);
+    });
+  });
+}
+
 // ── Code snippets that mirror toggle state ────────────────────────────────
 const codeRater  = document.getElementById('code-rater');
 const codeResult = document.getElementById('code-result');
 
-const raterState  = { colorMode: false, animated: true,  showVad: true };
-const resultState = { colorMode: true,  showFace: true,  showLabels: true, animated: true, showVad: false };
+const raterState  = {
+  colorMode: null as ColorMode | null,
+  animated: true,
+  showVad: true,
+  submitLabel: 'Done',
+};
+const resultState = {
+  colorMode: 'background' as ColorMode | null,
+  showFace: true,
+  showLabels: true,
+  animated: true,
+  showVad: false,
+  align: 'center' as 'left' | 'center' | 'right',
+  variant: 'default' as 'default' | 'compact',
+};
+
+function colorAttr(mode: ColorMode | null): string | null {
+  return mode === null ? null : `color-mode="${mode}"`;
+}
 
 function renderRaterCode() {
   if (!codeRater) return;
   const attrs: string[] = [];
-  if (raterState.colorMode) attrs.push('color-mode');
+  const c = colorAttr(raterState.colorMode);
+  if (c) attrs.push(c);
   if (!raterState.animated) attrs.push('animated="false"');
   if (raterState.showVad)   attrs.push('show-vad');
+  if (raterState.submitLabel !== 'Done') attrs.push(`submit-label="${raterState.submitLabel}"`);
   const tag = attrs.length
     ? `<affect-kit-rater ${attrs.join(' ')}></affect-kit-rater>`
     : `<affect-kit-rater></affect-kit-rater>`;
@@ -72,7 +110,7 @@ function renderRaterCode() {
     tag + `\n\n` +
     `// Listen for committed ratings:\n` +
     `const rater = document.querySelector('affect-kit-rater');\n` +
-    `rater.addEventListener('change', (e) => {\n` +
+    `rater.addEventListener('commit', (e) => {\n` +
     `  const rating = e.detail;  // Rating\n` +
     `  // store, sync, or pipe into <affect-kit-result>\n` +
     `});`;
@@ -81,11 +119,14 @@ function renderRaterCode() {
 function renderResultCode() {
   if (!codeResult) return;
   const attrs: string[] = [];
-  if (resultState.colorMode)  attrs.push('color-mode');
+  const c = colorAttr(resultState.colorMode);
+  if (c) attrs.push(c);
   if (resultState.showFace)   attrs.push('show-face');
   if (resultState.showLabels) attrs.push('show-labels');
   if (!resultState.animated)  attrs.push('animated="false"');
   if (resultState.showVad)    attrs.push('show-vad');
+  if (resultState.align   !== 'center')  attrs.push(`align="${resultState.align}"`);
+  if (resultState.variant !== 'default') attrs.push(`variant="${resultState.variant}"`);
   const tag = attrs.length
     ? `<affect-kit-result ${attrs.join(' ')}></affect-kit-result>`
     : `<affect-kit-result></affect-kit-result>`;
@@ -95,16 +136,16 @@ function renderResultCode() {
     tag + `\n\n` +
     `// Set a captured rating:\n` +
     `const result = document.querySelector('affect-kit-result');\n` +
-    `result.rating = capturedRating;  // Rating from the rater's 'change' event`;
+    `result.rating = capturedRating;  // Rating from the rater's 'commit' event`;
 }
 
 renderRaterCode();
 renderResultCode();
 
-// ── Rater toggles ──────────────────────────────────────────────────────────
-makeToggle('rater-color-toggle', (on) => {
-  if (rater) rater.colorMode = on;
-  raterState.colorMode = on; renderRaterCode();
+// ── Rater controls ─────────────────────────────────────────────────────────
+makeSeg('rater-color', (mode) => {
+  if (rater) rater.colorMode = mode;
+  raterState.colorMode = mode; renderRaterCode();
 });
 makeToggle('rater-animated-toggle', (on) => {
   if (rater) rater.animated = on;
@@ -114,11 +155,18 @@ makeToggle('rater-vad-toggle', (on) => {
   if (rater) rater.showVad = on;
   raterState.showVad = on; renderRaterCode();
 });
+const submitInput = document.getElementById('rater-submit-input') as HTMLInputElement | null;
+submitInput?.addEventListener('input', () => {
+  const v = submitInput.value || 'Done';
+  if (rater) rater.submitLabel = v;
+  raterState.submitLabel = v;
+  renderRaterCode();
+});
 
-// ── Result toggles ─────────────────────────────────────────────────────────
-makeToggle('result-color-toggle', (on) => {
-  if (resultEl) resultEl.colorMode = on;
-  resultState.colorMode = on; renderResultCode();
+// ── Result controls ────────────────────────────────────────────────────────
+makeSeg('result-color', (mode) => {
+  if (resultEl) resultEl.colorMode = mode;
+  resultState.colorMode = mode; renderResultCode();
 });
 makeToggle('result-face-toggle', (on) => {
   if (resultEl) resultEl.showFace = on;
@@ -135,6 +183,18 @@ makeToggle('result-animated-toggle', (on) => {
 makeToggle('result-vad-toggle', (on) => {
   if (resultEl) resultEl.showVad = on;
   resultState.showVad = on; renderResultCode();
+});
+const alignSelect   = document.getElementById('result-align-select')   as HTMLSelectElement | null;
+const variantSelect = document.getElementById('result-variant-select') as HTMLSelectElement | null;
+alignSelect?.addEventListener('change', () => {
+  const v = alignSelect.value as 'left' | 'center' | 'right';
+  if (resultEl) resultEl.align = v;
+  resultState.align = v; renderResultCode();
+});
+variantSelect?.addEventListener('change', () => {
+  const v = variantSelect.value as 'default' | 'compact';
+  if (resultEl) resultEl.variant = v;
+  resultState.variant = v; renderResultCode();
 });
 
 // ── Interactive face sliders ───────────────────────────────────────────────
@@ -169,31 +229,31 @@ document.getElementById('reset-btn')?.addEventListener('click', () => {
 // The data is hand-authored so the playground's Code tab can show the
 // exact arrays the consumer would write themselves.
 const yesterday: Rating[] = [
-  createRating({ v: -0.4, a:  0.5, labels: [
+  createRating({ face: { v: -0.4, a:  0.5 }, labels: [
     { name: 'overwhelmed', level: 3 },
     { name: 'anxious',     level: 2 },
     { name: 'tired',       level: 1 },
   ]}),
-  createRating({ v: -0.5, a:  0.4, labels: [
+  createRating({ face: { v: -0.5, a:  0.4 }, labels: [
     { name: 'frustrated',  level: 2 },
     { name: 'tired',       level: 2 },
   ]}),
-  createRating({ v: -0.3, a:  0.3, labels: [
+  createRating({ face: { v: -0.3, a:  0.3 }, labels: [
     { name: 'overwhelmed', level: 2 },
     { name: 'sad',         level: 1 },
   ]}),
 ];
 
 const today: Rating[] = [
-  createRating({ v:  0.5, a:  0.3, labels: [
+  createRating({ face: { v:  0.5, a:  0.3 }, labels: [
     { name: 'calm',     level: 2 },
     { name: 'grateful', level: 1 },
   ]}),
-  createRating({ v:  0.7, a:  0.5, labels: [
+  createRating({ face: { v:  0.7, a:  0.5 }, labels: [
     { name: 'joy',     level: 3 },
     { name: 'hopeful', level: 2 },
   ]}),
-  createRating({ v:  0.6, a:  0.2, labels: [
+  createRating({ face: { v:  0.6, a:  0.2 }, labels: [
     { name: 'content',  level: 2 },
     { name: 'grateful', level: 2 },
     { name: 'calm',     level: 1 },
@@ -209,7 +269,13 @@ if (compareEl) {
 // Dynamic code snippet — mirrors the toggle state and shows the same data
 // arrays the consumer would write themselves.
 const codeCompare = document.getElementById('code-compare');
-const compareState = { colorMode: true, showFace: true, showLabels: true };
+const compareState = {
+  colorMode: 'background' as ColorMode | null,
+  showFace: true,
+  showLabels: true,
+  beforeLabel: 'Yesterday',
+  afterLabel: 'Today',
+};
 
 function fmtRatings(name: string, ratings: Rating[]): string {
   const lines: string[] = [`const ${name}: Rating[] = [`];
@@ -217,7 +283,7 @@ function fmtRatings(name: string, ratings: Rating[]): string {
     const labelLines = r.labels
       .map(l => `    { name: '${l.name}', level: ${l.level} },`)
       .join('\n');
-    lines.push(`  createRating({ v: ${r.pad.v.toFixed(2).padStart(5)}, a: ${r.pad.a.toFixed(2).padStart(5)}, labels: [`);
+    lines.push(`  createRating({ face: { v: ${r.face.v.toFixed(2).padStart(5)}, a: ${r.face.a.toFixed(2).padStart(5)} }, labels: [`);
     lines.push(labelLines);
     lines.push(`  ]}),`);
   }
@@ -227,8 +293,12 @@ function fmtRatings(name: string, ratings: Rating[]): string {
 
 function renderCompareCode() {
   if (!codeCompare) return;
-  const attrs: string[] = ['before-label="Yesterday"', 'after-label="Today"'];
-  if (compareState.colorMode) attrs.push('color-mode');
+  const attrs: string[] = [
+    `before-label="${compareState.beforeLabel}"`,
+    `after-label="${compareState.afterLabel}"`,
+  ];
+  const c = colorAttr(compareState.colorMode);
+  if (c) attrs.push(c);
   if (compareState.showFace)  attrs.push('show-face');
   if (compareState.showLabels) attrs.push('show-labels');
   const html =
@@ -252,9 +322,9 @@ function renderCompareCode() {
 
 renderCompareCode();
 
-makeToggle('compare-color-toggle', (on) => {
-  if (compareEl) compareEl.colorMode = on;
-  compareState.colorMode = on; renderCompareCode();
+makeSeg('compare-color', (mode) => {
+  if (compareEl) compareEl.colorMode = mode;
+  compareState.colorMode = mode; renderCompareCode();
 });
 makeToggle('compare-face-toggle', (on) => {
   if (compareEl) compareEl.showFace = on;
@@ -264,4 +334,15 @@ makeToggle('compare-labels-toggle', (on) => {
   if (compareEl) compareEl.showLabels = on;
   compareState.showLabels = on; renderCompareCode();
 });
-
+const beforeInput = document.getElementById('compare-before-input') as HTMLInputElement | null;
+const afterInput  = document.getElementById('compare-after-input')  as HTMLInputElement | null;
+beforeInput?.addEventListener('input', () => {
+  const v = beforeInput.value;
+  if (compareEl) compareEl.beforeLabel = v;
+  compareState.beforeLabel = v; renderCompareCode();
+});
+afterInput?.addEventListener('input', () => {
+  const v = afterInput.value;
+  if (compareEl) compareEl.afterLabel = v;
+  compareState.afterLabel = v; renderCompareCode();
+});

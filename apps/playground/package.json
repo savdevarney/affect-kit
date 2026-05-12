@@ -13,6 +13,7 @@
     "vite": "^6.0.0"
   },
   "dependencies": {
-    "affect-kit": "workspace:*"
+    "affect-kit": "workspace:*",
+    "lit": "^3.2.0"
   }
 }
