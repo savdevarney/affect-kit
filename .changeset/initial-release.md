@@ -1,0 +1,16 @@
+---
+'affect-kit': minor
+---
+
+Initial public release.
+
+Four custom elements for dimensional emotion rating, built with Lit and grounded in the NRC VAD Lexicon:
+
+- `<affect-kit-rater>` — interactive V/A pad with emotion-label refinement; emits `commit` with a structured `Rating`.
+- `<affect-kit-result>` — renders a committed `Rating` as face + dominant label + optional color chip.
+- `<affect-kit-compare>` — two snapshots side-by-side, or two arrays of ratings averaged.
+- `<affect-kit-face>` — standalone face glyph driven by `v` and `a` props.
+
+Each component ships as its own entry point (`affect-kit/rater`, `/result`, `/compare`, `/face`) plus a bundled side-effect import (`affect-kit`). ESM-only, TypeScript-first, no framework required.
+
+Site and docs: [affectkit.com](https://affectkit.com).

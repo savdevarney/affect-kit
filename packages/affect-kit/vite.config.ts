@@ -5,6 +5,9 @@ import { defineConfig } from 'vite';
 // package.json#exports. Anything in src/core, src/vocabulary, src/styles
 // is bundled into these entries — never emitted as a separate file —
 // which is how we keep the public API surface tight.
+//
+// Type declarations are emitted by a separate `build:types` step that runs
+// dts-bundle-generator per entry. See package.json scripts.
 export default defineConfig({
   build: {
     lib: {
