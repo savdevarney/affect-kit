@@ -216,8 +216,17 @@ import '../styles/global.css';
             anxious D=−0.13.
           </figcaption>
           <div class="rp-diagram-wrap">
-            <svg viewBox="0 0 520 310" xmlns="http://www.w3.org/2000/svg"
-                 aria-label="3D scatter plot of the VAD (Valence, Arousal, Dominance) space with six emotion examples plotted at their NRC lexicon coordinates.">
+            {/*
+              Isometric projection of (V, A, D) → 2D:
+                screen.x = cx + S * (V * cos30 + D * cos150)
+                screen.y = cy + S * (-A + V * sin30 + D * sin150)
+              cos30 = √3/2 ≈ 0.866; sin30 = 0.5. D pushes up-and-right;
+              V pushes right-and-down; A is the vertical axis (inverted, so +A is up).
+              Dot size and opacity scale slightly with +D for a depth cue.
+            */}
+            <svg viewBox="0 0 700 420" xmlns="http://www.w3.org/2000/svg"
+                 aria-label="Isometric scatter plot of the VAD (Valence, Arousal, Dominance) space with six emotion examples plotted at their NRC lexicon coordinates."
+                 class="rp-vad-svg">
               <defs>
                 <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4"
                   markerWidth="5" markerHeight="5" orient="auto">
@@ -225,77 +234,97 @@ import '../styles/global.css';
                 </marker>
               </defs>
 
-              <!-- Quadrant color wash on the V/A plane (D=0 cross-section) -->
-              <rect x="110" y="125" width="85" height="75" fill="#FF1457" fill-opacity="0.05"/>
-              <rect x="195" y="125" width="85" height="75" fill="#FFC700" fill-opacity="0.05"/>
-              <rect x="195" y="200" width="85" height="75" fill="#1FE085" fill-opacity="0.05"/>
-              <rect x="110" y="200" width="85" height="75" fill="#2D72F0" fill-opacity="0.05"/>
+              {/*
+                Origin (350, 230). Scale 110 px per unit. cos30·S ≈ 95, sin30·S = 55.
+                D-axis projection: (+95, -55) for +D; (-95, +55) for -D.
+                V-axis projection: (+95, +55) for +V; (-95, -55) for -V (down-left).
+                  Wait — using standard isometric where V points up-right and D up-left
+                  inverts what feels right for an English reader. We instead use:
+                  V → right, A → up, D → up-right (depth into the page).
+                That gives:
+                  x = cx + S * V                 (pure horizontal)
+                  y = cy + S * (-A - D * sin30)  (A is vertical, D rises diagonally)
+                  x_d_shift = S * D * cos30      (D pushes right)
+                  Combined: x = cx + S*V + S*D*cos30; y = cy - S*A - S*D*sin30.
+                Constants: S=110, cos30·S ≈ 95.26, sin30·S = 55.
+              */}
 
-              <!-- Grid lines at D=0 -->
-              <line x1="195" y1="125" x2="195" y2="275" stroke="#1a1a1a" stroke-width="0.5" stroke-opacity="0.12"/>
-              <line x1="110" y1="200" x2="280" y2="200" stroke="#1a1a1a" stroke-width="0.5" stroke-opacity="0.12"/>
+              {/* V/A plane shaded by quadrant (D=0 slice) */}
+              <polygon points="350,230 460,230 460,120 350,120" fill="#FFC700" fill-opacity="0.05"/>
+              <polygon points="240,230 350,230 350,120 240,120" fill="#FF1457" fill-opacity="0.05"/>
+              <polygon points="240,230 350,230 350,340 240,340" fill="#2D72F0" fill-opacity="0.05"/>
+              <polygon points="350,230 460,230 460,340 350,340" fill="#1FE085" fill-opacity="0.05"/>
 
-              <!-- D axis negative (dashed) -->
-              <line x1="195" y1="200" x2="147" y2="227" stroke="#bbb" stroke-width="1" stroke-dasharray="4,3"/>
-              <!-- D axis positive -->
-              <line x1="195" y1="200" x2="244" y2="172" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
+              {/* V/A plane grid at D=0 */}
+              <line x1="240" y1="230" x2="460" y2="230" stroke="#1a1a1a" stroke-width="0.5" stroke-opacity="0.12"/>
+              <line x1="350" y1="120" x2="350" y2="340" stroke="#1a1a1a" stroke-width="0.5" stroke-opacity="0.12"/>
 
-              <!-- V axis negative (dashed) -->
-              <line x1="195" y1="200" x2="107" y2="200" stroke="#bbb" stroke-width="1" stroke-dasharray="4,3"/>
-              <!-- V axis positive -->
-              <line x1="195" y1="200" x2="284" y2="200" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
+              {/* V axis (horizontal) */}
+              <line x1="240" y1="230" x2="350" y2="230" stroke="#bbb" stroke-width="1" stroke-dasharray="4,3"/>
+              <line x1="350" y1="230" x2="500" y2="230" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
 
-              <!-- A axis negative (dashed) -->
-              <line x1="195" y1="200" x2="195" y2="277" stroke="#bbb" stroke-width="1" stroke-dasharray="4,3"/>
-              <!-- A axis positive -->
-              <line x1="195" y1="200" x2="195" y2="117" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
+              {/* A axis (vertical) */}
+              <line x1="350" y1="230" x2="350" y2="340" stroke="#bbb" stroke-width="1" stroke-dasharray="4,3"/>
+              <line x1="350" y1="230" x2="350" y2="80" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
 
-              <!-- Axis labels -->
-              <text x="291" y="197" font-size="11" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif">Valence</text>
-              <text x="291" y="210" font-size="9" fill="#888" font-family="system-ui, -apple-system, sans-serif">positive →</text>
-              <text x="198" y="112" font-size="11" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif">Arousal</text>
-              <text x="198" y="124" font-size="9" fill="#888" font-family="system-ui, -apple-system, sans-serif">energized →</text>
-              <text x="249" y="166" font-size="11" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif">Dominance</text>
-              <text x="249" y="178" font-size="9" fill="#888" font-family="system-ui, -apple-system, sans-serif">in-control →</text>
+              {/* D axis (diagonal, +D up-right into the page) */}
+              <line x1="350" y1="230" x2="302" y2="258" stroke="#bbb" stroke-width="1" stroke-dasharray="4,3"/>
+              <line x1="350" y1="230" x2="445" y2="175" stroke="#1a1a1a" stroke-width="1.5" marker-end="url(#arr)"/>
 
-              <!-- Negative axis labels -->
-              <text x="97" y="197" font-size="8" fill="#ccc" font-family="system-ui, -apple-system, sans-serif" text-anchor="end">−V</text>
-              <text x="193" y="290" font-size="8" fill="#ccc" font-family="system-ui, -apple-system, sans-serif" text-anchor="end">−A</text>
-              <text x="142" y="237" font-size="8" fill="#ccc" font-family="system-ui, -apple-system, sans-serif" text-anchor="end">−D</text>
+              {/* Axis labels */}
+              <text x="508" y="234" font-size="13" fill="#1a1a1a" font-weight="600">Valence</text>
+              <text x="508" y="248" font-size="10" fill="#888">pleasant →</text>
+              <text x="354" y="74" font-size="13" fill="#1a1a1a" font-weight="600">Arousal</text>
+              <text x="354" y="88" font-size="10" fill="#888">energized →</text>
+              <text x="452" y="171" font-size="13" fill="#1a1a1a" font-weight="600">Dominance</text>
+              <text x="452" y="185" font-size="10" fill="#888">in-control →</text>
 
-              <!-- joy (V=0.96, A=0.65, D=0.59): x=305, y=135 -->
-              <circle cx="305" cy="135" r="5.5" fill="#FFC700" stroke="#1a1a1a" stroke-width="1"/>
-              <text x="313" y="133" font-size="9.5" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif">joy</text>
-              <text x="313" y="144" font-size="7.5" fill="#aaa" font-family="'SF Mono', 'Fira Code', monospace">0.96, 0.65, +0.59</text>
+              {/* Negative axis tip labels */}
+              <text x="230" y="234" font-size="10" fill="#bbb" text-anchor="end">−V</text>
+              <text x="354" y="352" font-size="10" fill="#bbb">−A</text>
+              <text x="295" y="266" font-size="10" fill="#bbb" text-anchor="end">−D</text>
 
-              <!-- anger (V=-0.67, A=0.73, D=0.31): x=153, y=137 -->
-              <circle cx="153" cy="137" r="5.5" fill="#FF1457" stroke="#1a1a1a" stroke-width="1"/>
-              <text x="147" y="133" font-size="9.5" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif" text-anchor="end">anger</text>
-              <text x="147" y="144" font-size="7.5" fill="#aaa" font-family="'SF Mono', 'Fira Code', monospace" text-anchor="end">−0.67, 0.73, +0.31</text>
+              {/*
+                Plotted emotions. Each (V,A,D) → (cx + 110*V + 95*D, cy - 110*A - 55*D).
+                cx=350, cy=230.
+                Depth cue: dot radius scales 7→9 across D∈[-1,1]; opacity 0.78→1.0.
+                Each emotion also has a thin vertical "shadow" line from the dot down
+                to its V/A-plane projection (D=0), to anchor the 3D reading.
+              */}
 
-              <!-- calm (V=0.75, A=-0.90, D=-0.37): x=241, y=278 -->
-              <circle cx="241" cy="278" r="5.5" fill="#1FE085" stroke="#1a1a1a" stroke-width="1"/>
-              <text x="249" y="276" font-size="9.5" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif">calm</text>
-              <text x="249" y="287" font-size="7.5" fill="#aaa" font-family="'SF Mono', 'Fira Code', monospace">0.75, −0.90, −0.37</text>
+              {/* joy (V=0.96, A=0.65, D=0.59) → (350+106+56, 230-72-32) = (512, 126) */}
+              <line x1="512" y1="126" x2="456" y2="158" stroke="#FFC700" stroke-width="0.8" stroke-opacity="0.45" stroke-dasharray="2,2"/>
+              <circle cx="512" cy="126" r="8" fill="#FFC700" stroke="#1a1a1a" stroke-width="1" fill-opacity="0.95"/>
+              <text x="524" y="123" font-size="13" fill="#1a1a1a" font-weight="600">joy</text>
 
-              <!-- sadness (V=-0.55, A=-0.33, D=-0.70): x=115, y=244 -->
-              <circle cx="115" cy="244" r="5.5" fill="#2D72F0" stroke="#1a1a1a" stroke-width="1"/>
-              <text x="109" y="242" font-size="9.5" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif" text-anchor="end">sadness</text>
-              <text x="109" y="253" font-size="7.5" fill="#aaa" font-family="'SF Mono', 'Fira Code', monospace" text-anchor="end">−0.55, −0.33, −0.70</text>
+              {/* anger (V=−0.67, A=0.73, D=0.31) → (350−74+29, 230−80−17) = (305, 133) */}
+              <line x1="305" y1="133" x2="276" y2="150" stroke="#FF1457" stroke-width="0.8" stroke-opacity="0.45" stroke-dasharray="2,2"/>
+              <circle cx="305" cy="133" r="7.5" fill="#FF1457" stroke="#1a1a1a" stroke-width="1" fill-opacity="0.92"/>
+              <text x="295" y="128" font-size="13" fill="#1a1a1a" font-weight="600" text-anchor="end">anger</text>
 
-              <!-- frustrated (V=-0.84, A=0.30, D=-0.49): x=100, y=191 -->
-              <circle cx="100" cy="191" r="5.5" fill="#FF1457" stroke="#1a1a1a" stroke-width="1" fill-opacity="0.65"/>
-              <text x="94" y="189" font-size="9.5" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif" text-anchor="end">frustrated</text>
-              <text x="94" y="200" font-size="7.5" fill="#aaa" font-family="'SF Mono', 'Fira Code', monospace" text-anchor="end">−0.84, 0.30, −0.49</text>
+              {/* frustrated (V=−0.84, A=0.30, D=−0.49) → (350−92−47, 230−33+27) = (211, 224) */}
+              <line x1="211" y1="224" x2="258" y2="197" stroke="#FF1457" stroke-width="0.8" stroke-opacity="0.45" stroke-dasharray="2,2"/>
+              <circle cx="211" cy="224" r="6.8" fill="#FF1457" stroke="#1a1a1a" stroke-width="1" fill-opacity="0.75"/>
+              <text x="201" y="222" font-size="13" fill="#1a1a1a" font-weight="600" text-anchor="end">frustrated</text>
 
-              <!-- hopeful (V=0.89, A=-0.29, D=0.25): x=283, y=215 -->
-              <circle cx="283" cy="215" r="5.5" fill="#1FE085" stroke="#1a1a1a" stroke-width="1" fill-opacity="0.75"/>
-              <text x="291" y="213" font-size="9.5" fill="#1a1a1a" font-weight="600" font-family="system-ui, -apple-system, sans-serif">hopeful</text>
-              <text x="291" y="224" font-size="7.5" fill="#aaa" font-family="'SF Mono', 'Fira Code', monospace">0.89, −0.29, +0.25</text>
+              {/* hopeful (V=0.89, A=−0.29, D=0.25) → (350+98+24, 230+32−14) = (472, 248) */}
+              <line x1="472" y1="248" x2="448" y2="262" stroke="#1FE085" stroke-width="0.8" stroke-opacity="0.45" stroke-dasharray="2,2"/>
+              <circle cx="472" cy="248" r="7.5" fill="#1FE085" stroke="#1a1a1a" stroke-width="1" fill-opacity="0.9"/>
+              <text x="484" y="246" font-size="13" fill="#1a1a1a" font-weight="600">hopeful</text>
 
-              <!-- neutral (origin) -->
-              <circle cx="195" cy="200" r="3" fill="#ddd" stroke="#bbb" stroke-width="0.5"/>
-              <text x="200" y="208" font-size="7.5" fill="#bbb" font-family="system-ui, -apple-system, sans-serif">neutral</text>
+              {/* calm (V=0.75, A=−0.90, D=−0.37) → (350+83−35, 230+99+20) = (398, 349) */}
+              <line x1="398" y1="349" x2="433" y2="329" stroke="#1FE085" stroke-width="0.8" stroke-opacity="0.45" stroke-dasharray="2,2"/>
+              <circle cx="398" cy="349" r="6.8" fill="#1FE085" stroke="#1a1a1a" stroke-width="1" fill-opacity="0.78"/>
+              <text x="410" y="354" font-size="13" fill="#1a1a1a" font-weight="600">calm</text>
+
+              {/* sadness (V=−0.55, A=−0.33, D=−0.70) → (350−61−67, 230+36+39) = (222, 305) */}
+              <line x1="222" y1="305" x2="289" y2="266" stroke="#2D72F0" stroke-width="0.8" stroke-opacity="0.45" stroke-dasharray="2,2"/>
+              <circle cx="222" cy="305" r="6.6" fill="#2D72F0" stroke="#1a1a1a" stroke-width="1" fill-opacity="0.72"/>
+              <text x="212" y="308" font-size="13" fill="#1a1a1a" font-weight="600" text-anchor="end">sadness</text>
+
+              {/* neutral at origin */}
+              <circle cx="350" cy="230" r="3" fill="#ddd" stroke="#bbb" stroke-width="0.5"/>
+              <text x="356" y="244" font-size="10" fill="#bbb">neutral</text>
             </svg>
           </div>
         </figure>
