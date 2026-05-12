@@ -1,5 +1,5 @@
 import { LitElement, html, css, type PropertyValues } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { property } from 'lit/decorators.js';
 import {
   computeTarget,
   renderFace,
@@ -29,7 +29,6 @@ const SHOCK_DECAY = 0.93;
  * Animation (breath, tremor, crows-feet) runs at 60 fps by default and
  * respects `prefers-reduced-motion: reduce` automatically.
  */
-@customElement('affect-kit-face')
 export class AffectKitFace extends LitElement {
   static override styles = css`
     :host {

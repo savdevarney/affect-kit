@@ -1,5 +1,10 @@
-// `affect-kit/face` entry. Side-effect import registers the custom element.
+// `affect-kit/face` entry. Registers the custom element as a side effect.
+// See rater.ts for the rationale behind explicit registration.
 
-import './components/affect-kit-face';
+import { AffectKitFace } from './components/affect-kit-face';
 
-export { AffectKitFace } from './components/affect-kit-face';
+if (!customElements.get('affect-kit-face')) {
+  customElements.define('affect-kit-face', AffectKitFace);
+}
+
+export { AffectKitFace };

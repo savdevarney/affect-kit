@@ -1,11 +1,10 @@
 import { LitElement, html, css, nothing, type PropertyValues } from 'lit';
-import { customElement, property, state, query } from 'lit/decorators.js';
+import { property, state, query } from 'lit/decorators.js';
 import { colorForVA, darkerForChips, surfaceIsLight, type Rgb } from '../core/color';
 import { colorModeConverter } from '../core/color-mode';
 import { buildRating } from '../core/vad';
 import { EMOTIONS } from '../vocabulary/en';
 import type { ColorMode, Rating, EmotionName } from '../core/types';
-import './affect-kit-face';
 import type { AffectKitFace } from './affect-kit-face';
 
 const DWELL_MS = 500;
@@ -30,7 +29,6 @@ const animateConverter = {
  * </script>
  * ```
  */
-@customElement('affect-kit-rater')
 export class AffectKitRater extends LitElement {
   static override styles = css`
     :host {

@@ -1,10 +1,9 @@
 import { LitElement, html, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { property } from 'lit/decorators.js';
 import type { ColorMode, Rating } from '../core/types';
 import { averageRatings } from '../core/vad';
 import { colorForVA } from '../core/color';
 import { colorModeConverter } from '../core/color-mode';
-import './affect-kit-result'; // ensure result element is registered
 
 /**
  * `<affect-kit-compare>` — paired side-by-side word-cloud / face / color
@@ -49,7 +48,6 @@ import './affect-kit-result'; // ensure result element is registered
  * The widget makes no claims about what the comparison "means" — it just
  * shows the two states side-by-side. Interpretation belongs to the user.
  */
-@customElement('affect-kit-compare')
 export class AffectKitCompare extends LitElement {
   static override styles = css`
     :host {

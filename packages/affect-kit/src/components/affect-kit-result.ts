@@ -1,10 +1,9 @@
 import { LitElement, html, css, nothing } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { property } from 'lit/decorators.js';
 import { colorForVA, darkerForChips } from '../core/color';
 import { colorModeConverter } from '../core/color-mode';
 import type { ColorMode, Rating } from '../core/types';
 import { EMOTIONS_BY_NAME } from '../vocabulary/en';
-import './affect-kit-face'; // ensure face element is registered
 
 const animateConverter = {
   fromAttribute: (value: string | null): boolean => value !== 'false',
@@ -29,7 +28,6 @@ const animateConverter = {
  *
  * Color glow matches the V/A quadrant (pink/gold/green/blue) when `color-mode`.
  */
-@customElement('affect-kit-result')
 export class AffectKitResult extends LitElement {
   static override styles = css`
     :host {
