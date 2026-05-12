@@ -10,31 +10,100 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build, typecheck, test
+  # ───────────────────────────────────────────────────────────────────────
+  # Detect which areas of the repo changed so downstream jobs can skip work.
+  # ───────────────────────────────────────────────────────────────────────
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      site: ${{ steps.filter.outputs.site }}
+      pkg:  ${{ steps.filter.outputs.pkg }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            # Site rebuilds whenever the site OR the package it consumes change.
+            site:
+              - 'apps/site/**'
+              - 'packages/affect-kit/**'
+              - 'pnpm-lock.yaml'
+            # Package surface — affects publish + dependent harnesses + the site.
+            pkg:
+              - 'packages/affect-kit/**'
+              - 'packages/react/**'
+              - 'pnpm-lock.yaml'
+
+  # ───────────────────────────────────────────────────────────────────────
+  # Affected typecheck + build + test via Turbo's filter. With one published
+  # package this is effectively "always run", but the wiring is in place for
+  # when more packages land.
+  # ───────────────────────────────────────────────────────────────────────
+  test:
+    name: Typecheck + build + test (affected)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Turbo's --filter='...[BASE]' needs the base commit to be reachable.
+          fetch-depth: 0
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 10
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm --filter affect-kit typecheck
-      - run: pnpm --filter affect-kit build
-      - run: pnpm --filter affect-kit test
+      - name: Resolve base ref for affected detection
+        id: base
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "ref=${{ github.event.pull_request.base.sha }}" >> "$GITHUB_OUTPUT"
+          elif [ -n "${{ github.event.before }}" ] && [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            echo "ref=${{ github.event.before }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Validate package (publint + attw)
-        working-directory: packages/affect-kit
+      - name: Run affected pipeline
+        run: |
+          if [ -z "${{ steps.base.outputs.ref }}" ]; then
+            # First push to a branch (no base SHA available) — run everything.
+            pnpm turbo run typecheck build test
+          else
+            pnpm turbo run typecheck build test --filter="...[${{ steps.base.outputs.ref }}]"
+          fi
+
+  # ───────────────────────────────────────────────────────────────────────
+  # Package shape validation. Catches exports-map regressions, dual-package
+  # hazards, missing files, and broken type resolution before publish.
+  # ───────────────────────────────────────────────────────────────────────
+  validate-package:
+    name: publint + attw (esm-only)
+    runs-on: ubuntu-latest
+    needs: [changes, test]
+    if: needs.changes.outputs.pkg == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter affect-kit build
+
+      - working-directory: packages/affect-kit
         run: |
           npx --no -- publint
           npx --no -- attw --pack . --profile esm-only

@@ -1,42 +1,104 @@
 name: Release
 
+# Runs on every push to main. Two parallel paths:
+#   1. Deploy the marketing site to Cloudflare Pages (production) if the site
+#      or its package dependency changed.
+#   2. Run the Changesets release flow — opens a "Version packages" PR for
+#      pending changesets, or publishes to npm when a version PR merges.
+#
+# Required secrets (same as preview.yml):
+#   - CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+#   - NPM_TOKEN
+
 on:
   push:
     branches: [main]
 
-# Required for npm provenance and Changesets PR creation
 permissions:
   contents: write
   pull-requests: write
-  id-token: write
+  id-token: write          # npm provenance
 
 concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
+  group: release-main
+  cancel-in-progress: false   # never cancel a publish mid-flight
 
 jobs:
-  release:
-    name: Release
+  changes:
+    name: Detect changed paths
     runs-on: ubuntu-latest
+    outputs:
+      site: ${{ steps.filter.outputs.site }}
+      pkg:  ${{ steps.filter.outputs.pkg }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            site:
+              - 'apps/site/**'
+              - 'packages/affect-kit/**'
+              - 'pnpm-lock.yaml'
+            pkg:
+              - 'packages/affect-kit/**'
+              - 'pnpm-lock.yaml'
+
+  # ───────────────────────────────────────────────────────────────────────
+  # Site → Cloudflare Pages production (the `main` branch on the project).
+  # ───────────────────────────────────────────────────────────────────────
+  deploy-site:
+    name: Site → Cloudflare Pages production
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.site == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter affect-kit build
+      - run: pnpm --filter @affect-kit/site build
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy apps/site/dist --project-name=affectkit-site --branch=main
+
+  # ───────────────────────────────────────────────────────────────────────
+  # npm publish via Changesets. On a push that contains pending changesets,
+  # this opens a "Version packages" PR. When that PR merges, this job runs
+  # again, sees the version commit, and publishes to npm.
+  # ───────────────────────────────────────────────────────────────────────
+  release-npm:
+    name: npm publish (Changesets)
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.pkg == 'true'
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v4
         with:
           version: 10
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
           registry-url: 'https://registry.npmjs.org'
 
       - run: pnpm install --frozen-lockfile
-
       - run: pnpm --filter affect-kit build
 
       - name: Create Release PR or Publish

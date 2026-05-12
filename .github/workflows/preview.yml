@@ -1,0 +1,190 @@
+name: PR preview
+
+# Runs on every PR commit and posts back two preview artifacts:
+#   1. A Cloudflare Pages preview URL for the marketing site (if the site or
+#      its package dependency changed).
+#   2. An npm "snapshot" build tagged `pr-<N>` (if a changeset is present in
+#      the PR and the package source changed). Consumers can install with
+#        npm i affect-kit@pr-123
+#      to try the PR's code without merging.
+#
+# Required secrets:
+#   - CLOUDFLARE_API_TOKEN  (Cloudflare → My Profile → API Tokens → "Edit Cloudflare Pages")
+#   - CLOUDFLARE_ACCOUNT_ID (Cloudflare dashboard → right-hand sidebar)
+#   - NPM_TOKEN             (npm → Access Tokens → Granular, publish for affect-kit)
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write          # npm provenance
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    name: Detect changed paths
+    runs-on: ubuntu-latest
+    outputs:
+      site: ${{ steps.filter.outputs.site }}
+      pkg:  ${{ steps.filter.outputs.pkg }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            site:
+              - 'apps/site/**'
+              - 'packages/affect-kit/**'
+              - 'pnpm-lock.yaml'
+            pkg:
+              - 'packages/affect-kit/**'
+              - 'pnpm-lock.yaml'
+
+  # ───────────────────────────────────────────────────────────────────────
+  # Site preview → Cloudflare Pages. Each PR gets a unique URL on the
+  # `pr-<N>` branch of the Pages project; merging cleans it up.
+  # ───────────────────────────────────────────────────────────────────────
+  preview-site:
+    name: Site → Cloudflare Pages preview
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.site == 'true'
+    outputs:
+      url: ${{ steps.deploy.outputs.deployment-url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter affect-kit build
+      - run: pnpm --filter @affect-kit/site build
+
+      - name: Deploy to Cloudflare Pages
+        id: deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy apps/site/dist --project-name=affectkit-site --branch=pr-${{ github.event.pull_request.number }}
+
+  # ───────────────────────────────────────────────────────────────────────
+  # npm snapshot publish. Only runs if a changeset exists in the PR (so the
+  # snapshot has something to base its bump on) AND package source changed.
+  # The snapshot ships under the `pr-<N>` dist-tag, not `latest`.
+  # ───────────────────────────────────────────────────────────────────────
+  snapshot-publish:
+    name: npm snapshot
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.pkg == 'true'
+    outputs:
+      published: ${{ steps.publish.outputs.published }}
+      version:   ${{ steps.publish.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: pnpm install --frozen-lockfile
+
+      # Skip cleanly if the PR has no changeset — there's nothing to bump.
+      - name: Detect changesets
+        id: detect
+        run: |
+          if ls .changeset/*.md 2>/dev/null | grep -v -E '^\.changeset/(README|config)\.json$' | grep -q .; then
+            echo "has=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build + version with snapshot tag
+        if: steps.detect.outputs.has == 'true'
+        run: |
+          pnpm --filter affect-kit build
+          pnpm changeset version --snapshot pr-${{ github.event.pull_request.number }}
+
+      - name: Publish snapshot to npm
+        id: publish
+        if: steps.detect.outputs.has == 'true'
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          pnpm changeset publish --no-git-tag --snapshot --tag pr-${{ github.event.pull_request.number }} | tee publish.log
+          VERSION="$(grep -oE 'affect-kit@[^ ]+' publish.log | head -1 | sed 's/affect-kit@//')"
+          if [ -n "$VERSION" ]; then
+            echo "published=true"  >> "$GITHUB_OUTPUT"
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          else
+            echo "published=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  # ───────────────────────────────────────────────────────────────────────
+  # Post a single PR comment summarising preview artifacts.
+  # ───────────────────────────────────────────────────────────────────────
+  comment:
+    name: Comment preview links
+    runs-on: ubuntu-latest
+    needs: [preview-site, snapshot-publish]
+    if: always() && (needs.preview-site.result == 'success' || needs.snapshot-publish.result == 'success')
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const siteUrl    = '${{ needs.preview-site.outputs.url }}';
+            const npmVersion = '${{ needs.snapshot-publish.outputs.version }}';
+            const lines = ['## Preview build'];
+            if (siteUrl) {
+              lines.push('', `**Site preview:** ${siteUrl}`);
+            }
+            if (npmVersion) {
+              lines.push('', `**npm snapshot:** \`affect-kit@${npmVersion}\``);
+              lines.push('```bash');
+              lines.push(`npm i affect-kit@pr-${context.issue.number}`);
+              lines.push('```');
+            }
+            const body = lines.join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.user.type === 'Bot' && c.body?.startsWith('## Preview build'));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo:  context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo:  context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
