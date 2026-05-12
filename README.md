@@ -1,6 +1,6 @@
 # affect-kit
 
-Open-source web components for **dimensional emotion rating** — built with Lit, grounded in affective science.
+Open-source web components for **dimensional emotion rating**. Built with Lit, grounded in affective science.
 
 - **npm package:** [`affect-kit`](https://www.npmjs.com/package/affect-kit)
 - **Site + docs:** [affectkit.com](https://affectkit.com)
@@ -10,21 +10,20 @@ Open-source web components for **dimensional emotion rating** — built with Lit
 
 | Element | Role |
 |---|---|
-| `<affect-kit-rater>` | Interactive valence × arousal pad with optional emotion-label refinement |
-| `<affect-kit-result>` | Display panel for a captured rating |
-| `<affect-kit-face>` | Reusable face glyph driven by `v` and `a` |
+| `<affect-kit-rater>`   | Interactive V/A pad with emotion-label refinement |
+| `<affect-kit-result>`  | Display panel for a captured rating |
+| `<affect-kit-compare>` | Two snapshots side-by-side, or two arrays averaged |
+| `<affect-kit-face>`    | Reusable face glyph driven by `v` and `a` |
 
-## Why
+## How it works
 
-The fundamental flow is **rate, then refine**: drag a face on a V/A pad to capture the gut feeling, then optionally tap labels to add nuance. This sequence respects the way affect actually works — feeling first, naming second — and produces a richer dataset than a single-dimension scale.
+Words are the measurement. The face sorts them.
 
-The default vocabulary is grounded in the [NRC VAD Lexicon](https://saifmohammad.com/WebPages/nrc-vad.html) (Mohammad 2018). The face glyph is intentionally minimal — no skin tone, no hair, no body — so it carries the rating without encoding race, gender, or age.
+Emotion science's most validated instrument is the labeled word. The NRC VAD Lexicon scores 20,000 of them on valence, arousal, and dominance. The hard part has never been the list; it's finding the right word in the moment.
 
-Read the longer [research foundations](docs/research.md) for the theoretical and design-principles background.
+affect-kit makes label selection a standardized act. A pre-verbal **gesture** orients you in V/A space and re-sorts the lexicon so the closest words rise first. You **refine** by tapping the ones that fit. A single **commit** writes a structured `Rating`.
 
-## Status
-
-🚧 **Pre-release scaffold.** The monorepo and package skeleton are in place. Component implementations land in subsequent commits. Track progress at [github.com/savdevarney/affect-kit](https://github.com/savdevarney/affect-kit).
+The face glyph is intentionally minimal: no skin tone, no hair, no body. It carries the rating without encoding race, gender, or age. Read [research foundations](docs/research.md) for the full theoretical background.
 
 ## Repository layout
 
@@ -41,9 +40,9 @@ Read the longer [research foundations](docs/research.md) for the theoretical and
 │       ├── vanilla/  react/  vue/  sveltekit/  angular/  nextjs/
 └── docs/
     ├── research.md                # affective science foundations
-    ├── architecture.md            # component APIs, data flow, requirements
-    ├── original-prompt.md         # original spec used to bootstrap the port
-    └── nrc-vad-validation.md      # vocabulary validation plan
+    ├── longitudinal-future.md     # roadmap for longitudinal features
+    ├── nrc-vad-validation.md      # vocabulary validation plan
+    └── original-prompt.md         # original spec used to bootstrap the port
 ```
 
 ## Local development
@@ -51,10 +50,10 @@ Read the longer [research foundations](docs/research.md) for the theoretical and
 ```bash
 # Node 22+, pnpm 10+
 pnpm install
-pnpm build           # build all packages
-pnpm dev             # start the playground
-pnpm test            # vitest unit + integration
-pnpm test:visual     # playwright visual regression
+pnpm --filter affect-kit build           # build the package
+pnpm --filter @affect-kit/site dev       # run the marketing site
+pnpm --filter affect-kit test            # vitest unit + integration
+pnpm --filter affect-kit test:visual     # playwright visual regression
 ```
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for monorepo conventions and [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.

@@ -1,14 +1,18 @@
 # affect-kit
 
-Web components for dimensional emotion rating — built with Lit, grounded in affective science.
+Web components for dimensional emotion rating. Built with Lit, grounded in affective science.
 
-> **Status:** pre-release scaffold. The component implementations are not yet here. See [the monorepo root](https://github.com/savdevarney/affect-kit) for progress.
+- **Site + docs:** [affectkit.com](https://affectkit.com)
+- **Source:** [github.com/savdevarney/affect-kit](https://github.com/savdevarney/affect-kit)
+- **License:** MIT
 
 ## Install
 
 ```bash
 npm install affect-kit
 ```
+
+Requires Lit 3 as a peer dependency.
 
 ## Quick start
 
@@ -19,12 +23,12 @@ npm install affect-kit
 </script>
 
 <affect-kit-rater></affect-kit-rater>
-<affect-kit-result></affect-kit-result>
+<affect-kit-result show-face show-labels color-mode></affect-kit-result>
 
 <script type="module">
-  const rater = document.querySelector('affect-kit-rater');
-  const panel = document.querySelector('affect-kit-result');
-  rater.addEventListener('change', (e) => { panel.rating = e.detail; });
+  const rater  = document.querySelector('affect-kit-rater');
+  const result = document.querySelector('affect-kit-result');
+  rater.addEventListener('commit', (e) => { result.rating = e.detail; });
 </script>
 ```
 
@@ -32,11 +36,18 @@ npm install affect-kit
 
 | Element | Role |
 |---|---|
-| `<affect-kit-rater>` | Interactive V/A pad with optional emotion-label refinement |
-| `<affect-kit-result>` | Display panel for a captured rating |
-| `<affect-kit-face>` | Reusable face glyph driven by `v` and `a` |
+| `<affect-kit-rater>`   | Interactive V/A pad with emotion-label refinement. Fires `commit` with a `Rating`. |
+| `<affect-kit-result>`  | Renders a committed `Rating` as face + dominant label + optional color chip. |
+| `<affect-kit-compare>` | Two snapshots side-by-side, or two arrays of ratings averaged. |
+| `<affect-kit-face>`    | Standalone face glyph driven by `v` and `a` props. |
 
-Full API, theming guide, and framework integration notes live at [affectkit.com](https://affectkit.com).
+Each ships as its own entry point (`affect-kit/rater`, `/result`, `/compare`, `/face`) and as a bundled side-effect import (`affect-kit`).
+
+## How it works
+
+Words are the measurement. The face sorts them. A pre-verbal gesture on the V/A pad orients you and re-sorts the NRC VAD lexicon so the closest words rise first. You refine by tapping the labels that fit. A single commit writes a structured `Rating`.
+
+Full API reference, theming, and framework integration notes: [affectkit.com/docs](https://affectkit.com/docs).
 
 ## License
 

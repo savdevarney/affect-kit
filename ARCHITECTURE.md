@@ -73,7 +73,7 @@ The `package.json#exports` field is the resolver-level wall:
 | `<affect-kit-face>` | custom element | props: `v`, `a`, `animated` |
 | `Rating` | TS type | re-exported from each entry |
 | `EmotionLabel` | TS type | re-exported from each entry |
-| CSS custom properties | runtime | `--affect-kit-{ink,paper,rule}`, `--affect-kit-color-{pink,gold,green,blue}`, `--affect-kit-font-display` |
+| CSS custom properties | runtime | `--affect-kit-{ink,paper,rule}`, `--affect-kit-color-{pink,gold,green,blue}`, `--affect-kit-font-size` |
 
 ### Encapsulation enforcement (multi-layered)
 
