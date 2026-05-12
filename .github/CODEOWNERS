@@ -1,0 +1,28 @@
+# Code owners for affect-kit.
+#
+# CODEOWNERS auto-requests review from the listed owner on every PR that
+# touches the matching paths. With branch protection's "Required reviews:
+# 0" set, this is *informational* — it doesn't block merge — but it
+# surfaces ownership at a glance and keeps you in the loop on changes.
+#
+# Later, flipping "Require review from Code Owners" in branch protection
+# makes owner approval mandatory before merge.
+#
+# Pattern syntax mirrors .gitignore. Last matching pattern wins.
+
+# Catch-all — Savannah owns the repo end-to-end by default.
+*                                       @savdevarney
+
+# Affective-science surface — vocabulary, color quadrants, face anatomy,
+# research page. Changes here usually need a citation per CONTRIBUTING.md.
+/packages/affect-kit/src/vocabulary/    @savdevarney
+/packages/affect-kit/src/core/color.ts  @savdevarney
+/packages/affect-kit/src/core/face-renderer.ts  @savdevarney
+/apps/site/src/pages/research.astro     @savdevarney
+
+# Release + CI plumbing — anything that touches what ships to npm or
+# how the site deploys. Worth a heads-up to the maintainer.
+/.github/workflows/                     @savdevarney
+/.changeset/                            @savdevarney
+/packages/affect-kit/package.json       @savdevarney
+/packages/react/package.json            @savdevarney
