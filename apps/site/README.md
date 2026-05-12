@@ -1,7 +1,18 @@
-# site
+# @affect-kit/site
 
-Marketing + documentation site for affect-kit. Deploys to **affectkit.com** via Cloudflare Pages.
+Marketing and documentation site for affect-kit. Deploys to **[affectkit.com](https://affectkit.com)** via Cloudflare Pages.
 
-**Stack:** Astro + MDX + Cloudflare Pages adapter. No CSS framework. Content collections for docs.
+**Pages:**
+- `/` — homepage with live `<affect-kit-rater>` and component demos
+- `/research` — affective-science foundations (canonical source for the science behind the package)
+- `/docs` — full API reference with interactive controls for each component
 
-**Status:** placeholder. Initialize with `pnpm create astro@latest .` from inside this directory once the rest of the monorepo settles.
+**Stack:** Astro 6 + the local `affect-kit` workspace package. No CSS framework.
+
+## Local development
+
+```bash
+# from the repo root
+pnpm --filter @affect-kit/site dev    # http://localhost:4321
+pnpm --filter @affect-kit/site build  # static output in dist/
+```

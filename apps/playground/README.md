@@ -1,5 +1,12 @@
 # playground
 
-Local development app for hacking on the components in isolation. Single Vite dev server with the rater + result panel side-by-side. Used as the host for Playwright visual regression tests (see `packages/affect-kit/playwright.config.ts`).
+Local development host for hacking on the components in isolation. A single Vite dev server renders all four custom elements (`<affect-kit-rater>`, `<affect-kit-result>`, `<affect-kit-compare>`, `<affect-kit-face>`) with interactive control panels for every public prop — color-mode (`off` / `bg` / `words`), animation toggles, layout selects, label text inputs, and a live code snippet that mirrors the current state.
 
-**Status:** placeholder. Initialize with a minimal Vite + vanilla TypeScript template.
+Edits to `packages/affect-kit/src` hot-reload here.
+
+## Run
+
+```bash
+# from the repo root
+pnpm --filter playground dev    # http://localhost:5173
+```

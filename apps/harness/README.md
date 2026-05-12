@@ -1,20 +1,16 @@
 # harness/
 
-Framework integration test harnesses. Each subdirectory is a tiny app that imports `affect-kit` and renders the rater + result, plus a Playwright spec asserting:
+Framework integration test harnesses. Each subdirectory is a tiny app that imports `affect-kit` and renders the components, plus a Playwright spec asserting:
 
 - The custom elements register and render
-- The `change` event fires with a correctly-shaped `Rating` payload
+- The `change` / `commit` events fire with correctly-shaped `Rating` payloads
 - SSR (where applicable) doesn't crash on import
 
 These apps are **not deployed**. They're pinned harnesses run in CI.
 
-| Dir | Validates |
-|---|---|
-| `vanilla/` | Plain HTML — bare-DOM regressions |
-| `react/` | Vite + React 19 — object-prop passing, event mapping |
-| `vue/` | Vite + Vue 3 — `@change` handler, props |
-| `sveltekit/` | SvelteKit — SSR placeholder + client hydration (highest-risk path) |
-| `angular/` | Angular 17+ — `CUSTOM_ELEMENTS_SCHEMA`, binding semantics |
-| `nextjs/` | Next.js App Router — `'use client'`, RSC boundary |
+| Dir | Validates | Status |
+|---|---|---|
+| `react/` | Vite + React 19 — object-prop passing, event mapping | ✓ wired |
+| `vanilla/`, `vue/`, `sveltekit/`, `angular/`, `nextjs/` | bare-DOM, Vue 3, SvelteKit SSR, Angular 17+, Next.js App Router | planned |
 
-**Status:** placeholders. Initialize each with its respective `create` command in a follow-up commit.
+The planned harnesses are intentionally not stubbed in the repo — they'll be added when each is genuinely wired up.

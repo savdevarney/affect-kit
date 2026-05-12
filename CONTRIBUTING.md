@@ -1,6 +1,6 @@
 # Contributing to affect-kit
 
-Thanks for your interest. The package is pre-release; the contribution process below will firm up before v1.0.
+Thanks for your interest. The package is pre-1.0; expect refinement of internals before 1.0 ships.
 
 ## Setup
 
@@ -15,15 +15,15 @@ Requires Node 22+ and pnpm 10+.
 ## Workflow
 
 1. Branch off `main` (use a short descriptive name).
-2. Make your change. Keep commits in [Conventional Commits](https://www.conventionalcommits.org/) form: `feat:`, `fix:`, `docs:`, `chore:`.
+2. Make your change. Commit subjects are short, lowercase, and scope-prefixed: `rater: ...`, `docs: ...`, `compare: fix ...`. No `Co-Authored-By:` lines.
 3. If your change affects what `affect-kit` publishes, run `pnpm changeset` and pick the appropriate bump.
 4. Run the local checks:
    ```bash
-   pnpm lint
-   pnpm typecheck
-   pnpm test
+   pnpm --filter affect-kit typecheck
+   pnpm --filter affect-kit build
+   pnpm --filter affect-kit test
    ```
-5. Open a PR against `main`.
+5. Open a PR against `main`. CI runs the same checks plus `publint` and `attw`.
 
 ## Scope
 
@@ -45,7 +45,7 @@ We do welcome PRs for:
 
 ## Affective-science changes
 
-If your change affects vocabulary V/A/D values, the face glyph anatomy, color quadrant mapping, or any other element grounded in the [research foundations](docs/research.md), include the citation supporting your change in the PR description. We're not gatekeeping casually-justified changes to peer-reviewed mappings.
+If your change affects vocabulary V/A/D values, the face glyph anatomy, color quadrant mapping, or any other element grounded in the [research foundations](https://affectkit.com/research), include the citation supporting your change in the PR description. We're not gatekeeping casually-justified changes to peer-reviewed mappings.
 
 ## Code of conduct
 

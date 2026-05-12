@@ -23,26 +23,23 @@ Emotion science's most validated instrument is the labeled word. The NRC VAD Lex
 
 affect-kit makes label selection a standardized act. A pre-verbal **gesture** orients you in V/A space and re-sorts the lexicon so the closest words rise first. You **refine** by tapping the ones that fit. A single **commit** writes a structured `Rating`.
 
-The face glyph is intentionally minimal: no skin tone, no hair, no body. It carries the rating without encoding race, gender, or age. Read [research foundations](docs/research.md) for the full theoretical background.
+The face glyph is intentionally minimal: no skin tone, no hair, no body. It carries the rating without encoding race, gender, or age. Read the [research foundations on affectkit.com](https://affectkit.com/research) for the full theoretical background.
 
 ## Repository layout
 
 ```
 .
 ├── packages/
-│   ├── affect-kit/                # the npm package
+│   ├── affect-kit/                # the published npm package
+│   ├── react/                     # @affect-kit/react — typed React wrappers
 │   ├── tsconfig/                  # shared TS configs
 │   └── eslint-config/             # shared lint config
 ├── apps/
 │   ├── site/                      # affectkit.com (Astro on Cloudflare Pages)
-│   ├── playground/                # local dev host (Vite)
+│   ├── playground/                # local dev host (Vite) — full settings explorer
 │   └── harness/                   # framework integration test harnesses
-│       ├── vanilla/  react/  vue/  sveltekit/  angular/  nextjs/
 └── docs/
-    ├── research.md                # affective science foundations
-    ├── longitudinal-future.md     # roadmap for longitudinal features
-    ├── nrc-vad-validation.md      # vocabulary validation plan
-    └── original-prompt.md         # original spec used to bootstrap the port
+    └── longitudinal-future.md     # design rationale for retired widgets
 ```
 
 ## Local development
