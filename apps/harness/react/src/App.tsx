@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Rater, Result, Compare, Face } from '@affect-kit/react';
 import type { Rating } from '@affect-kit/react';
+import { createRating } from 'affect-kit';
 import type { AffectKitRater } from 'affect-kit/rater';
 import type { AffectKitFace } from 'affect-kit/face';
 
@@ -25,7 +26,7 @@ export function App() {
       <div className="card">
         <p className="label">&lt;Rater&gt;</p>
         <Rater
-          colorMode
+          colorMode="background"
           showVad
           onChange={(e) => {
             const r = (e as CustomEvent<Rating>).detail;
@@ -44,30 +45,25 @@ export function App() {
 
       <div className="card">
         <p className="label">&lt;Result&gt;</p>
-        <Result rating={rating} showFace colorMode />
+        <Result rating={rating} showFace colorMode="background" />
       </div>
 
       <div className="card">
         <p className="label">&lt;Compare&gt;</p>
         <Compare
           showFace
-          colorMode
+          colorMode="background"
           beforeLabel="Yesterday"
           afterLabel="Today"
-          beforeRating={{
-            v: -0.5, a: 0.4, d: 0,
-            pad: { v: -0.5, a: 0.4 },
-            fromLabels: false,
+          beforeRating={createRating({
+            face: { v: -0.5, a: 0.4 },
             labels: [{ name: 'overwhelmed', level: 3 }, { name: 'anxious', level: 2 }],
             timestamp: Date.now() - 86400000,
-          }}
-          afterRating={{
-            v: 0.6, a: 0.2, d: 0,
-            pad: { v: 0.6, a: 0.2 },
-            fromLabels: false,
+          })}
+          afterRating={createRating({
+            face: { v: 0.6, a: 0.2 },
             labels: [{ name: 'calm', level: 2 }, { name: 'grateful', level: 2 }],
-            timestamp: Date.now(),
-          }}
+          })}
         />
       </div>
 

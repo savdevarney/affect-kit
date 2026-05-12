@@ -8,14 +8,9 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "site",
+    "@affect-kit/site",
     "playground",
-    "harness-vanilla",
-    "harness-react",
-    "harness-vue",
-    "harness-sveltekit",
-    "harness-angular",
-    "harness-nextjs",
+    "@affect-kit-harness/react",
     "@affect-kit/tsconfig",
     "@affect-kit/eslint-config"
   ]
