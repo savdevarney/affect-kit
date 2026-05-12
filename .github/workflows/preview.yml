@@ -129,8 +129,11 @@ jobs:
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        # `--snapshot` is a flag on `version`, not `publish`. The previous
+        # `version --snapshot` step already set the snapshot versions in
+        # package.json; `publish` just ships those under the `--tag`.
         run: |
-          pnpm changeset publish --no-git-tag --snapshot --tag pr-${{ github.event.pull_request.number }} | tee publish.log
+          pnpm changeset publish --no-git-tag --tag pr-${{ github.event.pull_request.number }} | tee publish.log
           VERSION="$(grep -oE 'affect-kit@[^ ]+' publish.log | head -1 | sed 's/affect-kit@//')"
           if [ -n "$VERSION" ]; then
             echo "published=true"  >> "$GITHUB_OUTPUT"
