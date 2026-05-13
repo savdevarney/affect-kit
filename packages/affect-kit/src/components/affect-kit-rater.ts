@@ -158,6 +158,7 @@ export class AffectKitRater extends LitElement {
       flex-wrap: wrap;
       gap: 7px;
       align-items: baseline;
+      justify-content: center;
     }
 
     .chip {
