@@ -1,0 +1,83 @@
+name: PR cleanup
+
+# When a PR closes (merged or not), remove its npm snapshot publishes
+# so the registry doesn't accumulate per-commit `pr-<N>-<timestamp>`
+# versions forever.
+#
+# Two-step cleanup per package:
+#   1. Remove the `pr-<N>` dist-tag — instantly stops `npm i affect-kit@pr-N`
+#      from resolving. This is the main consumer-facing cleanup.
+#   2. For each snapshot version published from this PR, try `npm unpublish`.
+#      npm's policy: unpublish is allowed within 72 hours of publish. Older
+#      versions fall back to `npm deprecate` with a "PR closed" message so
+#      anyone who pinned to that exact version sees a hint.
+#
+# Required secret: NPM_TOKEN (same one publish + snapshot use).
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-cleanup-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  cleanup-npm-snapshots:
+    name: Drop pr-${{ github.event.pull_request.number }} snapshots
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Remove dist-tag + unpublish (or deprecate) snapshot versions
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -u
+          PR="${{ github.event.pull_request.number }}"
+          TAG="pr-$PR"
+
+          for pkg in affect-kit '@affect-kit/react'; do
+            echo "──── $pkg ────"
+
+            # Remove the friendly `pr-N` dist-tag. No-op if it doesn't exist.
+            if npm view "$pkg" "dist-tags.$TAG" --silent 2>/dev/null | grep -q .; then
+              echo "Removing dist-tag $TAG from $pkg"
+              npm dist-tag rm "$pkg" "$TAG" || true
+            else
+              echo "(no $TAG tag on $pkg)"
+            fi
+
+            # Find every snapshot version this PR published. Format:
+            #   0.0.0-pr-<N>-<timestamp-or-sha>
+            versions=$(npm view "$pkg" versions --json 2>/dev/null \
+              | grep -oE "\"0\.0\.0-pr-${PR}-[A-Za-z0-9]+\"" \
+              | tr -d '"' \
+              || true)
+
+            if [ -z "$versions" ]; then
+              echo "(no snapshot versions for PR $PR on $pkg)"
+              continue
+            fi
+
+            for v in $versions; do
+              echo "→ $pkg@$v"
+              # Try unpublish first (works within npm's 72h window).
+              if npm unpublish "$pkg@$v" 2>/tmp/unpub.err; then
+                echo "  unpublished"
+              else
+                err=$(cat /tmp/unpub.err)
+                echo "  unpublish failed: $err"
+                # Past the 72h window — fall back to deprecate so the
+                # version is flagged in tooling.
+                npm deprecate "$pkg@$v" "PR #$PR closed; snapshot retired" \
+                  || echo "  deprecate also failed (non-fatal)"
+              fi
+            done
+          done
