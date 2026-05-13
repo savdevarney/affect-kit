@@ -8,4 +8,4 @@ if (!customElements.get('affect-kit-face'))   customElements.define('affect-kit-
 if (!customElements.get('affect-kit-result')) customElements.define('affect-kit-result', AffectKitResult);
 
 export { AffectKitResult };
-export type { ColorMode, Rating, EmotionLabel } from './core/types';
+export type { ColorMode, Theme, Rating, EmotionLabel } from './core/types';

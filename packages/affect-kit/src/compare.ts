@@ -11,4 +11,4 @@ if (!customElements.get('affect-kit-result'))  customElements.define('affect-kit
 if (!customElements.get('affect-kit-compare')) customElements.define('affect-kit-compare', AffectKitCompare);
 
 export { AffectKitCompare };
-export type { ColorMode, Rating } from './core/types';
+export type { ColorMode, Theme, Rating } from './core/types';

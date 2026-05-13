@@ -1,8 +1,9 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { property } from 'lit/decorators.js';
-import { colorForVA, darkerForChips } from '../core/color';
+import { colorForVA, darkerForChips, lighterForChips } from '../core/color';
 import { colorModeConverter } from '../core/color-mode';
-import type { ColorMode, Rating } from '../core/types';
+import { themeConverter } from '../core/theme';
+import type { ColorMode, Rating, Theme } from '../core/types';
 import { EMOTIONS_BY_NAME } from '../vocabulary/en';
 
 const animateConverter = {
@@ -33,15 +34,24 @@ export class AffectKitResult extends LitElement {
     :host {
       display: block;
       container-type: inline-size;
-      /* Inherit family from the host; consumers can override at any
-         ancestor. Base font-size comes from --affect-kit-font-size so
-         consumers can scale the whole component up or down with a
-         single variable. All internal sizing is em-based off this. */
       font-family: inherit;
       font-size: var(--affect-kit-font-size, 1rem);
-      /* Cap so the widget doesn't stretch ugly in wide layouts. Override
-         via the custom property if you need something different. */
       max-width: var(--affect-kit-result-max-width, 640px);
+
+      /* Theme: --_ink and --_paper polarity. See affect-kit-rater. */
+      --_ink:   #1a1a1a;
+      --_paper: white;
+      color: var(--_ink);
+    }
+    :host([theme="dark"]) {
+      --_ink:   white;
+      --_paper: #1a1a1a;
+    }
+    @media (prefers-color-scheme: dark) {
+      :host([theme="auto"]) {
+        --_ink:   white;
+        --_paper: #1a1a1a;
+      }
     }
     /*
      * Panel chrome is driven by CSS custom properties so a parent widget
@@ -50,11 +60,13 @@ export class AffectKitResult extends LitElement {
      */
     .panel {
       position: relative;
-      background: var(--_panel-bg, white);
+      background: var(--_panel-bg, var(--_paper));
       border-radius: var(--_panel-radius, 1.5em);
       padding: var(--_panel-padding, 2.4em 3em);
       overflow: var(--_panel-overflow, hidden);
-      box-shadow: var(--_panel-shadow, 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04));
+      box-shadow: var(--_panel-shadow,
+        0 1px 2px color-mix(in srgb, var(--_ink) 4%, transparent),
+        0 8px 24px color-mix(in srgb, var(--_ink) 4%, transparent));
     }
     .panel.compact  { padding: var(--_panel-padding, 1.4em 1.75em); }
     .panel.with-face { padding: var(--_panel-padding, 1.6em 2em); }
@@ -103,7 +115,7 @@ export class AffectKitResult extends LitElement {
       line-height: 1.15;
       min-height: 2.5em;
       min-width: 0;
-      color: var(--affect-kit-ink, #1a1a1a);
+      color: var(--_ink);
     }
 
     /*
@@ -123,12 +135,13 @@ export class AffectKitResult extends LitElement {
       opacity:   calc(0.6 + (var(--_lv) - 1) * 0.2);
       font-family: inherit;
       letter-spacing: -0.01em;
-      color: var(--affect-kit-ink, #1a1a1a);
+      color: var(--_ink);
     }
     /* Words mode: each label picks up its own V/A color from the lexicon.
-       --_word-color is set inline per-word from EMOTIONS_BY_NAME. */
+       --_word-color is set inline per-word — render() picks lighter or
+       darker hue variant based on theme. */
     :host([color-mode="words"]) .word {
-      color: var(--_word-color, var(--affect-kit-ink, #1a1a1a));
+      color: var(--_word-color, var(--_ink));
       /* Bias opacity higher in words mode so light-V/A words stay legible. */
       opacity: calc(0.78 + (var(--_lv) - 1) * 0.11);
     }
@@ -141,10 +154,10 @@ export class AffectKitResult extends LitElement {
       gap: 1.4em;
       margin-top: 1.6em;
       padding-top: 1em;
-      border-top: 1px solid rgba(0,0,0,0.06);
+      border-top: 1px solid color-mix(in srgb, var(--_ink) 6%, transparent);
       font-family: inherit;
       font-size: 0.625em;
-      color: #6b7280;
+      color: color-mix(in srgb, var(--_ink) 50%, transparent);
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
@@ -257,6 +270,18 @@ export class AffectKitResult extends LitElement {
   @property({ converter: animateConverter, reflect: true })
   animated = true;
 
+  /**
+   * Surface theme. See {@link Theme}.
+   * - `'light'` (default) — dark ink on white paper.
+   * - `'dark'` — white ink on dark paper; words-mode picks lighter V/A
+   *   color variants so each label stays legible against the dark surface.
+   * - `'auto'` — follow `prefers-color-scheme`.
+   *
+   * Orthogonal to {@link ColorMode}.
+   */
+  @property({ converter: themeConverter, reflect: true })
+  theme: Theme = 'light';
+
   override render() {
     const r = this.rating;
     if (!r) return nothing;
@@ -302,12 +327,20 @@ export class AffectKitResult extends LitElement {
                 // adds emphasis without competing.
                 const weight = Math.round(400 + 100 * (lv - 1));
                 // In 'words' mode each label picks up its own NRC V/A color,
-                // darkened to keep type legible against the panel background.
+                // adjusted to stay legible against the surface — darker on
+                // light theme, lighter on dark theme. 'auto' picks based on
+                // OS preference.
                 let extraStyle = '';
                 if (this.colorMode === 'words') {
                   const e = EMOTIONS_BY_NAME.get(l.name);
                   if (e) {
-                    const [wr, wg, wb] = darkerForChips(colorForVA(e.v, e.a));
+                    const useLight =
+                      this.theme === 'dark' ||
+                      (this.theme === 'auto' &&
+                        typeof matchMedia !== 'undefined' &&
+                        matchMedia('(prefers-color-scheme: dark)').matches);
+                    const adjust = useLight ? lighterForChips : darkerForChips;
+                    const [wr, wg, wb] = adjust(colorForVA(e.v, e.a));
                     extraStyle = `;--_word-color: rgb(${wr},${wg},${wb})`;
                   }
                 }

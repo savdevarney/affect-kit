@@ -8,6 +8,8 @@ import {
   type FaceParams,
 } from '../core/face-renderer';
 import { computeAnimationOffsets } from '../core/animation';
+import { themeConverter } from '../core/theme';
+import type { Theme } from '../core/types';
 
 // HTML attribute "false" → false; anything else (including absent) → true.
 const animateConverter = {
@@ -36,6 +38,16 @@ export class AffectKitFace extends LitElement {
       width: 120px;
       height: 120px;
       line-height: 0;
+      /* Theme: --_ink is what currentColor resolves to. SVG strokes/fills
+         below all use currentColor, so theme="dark" flips the face to
+         white strokes without touching markup. */
+      color: var(--_ink, #1a1a1a);
+    }
+    :host([theme="light"]) { --_ink: #1a1a1a; }
+    :host([theme="dark"])  { --_ink: white;   }
+    /* 'auto' (and absent) default to light; @media flips on system preference. */
+    @media (prefers-color-scheme: dark) {
+      :host([theme="auto"]) { --_ink: white; }
     }
     svg {
       width: 100%;
@@ -91,6 +103,13 @@ export class AffectKitFace extends LitElement {
    * Reduced-motion users always get a static face regardless of this prop.
    */
   @property({ converter: animateConverter, reflect: true }) animated = true;
+
+  /**
+   * Surface theme. See {@link Theme}. `'dark'` flips the strokes to white.
+   * `'auto'` follows `prefers-color-scheme`.
+   */
+  @property({ converter: themeConverter, reflect: true })
+  theme: Theme = 'light';
 
   /**
    * Scales all animation amplitude (breath + tremor). Range 0..1, default 1.

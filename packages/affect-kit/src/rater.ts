@@ -13,4 +13,4 @@ if (!customElements.get('affect-kit-face'))  customElements.define('affect-kit-f
 if (!customElements.get('affect-kit-rater')) customElements.define('affect-kit-rater', AffectKitRater);
 
 export { AffectKitRater };
-export type { ColorMode, Rating, EmotionLabel } from './core/types';
+export type { ColorMode, Theme, Rating, EmotionLabel } from './core/types';
