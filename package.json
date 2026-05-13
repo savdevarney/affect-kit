@@ -24,7 +24,7 @@
     "clean": "turbo run clean && rm -rf node_modules .turbo",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "turbo run build --filter=affect-kit && changeset publish"
+    "release": "turbo run build && changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^2.27.0",
