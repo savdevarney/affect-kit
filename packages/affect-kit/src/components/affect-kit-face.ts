@@ -40,12 +40,14 @@ export class AffectKitFace extends LitElement {
       line-height: 0;
       /* Theme: --_ink is what currentColor resolves to. SVG strokes/fills
          below all use currentColor, so theme="dark" flips the face to
-         white strokes without touching markup. */
+         white strokes without touching markup.
+         No :host([theme="light"]) override — we deliberately *don't*
+         redeclare --_ink for light theme so the property can inherit
+         from a themed parent (rater/result/compare). The var() fallback
+         catches the standalone "no parent" case. */
       color: var(--_ink, #1a1a1a);
     }
-    :host([theme="light"]) { --_ink: #1a1a1a; }
-    :host([theme="dark"])  { --_ink: white;   }
-    /* 'auto' (and absent) default to light; @media flips on system preference. */
+    :host([theme="dark"])  { --_ink: white; }
     @media (prefers-color-scheme: dark) {
       :host([theme="auto"]) { --_ink: white; }
     }
