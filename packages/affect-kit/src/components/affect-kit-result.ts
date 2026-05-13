@@ -87,6 +87,16 @@ export class AffectKitResult extends LitElement {
       z-index: 1;
       display: flex;
       flex-direction: column;
+      /*
+       * Nested container query origin. cqi units inside .word resolve
+       * against .content's inline size — which is the actual usable
+       * width after .panel's padding. Without this, cqi would measure
+       * the host width and long words could still overflow the padded
+       * inner area. The outer :host container-type stays in place so
+       * existing layout queries (@container (min-width: 360px) ...)
+       * still target the host.
+       */
+      container-type: inline-size;
     }
 
     .face-zone {
