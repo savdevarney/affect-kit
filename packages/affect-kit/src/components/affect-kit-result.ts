@@ -164,8 +164,11 @@ export class AffectKitResult extends LitElement {
       letter-spacing: -0.01em;
       color: color-mix(in srgb, var(--_word-color, var(--_ink)) var(--_text-alpha), transparent);
       background: color-mix(in srgb, var(--_word-color, var(--_ink)) 11%, transparent);
-      padding: 0.18em 0.55em;
-      border-radius: 0.35em;
+      /* max() gives small (low-level) pills a px-based minimum so they
+         don't crowd the text — em-only padding shrinks with font-size,
+         leaving low-intensity words feeling cramped against their pill. */
+      padding: max(0.18em, 0.35rem) max(0.55em, 0.75rem);
+      border-radius: max(0.35em, 0.4rem);
       overflow-wrap: break-word;
     }
     /* Words mode: each label picks up its own V/A color from the lexicon.
