@@ -86,6 +86,13 @@ export class AffectKitCompare extends LitElement {
       overflow: hidden;
       isolation: isolate;
     }
+    /* color-mode off → composable surface. The two halves keep their
+       caption pills and divider; only the card itself disappears so
+       compare blends with the host background. */
+    :host(:not([color-mode])) .panel {
+      background: transparent;
+      box-shadow: none;
+    }
     /*
      * The gradient layer paints the V/A → color transition from one side
      * to the other. Stops are placed at 30% / 70% so each side keeps a

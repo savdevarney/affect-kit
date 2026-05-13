@@ -72,6 +72,12 @@ export class AffectKitRater extends LitElement {
       display: flex;
       flex-direction: column;
     }
+    /* color-mode off → composable surface. No paper, no card shadow, so
+       the rater drops onto whatever the host's background is. */
+    :host(:not([color-mode])) .surface {
+      background: transparent;
+      box-shadow: none;
+    }
 
     .glow {
       position: absolute;

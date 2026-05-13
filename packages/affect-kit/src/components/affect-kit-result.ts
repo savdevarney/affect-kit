@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { property } from 'lit/decorators.js';
-import { colorForVA, darkerForChips, lighterForChips } from '../core/color';
+import { colorForVA, lighterForChips } from '../core/color';
 import { colorModeConverter } from '../core/color-mode';
 import { themeConverter } from '../core/theme';
 import type { ColorMode, Rating, Theme } from '../core/types';
@@ -67,6 +67,13 @@ export class AffectKitResult extends LitElement {
       box-shadow: var(--_panel-shadow,
         0 1px 2px color-mix(in srgb, var(--_ink) 4%, transparent),
         0 8px 24px color-mix(in srgb, var(--_ink) 4%, transparent));
+    }
+    /* color-mode off → composable surface. The --_panel-bg / --_panel-shadow
+       custom-property fallbacks remain external-override-friendly (compare
+       still wins by setting them), but standalone result drops the card. */
+    :host(:not([color-mode])) .panel {
+      background: var(--_panel-bg, transparent);
+      box-shadow: var(--_panel-shadow, none);
     }
     .panel.compact  { padding: var(--_panel-padding, 1.4em 1.75em); }
     .panel.with-face { padding: var(--_panel-padding, 1.6em 2em); }
@@ -362,13 +369,20 @@ export class AffectKitResult extends LitElement {
                 if (this.colorMode === 'words') {
                   const e = EMOTIONS_BY_NAME.get(l.name);
                   if (e) {
-                    const useLight =
+                    // Words mode = no V/A panel behind the text. On a light
+                    // surface the raw brand color reads fine and stays
+                    // vivid — no muting needed (muting is for figure/ground
+                    // when color sits *under* text). On dark the dim hues
+                    // (cobalt, deep teal) need a lift to stay legible against
+                    // dark paper, so lighterForChips applies in dark theme.
+                    const useDark =
                       this.theme === 'dark' ||
                       (this.theme === 'auto' &&
                         typeof matchMedia !== 'undefined' &&
                         matchMedia('(prefers-color-scheme: dark)').matches);
-                    const adjust = useLight ? lighterForChips : darkerForChips;
-                    const [wr, wg, wb] = adjust(colorForVA(e.v, e.a));
+                    const [wr, wg, wb] = useDark
+                      ? lighterForChips(colorForVA(e.v, e.a))
+                      : colorForVA(e.v, e.a);
                     extraStyle = `;--_word-color: rgb(${wr},${wg},${wb})`;
                   }
                 }

@@ -27,7 +27,9 @@ On `<affect-kit-rater>`, `<affect-kit-result>`, `<affect-kit-compare>`, and `<af
 - Internal `--_ink` / `--_paper` CSS variables drive every text/surface color. Not exposed as public CSS knobs yet — consumers wanting per-color overrides should file a request.
 - Hardcoded `rgba(0,0,0,N)` colors swapped for `color-mix(in srgb, var(--_ink) N%, transparent)` — auto-inverts based on ink polarity.
 - Mono chip backgrounds use `color-mix(in srgb, var(--_ink) Xpct, var(--_paper))` so the chip "fills with ink" cleanly in both light and dark.
+- `<affect-kit-result>` words-mode now uses the **raw** brand color on light surfaces (no darkening). The darker/lighter chip-variant helpers are only applied where color sits *under* text — background mode and rater selected chip-as-bg. Dark-theme words still get a lift via `lighterForChips` because raw cobalt/teal would be unreadable on dark paper; light-theme drops the muting so vivid colors come through.
 - New internal `lighterForChips()` helper in `core/color.ts` mirrors `darkerForChips()` for dark-theme words-mode.
+- At `color-mode={null}` (off), all three components drop their paper + card shadow so they composit transparently on the host surface. `color-mode="background"`/`"words"` keep the full card surface as before.
 
 ### Playground
 
