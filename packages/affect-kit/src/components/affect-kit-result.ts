@@ -3,7 +3,8 @@ import { property } from 'lit/decorators.js';
 import { colorForVA, lighterForChips } from '../core/color';
 import { colorModeConverter } from '../core/color-mode';
 import { themeConverter } from '../core/theme';
-import type { ColorMode, Rating, Theme } from '../core/types';
+import { layoutConverter } from '../core/layout';
+import type { ColorMode, Layout, Rating, Theme } from '../core/types';
 import { EMOTIONS_BY_NAME } from '../vocabulary/en';
 
 const animateConverter = {
@@ -241,19 +242,37 @@ export class AffectKitResult extends LitElement {
       margin-bottom: var(--_face-mb, 0.5em);
     }
 
-    /* Standalone wide (host >= 360px) — face left, words right. */
+    /* Standalone wide (host >= 360px) — face left, words right.
+       Skipped when layout="stack" is set (forces column at any width). */
     @container (min-width: 360px) {
-      .content.has-face {
+      :host(:not([layout="stack"])) .content.has-face {
         flex-direction: var(--_face-dir, row);
         align-items: var(--_face-align, center);
         gap: var(--_face-gap, 2em);
         --_level-step: var(--_face-step, 0.5em);
       }
-      .content.has-face .face-zone {
+      :host(:not([layout="stack"])) .content.has-face .face-zone {
         margin-top: var(--_face-mt, 0);
         margin-bottom: var(--_face-mb, 0);
       }
-      .content.has-face .words { flex: 1 1 auto; min-width: 0; }
+      :host(:not([layout="stack"])) .content.has-face .words { flex: 1 1 auto; min-width: 0; }
+    }
+
+    /* layout="row" — unlock face-on-the-side at a much lower threshold
+       (240px instead of 360px). Below the floor we still stack rather
+       than letting cramped row overflow the panel. */
+    @container (min-width: 240px) {
+      :host([layout="row"]) .content.has-face {
+        flex-direction: var(--_face-dir, row);
+        align-items: var(--_face-align, center);
+        gap: var(--_face-gap, 2em);
+        --_level-step: var(--_face-step, 0.5em);
+      }
+      :host([layout="row"]) .content.has-face .face-zone {
+        margin-top: var(--_face-mt, 0);
+        margin-bottom: var(--_face-mb, 0);
+      }
+      :host([layout="row"]) .content.has-face .words { flex: 1 1 auto; min-width: 0; }
     }
   `;
 
@@ -316,6 +335,16 @@ export class AffectKitResult extends LitElement {
    */
   @property({ converter: themeConverter, reflect: true })
   theme: Theme = 'light';
+
+  /**
+   * Preferred face-vs-words orientation. See {@link Layout}.
+   * - `'auto'` (default) — container query at 360px decides.
+   * - `'stack'` — face on top of words at any width.
+   * - `'row'` — face beside words; threshold lowered to 240px, with a
+   *   stack fallback below the floor to avoid breakage.
+   */
+  @property({ converter: layoutConverter, reflect: true })
+  layout: Layout = 'auto';
 
   override render() {
     const r = this.rating;

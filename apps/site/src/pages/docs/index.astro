@@ -342,6 +342,12 @@ function App() {
                 <td>Surface theme. <code>'dark'</code> flips ink to white on a dark panel; in <code>color-mode="words"</code>, each label switches to a lighter V/A color variant so it stays legible against the dark surface. <code>'auto'</code> follows <code>prefers-color-scheme</code>.</td>
               </tr>
               <tr>
+                <td><code>layout</code></td>
+                <td><code>'auto' | 'stack' | 'row'</code></td>
+                <td><code>'auto'</code></td>
+                <td>Preferred face-vs-words orientation. <code>'auto'</code> uses a container query at 360px. <code>'stack'</code> keeps face above words at any width. <code>'row'</code> unlocks side-by-side from 240px, falling back to stacked below the floor rather than overflowing.</td>
+              </tr>
+              <tr>
                 <td><code>show-vad</code></td>
                 <td>boolean</td>
                 <td><code>false</code></td>
@@ -608,6 +614,12 @@ function App() {
                 <td><code>'light' | 'dark' | 'auto'</code></td>
                 <td><code>'light'</code></td>
                 <td>Surface theme; forwarded to each inner <code>&lt;affect-kit-result&gt;</code>. <code>'dark'</code> flips the card to dark with light captions; words mode picks lighter V/A variants. <code>'auto'</code> follows <code>prefers-color-scheme</code>.</td>
+              </tr>
+              <tr>
+                <td><code>layout</code></td>
+                <td><code>'auto' | 'stack' | 'row'</code></td>
+                <td><code>'auto'</code></td>
+                <td>Preferred halves orientation. <code>'auto'</code> uses container queries (720px full content / 380px with face-or-labels off). <code>'stack'</code> keeps halves vertically stacked at any width. <code>'row'</code> unlocks side-by-side from 320px, falling back to stacked below the floor.</td>
               </tr>
             </tbody>
           </table>
