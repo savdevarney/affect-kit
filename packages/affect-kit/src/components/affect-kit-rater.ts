@@ -246,9 +246,13 @@ export class AffectKitRater extends LitElement {
       line-height: 1;
       margin-top: 0.2em;
     }
-    .chip.level-1::after { content: '\\2022'; }
-    .chip.level-2::after { content: '\\2022\\2022'; }
-    .chip.level-3::after { content: '\\2022\\2022\\2022'; }
+    /* Show three pips on every selected chip; filled (●) for the
+       reached level, empty (○) for the remaining. Constant footprint
+       across levels reinforces the 1/2/3 scale (it's a tier indicator,
+       not a count). */
+    .chip.level-1::after { content: '\\25CF\\25CB\\25CB'; }
+    .chip.level-2::after { content: '\\25CF\\25CF\\25CB'; }
+    .chip.level-3::after { content: '\\25CF\\25CF\\25CF'; }
 
     /* Color mode: unselected chips adapt to surface lightness */
     :host([color-mode]) .chip {
