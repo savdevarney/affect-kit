@@ -157,11 +157,22 @@ export class AffectKitRater extends LitElement {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      align-items: baseline;
+      /* Switched from baseline to center because selected chips have
+         the dots-below pseudo, making them taller than unselected.
+         Center keeps the row visually balanced. */
+      align-items: center;
       justify-content: center;
     }
 
     .chip {
+      /* inline-flex column so the ::after dots stack below the text
+         instead of inline-after — that keeps the chip width determined
+         by the text only, so growing levels never widens the chip and
+         never reflows the chip-list horizontally. */
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
       padding: 0.40em 0.88em;
       background: color-mix(in srgb, var(--_ink) 5%, transparent);
       color:      color-mix(in srgb, var(--_ink) 55%, transparent);
@@ -222,17 +233,18 @@ export class AffectKitRater extends LitElement {
       color: var(--_paper);
       font-weight: 800; font-size: 0.88em;
     }
-    /* Intensity pips. Sized small + faint so they read as a count
-       indicator rather than text. */
+    /* Intensity pips, stacked BELOW the word so the chip width is
+       determined entirely by the text — selecting a chip can never
+       widen it, so the chip-list never reflows horizontally on click. */
     .chip.level-1::after,
     .chip.level-2::after,
     .chip.level-3::after {
-      margin-left: 0.45em;
-      letter-spacing: 0.15em;
+      letter-spacing: 0.2em;
       font-weight: 400;
-      opacity: 0.65;
-      font-size: 0.85em;
-      vertical-align: 0.05em;
+      opacity: 0.6;
+      font-size: 0.65em;
+      line-height: 1;
+      margin-top: 0.2em;
     }
     .chip.level-1::after { content: '\\2022'; }
     .chip.level-2::after { content: '\\2022\\2022'; }
