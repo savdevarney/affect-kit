@@ -68,8 +68,8 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter affect-kit build
-      - run: pnpm --filter @affect-kit/site build
+      # Build the whole workspace via turbo (respects topological order).
+      - run: pnpm build
 
       - name: Deploy to Cloudflare Pages
         id: deploy
@@ -120,7 +120,8 @@ jobs:
       - name: Build + version with snapshot tag
         if: steps.detect.outputs.has == 'true'
         run: |
-          pnpm --filter affect-kit build
+          # Whole workspace build so both publishable packages are ready.
+          pnpm build
           pnpm changeset version --snapshot pr-${{ github.event.pull_request.number }}
 
       - name: Publish snapshot to npm
