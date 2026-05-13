@@ -712,10 +712,14 @@ export class AffectKitRater extends LitElement {
               // 'words' mode: each chip carries its own emotion's color
               // via inline --_l3-{r,g,b}, which shadows the host-level
               // (pad-V/A-derived) variables so the existing chip rules
-              // resolve to the per-emotion color.
+              // resolve to the per-emotion color. Uses the raw lexicon
+              // color (not darkerForChips) so chip backgrounds match the
+              // V/A panel color in <affect-kit-result> for the same
+              // emotion — keeps the language consistent across input
+              // (rater) and display (result/compare).
               let chipStyle = `order:${order}`;
               if (wordsMode) {
-                const [cr, cg, cb] = darkerForChips(colorForVA(emotion.v, emotion.a));
+                const [cr, cg, cb] = colorForVA(emotion.v, emotion.a);
                 chipStyle += `;--_l3-r:${cr};--_l3-g:${cg};--_l3-b:${cb}`;
               }
               return html`
