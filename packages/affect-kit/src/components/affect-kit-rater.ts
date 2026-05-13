@@ -161,37 +161,42 @@ export class AffectKitRater extends LitElement {
       justify-content: center;
     }
 
+    /*
+     * Stable-layout chips: every chip reserves its level-3 box size at
+     * all times — padding and font-size never change. The selection
+     * level is signaled visually via transform:scale (which doesn't
+     * affect layout) plus font-weight (which fits within the same box
+     * since font-size is constant). Clicking a chip never reflows the
+     * chip-list because nothing changes outer dimensions.
+     *
+     * Tradeoff: each chip's reserved box is its level-3 size, so the
+     * chip-list takes more vertical space than if chips only grew on
+     * demand. Worth it for input that never jumps under the cursor.
+     */
     .chip {
-      padding: 0.38em 0.85em;
+      padding: 0.58em 1.25em;        /* level-3 padding, fixed */
+      font-size: 1.15em;             /* level-3 font-size, fixed */
       background: color-mix(in srgb, var(--_ink) 5%, transparent);
       color:      color-mix(in srgb, var(--_ink) 55%, transparent);
       border: none;
       border-radius: 999px;
       font-family: inherit;
-      font-size: 0.78em;
       font-weight: 500;
       cursor: pointer;
-      /* Color/bg feedback fires immediately on click (0.18s) so the
-         user feels the press right away. The size morph is slower
-         (0.35s) and starts after a tiny 50ms delay — gives the
-         neighbouring chips a beat to settle into their new wrap line
-         instead of jumping mid-click. The previous curve was a bouncy
-         cubic-bezier(0.34, 1.56, 0.64, 1) which OVERSHOT the final
-         size before settling — that overshoot is what made the reflow
-         feel sudden. Standard ease-in-out is calmer. */
+      transform: scale(0.68);         /* unselected visual size */
+      transform-origin: center;
       transition:
         background 0.18s ease,
         color      0.18s ease,
-        padding    0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s,
-        font-size  0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s,
-        font-weight 0.18s ease,
-        transform  0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        transform  0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        font-weight 0.18s ease;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
     .chip:hover {
       background: color-mix(in srgb, var(--_ink) 10%, transparent);
       color:      color-mix(in srgb, var(--_ink) 85%, transparent);
+      transform: scale(0.72);
     }
 
     /*
@@ -199,25 +204,24 @@ export class AffectKitRater extends LitElement {
      * increases — bg climbs from a faint tint to solid --_ink, and text
      * flips from ink to paper for full contrast at high levels.
      *
-     * Size/weight/padding here apply across ALL color modes (not just
-     * mono) so the level signal isn't carried by color alone — bigger
-     * chip = stronger selection. Color-mode rules below override only
-     * bg + color, inheriting the size from these base rules.
+     * Size/weight signal: each level scales up via transform (no layout
+     * impact) and bumps font-weight. The chip's actual padding and
+     * font-size never change, so the chip-list never reflows on click.
      */
     .chip.level-1 {
       background: color-mix(in srgb, var(--_ink) 16%, transparent);
       color:      color-mix(in srgb, var(--_ink) 85%, transparent);
-      font-weight: 600; font-size: 0.88em; padding: 0.42em 0.95em;
+      transform: scale(0.78); font-weight: 600;
     }
     .chip.level-2 {
       background: color-mix(in srgb, var(--_ink) 70%, var(--_paper));
       color: var(--_paper);
-      font-weight: 700; font-size: 1.0em;  padding: 0.5em 1.1em;
+      transform: scale(0.88); font-weight: 700;
     }
     .chip.level-3 {
       background: var(--_ink);
       color: var(--_paper);
-      font-weight: 800; font-size: 1.15em; padding: 0.58em 1.25em;
+      transform: scale(1); font-weight: 800;
     }
 
     /* Color mode: unselected chips adapt to surface lightness */
