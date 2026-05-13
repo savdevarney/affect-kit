@@ -168,6 +168,7 @@ makeSeg('rater-color', (mode) => {
 });
 makeThemeSeg('rater-theme', (theme) => {
   if (rater) rater.theme = theme;
+  rater?.closest('[slot="demo"]')?.setAttribute('data-theme', theme);
   raterState.theme = theme; renderRaterCode();
 });
 makeToggle('rater-animated-toggle', (on) => {
@@ -193,6 +194,7 @@ makeSeg('result-color', (mode) => {
 });
 makeThemeSeg('result-theme', (theme) => {
   if (resultEl) resultEl.theme = theme;
+  resultEl?.closest('[slot="demo"]')?.setAttribute('data-theme', theme);
   resultState.theme = theme; renderResultCode();
 });
 makeToggle('result-face-toggle', (on) => {
@@ -244,7 +246,10 @@ function updateFace() {
 vSlider?.addEventListener('input', updateFace);
 aSlider?.addEventListener('input', updateFace);
 document.getElementById('shock-btn')?.addEventListener('click', () => face?.triggerShock());
-makeThemeSeg('face-theme', (theme) => { if (face) face.theme = theme; });
+makeThemeSeg('face-theme', (theme) => {
+  if (face) face.theme = theme;
+  face?.closest('[slot="demo"]')?.setAttribute('data-theme', theme);
+});
 
 // ── Reset ──────────────────────────────────────────────────────────────────
 document.getElementById('reset-btn')?.addEventListener('click', () => {
@@ -359,6 +364,7 @@ makeSeg('compare-color', (mode) => {
 });
 makeThemeSeg('compare-theme', (theme) => {
   if (compareEl) compareEl.theme = theme;
+  compareEl?.closest('[slot="demo"]')?.setAttribute('data-theme', theme);
   compareState.theme = theme; renderCompareCode();
 });
 makeToggle('compare-face-toggle', (on) => {
