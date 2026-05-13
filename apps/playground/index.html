@@ -205,13 +205,15 @@
 
     /* Demo surface — follow the widget's theme so we can verify
        dark-mode widgets (especially the transparent color=off variant)
-       against an appropriate background. Default light; flips dark
-       when the theme control selects it. Auto follows OS preference. */
-    .demo-surface {
+       against an appropriate background. Padding + radius only kick
+       in when a non-light theme is set, so light theme stays at the
+       original card-padded width (don't shrink the rater chip layout). */
+    .demo-surface { transition: background-color 0.25s ease; }
+    .demo-surface[data-theme="dark"],
+    .demo-surface[data-theme="auto"] {
       border-radius: 10px;
       padding: 1rem;
       margin: -0.25rem;
-      transition: background-color 0.25s ease;
     }
     .demo-surface[data-theme="dark"] { background-color: #0d0d0d; }
     @media (prefers-color-scheme: dark) {
