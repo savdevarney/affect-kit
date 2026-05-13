@@ -156,47 +156,40 @@ export class AffectKitRater extends LitElement {
     .chip-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 12px;
       align-items: baseline;
       justify-content: center;
     }
 
-    /*
-     * Stable-layout chips: every chip reserves its level-3 box size at
-     * all times — padding and font-size never change. The selection
-     * level is signaled visually via transform:scale (which doesn't
-     * affect layout) plus font-weight (which fits within the same box
-     * since font-size is constant). Clicking a chip never reflows the
-     * chip-list because nothing changes outer dimensions.
-     *
-     * Tradeoff: each chip's reserved box is its level-3 size, so the
-     * chip-list takes more vertical space than if chips only grew on
-     * demand. Worth it for input that never jumps under the cursor.
-     */
     .chip {
-      padding: 0.58em 1.25em;        /* level-3 padding, fixed */
-      font-size: 1.15em;             /* level-3 font-size, fixed */
+      padding: 0.40em 0.88em;
       background: color-mix(in srgb, var(--_ink) 5%, transparent);
       color:      color-mix(in srgb, var(--_ink) 55%, transparent);
       border: none;
       border-radius: 999px;
       font-family: inherit;
+      font-size: 0.82em;
       font-weight: 500;
       cursor: pointer;
-      transform: scale(0.68);         /* unselected visual size */
-      transform-origin: center;
+      /* Color/bg feedback fires immediately on click (0.18s) so the
+         user feels the press right away. The size morph is slower
+         (0.35s) and starts after a tiny 50ms delay — neighbouring
+         chips get a beat to settle into a new wrap line instead of
+         jumping mid-click. Standard ease-in-out (not the bouncy
+         overshoot curve) keeps the reflow calm. */
       transition:
         background 0.18s ease,
         color      0.18s ease,
-        transform  0.3s cubic-bezier(0.4, 0, 0.2, 1),
-        font-weight 0.18s ease;
+        padding    0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s,
+        font-size  0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s,
+        font-weight 0.18s ease,
+        transform  0.45s cubic-bezier(0.4, 0, 0.2, 1);
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
     .chip:hover {
       background: color-mix(in srgb, var(--_ink) 10%, transparent);
       color:      color-mix(in srgb, var(--_ink) 85%, transparent);
-      transform: scale(0.72);
     }
 
     /*
@@ -204,24 +197,28 @@ export class AffectKitRater extends LitElement {
      * increases — bg climbs from a faint tint to solid --_ink, and text
      * flips from ink to paper for full contrast at high levels.
      *
-     * Size/weight signal: each level scales up via transform (no layout
-     * impact) and bumps font-weight. The chip's actual padding and
-     * font-size never change, so the chip-list never reflows on click.
+     * Size/weight/padding here apply across ALL color modes (not just
+     * mono) so the level signal isn't carried by color alone — bigger
+     * chip = stronger selection. Step deltas are kept modest (~6-10%
+     * per level) so growing one chip is unlikely to push a neighbor
+     * across the wrap line; combined with the 12px chip-list gap and
+     * the smooth 0.35s transition above, the few reflows that DO
+     * happen feel intentional rather than jumpy.
      */
     .chip.level-1 {
       background: color-mix(in srgb, var(--_ink) 16%, transparent);
       color:      color-mix(in srgb, var(--_ink) 85%, transparent);
-      transform: scale(0.78); font-weight: 600;
+      font-weight: 600; font-size: 0.88em; padding: 0.42em 0.95em;
     }
     .chip.level-2 {
       background: color-mix(in srgb, var(--_ink) 70%, var(--_paper));
       color: var(--_paper);
-      transform: scale(0.88); font-weight: 700;
+      font-weight: 700; font-size: 0.95em; padding: 0.46em 1.02em;
     }
     .chip.level-3 {
       background: var(--_ink);
       color: var(--_paper);
-      transform: scale(1); font-weight: 800;
+      font-weight: 800; font-size: 1.05em; padding: 0.50em 1.10em;
     }
 
     /* Color mode: unselected chips adapt to surface lightness */
