@@ -1,9 +1,10 @@
 import { LitElement, html, css } from 'lit';
 import { property } from 'lit/decorators.js';
-import type { ColorMode, Rating, Theme } from '../core/types';
+import type { ColorMode, Layout, Rating, Theme } from '../core/types';
 import { colorForVA } from '../core/color';
 import { colorModeConverter } from '../core/color-mode';
 import { themeConverter } from '../core/theme';
+import { layoutConverter } from '../core/layout';
 
 /**
  * `<affect-kit-compare>` — paired side-by-side word-cloud / face / color
@@ -209,23 +210,21 @@ export class AffectKitCompare extends LitElement {
     }
 
     /*
-     * Unlock side-by-side. Two blocks, same body — kept in sync by
-     * convention. CSS nesting keeps each block tight; the only thing
-     * that differs between them is the @container threshold and
-     * (for the second) a :where() selector that gates the rule on
-     * the content being light enough to need only the narrower
-     * threshold.
+     * Unlock side-by-side. Each @container block is gated on
+     * :host(:not([layout="stack"])) so a layout="stack" consumer keeps
+     * the default stacked layout regardless of width. layout="row" gets
+     * its own block below with a much lower threshold.
      */
     @container (min-width: 720px) {
-      .row { grid-template-columns: 1fr 1fr; }
-      .side.left {
+      :host(:not([layout="stack"])) .row { grid-template-columns: 1fr 1fr; }
+      :host(:not([layout="stack"])) .side.left {
         border-right: 1px solid color-mix(in srgb, var(--_ink) 8%, transparent);
         border-bottom: none;
       }
-      .gradient { --_grad-dir: to right; }
-      .side .caption { align-self: flex-start; }
-      .side.right .caption { align-self: flex-end; }
-      affect-kit-result {
+      :host(:not([layout="stack"])) .gradient { --_grad-dir: to right; }
+      :host(:not([layout="stack"])) .side .caption { align-self: flex-start; }
+      :host(:not([layout="stack"])) .side.right .caption { align-self: flex-end; }
+      :host(:not([layout="stack"])) affect-kit-result {
         --_face-dir: row;
         --_face-align: center;
         --_face-gap: 2em;
@@ -233,13 +232,63 @@ export class AffectKitCompare extends LitElement {
         --_face-mb: 0;
         --_face-mt: 0;
       }
-      .side.right affect-kit-result { --_face-dir: row-reverse; }
+      :host(:not([layout="stack"])) .side.right affect-kit-result { --_face-dir: row-reverse; }
     }
 
     /* Light content (face OR labels off) — unlock side-by-side at 380px.
        Below that is "xs" territory where stacked still reads better. */
     @container (min-width: 380px) {
-      :host(:where(:not([show-face]), :not([show-labels]))) {
+      :host(:where(:not([show-face]), :not([show-labels])):not([layout="stack"])) {
+        & .row { grid-template-columns: 1fr 1fr; }
+        & .side.left {
+          border-right: 1px solid color-mix(in srgb, var(--_ink) 8%, transparent);
+          border-bottom: none;
+        }
+        & .gradient { --_grad-dir: to right; }
+        & .side .caption { align-self: flex-start; }
+        & .side.right .caption { align-self: flex-end; }
+        & affect-kit-result {
+          --_face-dir: row;
+          --_face-align: center;
+          --_face-gap: 2em;
+          --_face-step: 0.5em;
+          --_face-mb: 0;
+          --_face-mt: 0;
+        }
+        & .side.right affect-kit-result { --_face-dir: row-reverse; }
+      }
+    }
+
+    /* layout="row" — unlock side-by-side at lower thresholds than auto.
+       Content-aware so we never break: full content (face + labels) still
+       needs ~640px because each half has to fit a face + a word area,
+       only ~80px lower than auto's 720px. Light content (face OR labels
+       off) drops to 260px since each half is single-column. Below the
+       floor we still stack rather than letting halves burst the panel. */
+    @container (min-width: 640px) {
+      :host([layout="row"]) {
+        & .row { grid-template-columns: 1fr 1fr; }
+        & .side.left {
+          border-right: 1px solid color-mix(in srgb, var(--_ink) 8%, transparent);
+          border-bottom: none;
+        }
+        & .gradient { --_grad-dir: to right; }
+        & .side .caption { align-self: flex-start; }
+        & .side.right .caption { align-self: flex-end; }
+        & affect-kit-result {
+          --_face-dir: row;
+          --_face-align: center;
+          --_face-gap: 2em;
+          --_face-step: 0.5em;
+          --_face-mb: 0;
+          --_face-mt: 0;
+        }
+        & .side.right affect-kit-result { --_face-dir: row-reverse; }
+      }
+    }
+
+    @container (min-width: 260px) {
+      :host([layout="row"]:where(:not([show-face]), :not([show-labels]))) {
         & .row { grid-template-columns: 1fr 1fr; }
         & .side.left {
           border-right: 1px solid color-mix(in srgb, var(--_ink) 8%, transparent);
@@ -310,6 +359,19 @@ export class AffectKitCompare extends LitElement {
    */
   @property({ converter: themeConverter, reflect: true })
   theme: Theme = 'light';
+
+  /**
+   * Preferred halves orientation. See {@link Layout}.
+   * - `'auto'` (default) — container query at 720px (or 380px when face
+   *   or labels are off) decides side-by-side vs stacked.
+   * - `'stack'` — halves stacked at any width.
+   * - `'row'` — halves side-by-side; threshold lowered to 320px, with
+   *   a stack fallback below the floor to avoid breakage. The inner
+   *   `<affect-kit-result>` instances are not forwarded a layout —
+   *   each half decides for itself within its share of the width.
+   */
+  @property({ converter: layoutConverter, reflect: true })
+  layout: Layout = 'auto';
 
   override render() {
     const left  = this.beforeRating;

@@ -34,6 +34,25 @@ export type ColorMode = 'background' | 'words';
 export type Theme = 'light' | 'dark' | 'auto';
 
 /**
+ * Layout preference for components that have a "stacked vs side-by-side"
+ * choice — `<affect-kit-result>` (face vs words) and `<affect-kit-compare>`
+ * (left vs right halves).
+ *
+ * - `'auto'` (default) — container queries decide based on available width.
+ *   Stacked at narrow widths, side-by-side at wider widths.
+ * - `'stack'` — always stacked, regardless of width. Use this when the
+ *   consumer wants a deliberate vertical reading order even when there's
+ *   horizontal room.
+ * - `'row'` — side-by-side whenever space allows. Threshold is lower than
+ *   `'auto'` so row layout kicks in at narrower widths. Below the floor
+ *   (where row would genuinely break) the component falls back to stacked
+ *   rather than overflowing.
+ *
+ * Set via the `layout` HTML attribute.
+ */
+export type Layout = 'auto' | 'stack' | 'row';
+
+/**
  * A single emotion label attached to a rating, with intensity level in [1, 3].
  *
  * `name` is strictly typed to {@link EmotionName} — only words from the validated

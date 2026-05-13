@@ -3,7 +3,8 @@ import { property } from 'lit/decorators.js';
 import { colorForVA, lighterForChips } from '../core/color';
 import { colorModeConverter } from '../core/color-mode';
 import { themeConverter } from '../core/theme';
-import type { ColorMode, Rating, Theme } from '../core/types';
+import { layoutConverter } from '../core/layout';
+import type { ColorMode, Layout, Rating, Theme } from '../core/types';
 import { EMOTIONS_BY_NAME } from '../vocabulary/en';
 
 const animateConverter = {
@@ -127,7 +128,7 @@ export class AffectKitResult extends LitElement {
     .words {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.4em 1.5em;
+      gap: 0.4em 0.6em;
       align-items: baseline;
       line-height: 1.15;
       min-height: 2.5em;
@@ -137,48 +138,51 @@ export class AffectKitResult extends LitElement {
 
     /*
      * Continuous level scaling for the word-cloud effect. --_level is set
-     * inline per-word and clamped into [1, 3]. Linear scale anchored at:
+     * inline per-word and clamped into [1, 3]. Each level is a fixed
+     * percentage of the content's inline size (3.3cqi per level → level
+     * 3 is ~10% of inline width), so the longest vocab word
+     * ("compassionate") fits at every container width. max() floor
+     * keeps tiny containers from collapsing to unreadable.
      *
-     *   level 1 → 1em (100%)   ← base
-     *   level 2 → 2em (200%)
-     *   level 3 → 3em (300%)
+     * --_count-scale (set inline on .words) bumps font-size when only a
+     * few labels are present — a lone "grateful" reads as a statement,
+     * not an afterthought. Default 1.0 (5+ labels = normal). Computed
+     * in render(): max(1, 1.3 - (n-1) * 0.075).
      *
-     * Averaged (non-integer) levels interpolate continuously.
-     * Family inherits; opacity climbs gently with level.
+     * --_word-color drives both the text color and the highlighter
+     * background. Color is alpha-modulated via color-mix (instead of
+     * the host element's opacity) so the highlighter background can
+     * stay at its own alpha independent of the text.
      */
     .word {
       --_lv: clamp(1, var(--_level, 1), 3);
-      /*
-       * Level scaling is purely container-relative: each level is a fixed
-       * percentage of the content's inline size (3.3cqi per level → level
-       * 3 is ~10% of inline width). This guarantees the longest word in
-       * the vocabulary ("compassionate", 13 chars at semibold weight)
-       * fits inside the card at every container width. The .content
-       * declares container-type: inline-size so cqi measures the actual
-       * post-padding usable space, not the raw host width.
-       *
-       * max() provides an em-relative floor so words don't collapse to
-       * unreadable in extreme cases — consumers can still scale the floor
-       * by setting --affect-kit-font-size. overflow-wrap is the final
-       * escape hatch for absurdly narrow containers.
-       */
+      --_text-alpha: calc((0.6 + (var(--_lv) - 1) * 0.2) * 100%);
       font-size: max(
-        calc(var(--_lv) * 0.5em),
-        calc(var(--_lv) * 3.3cqi)
+        calc(var(--_lv) * 0.5em * var(--_count-scale, 1)),
+        calc(var(--_lv) * 3.3cqi * var(--_count-scale, 1))
       );
-      opacity:   calc(0.6 + (var(--_lv) - 1) * 0.2);
       font-family: inherit;
       letter-spacing: -0.01em;
-      color: var(--_ink);
+      color: color-mix(in srgb, var(--_word-color, var(--_ink)) var(--_text-alpha), transparent);
+      background: color-mix(in srgb, var(--_word-color, var(--_ink)) 11%, transparent);
+      /* max() gives small (low-level) pills a px-based minimum so they
+         don't crowd the text — em-only padding shrinks with font-size,
+         leaving low-intensity words feeling cramped against their pill. */
+      padding: max(0.18em, 0.35rem) max(0.55em, 0.75rem);
+      border-radius: max(0.35em, 0.4rem);
       overflow-wrap: break-word;
     }
     /* Words mode: each label picks up its own V/A color from the lexicon.
-       --_word-color is set inline per-word — render() picks lighter or
-       darker hue variant based on theme. */
+       --_word-color is set inline per-word — render() picks the raw
+       brand color on light, lighterForChips on dark. Higher text-alpha
+       floor so light-V/A words stay legible. */
     :host([color-mode="words"]) .word {
-      color: var(--_word-color, var(--_ink));
-      /* Bias opacity higher in words mode so light-V/A words stay legible. */
-      opacity: calc(0.78 + (var(--_lv) - 1) * 0.11);
+      --_text-alpha: calc((0.78 + (var(--_lv) - 1) * 0.11) * 100%);
+    }
+    /* Background mode: pill uses the *paper* tone (not the panel color)
+       so each word reads like a sticky-note on top of the V/A wash. */
+    :host([color-mode="background"]) .word {
+      background: color-mix(in srgb, var(--_paper) 55%, transparent);
     }
 
     .align-center .words { justify-content: center; }
@@ -241,19 +245,39 @@ export class AffectKitResult extends LitElement {
       margin-bottom: var(--_face-mb, 0.5em);
     }
 
-    /* Standalone wide (host >= 360px) — face left, words right. */
+    /* Standalone wide (host >= 360px) — face left, words right.
+       Skipped when layout="stack" is set (forces column at any width). */
     @container (min-width: 360px) {
-      .content.has-face {
+      :host(:not([layout="stack"])) .content.has-face {
         flex-direction: var(--_face-dir, row);
         align-items: var(--_face-align, center);
         gap: var(--_face-gap, 2em);
         --_level-step: var(--_face-step, 0.5em);
       }
-      .content.has-face .face-zone {
+      :host(:not([layout="stack"])) .content.has-face .face-zone {
         margin-top: var(--_face-mt, 0);
         margin-bottom: var(--_face-mb, 0);
       }
-      .content.has-face .words { flex: 1 1 auto; min-width: 0; }
+      :host(:not([layout="stack"])) .content.has-face .words { flex: 1 1 auto; min-width: 0; }
+    }
+
+    /* layout="row" — unlock face-on-the-side at a lower threshold (300px
+       instead of 360px). Each half of compare passes ~half its host width
+       to its inner result, so a too-low floor here breaks compare's
+       layout="row" with full content. Below the floor we still stack
+       rather than letting cramped row overflow the panel. */
+    @container (min-width: 300px) {
+      :host([layout="row"]) .content.has-face {
+        flex-direction: var(--_face-dir, row);
+        align-items: var(--_face-align, center);
+        gap: var(--_face-gap, 2em);
+        --_level-step: var(--_face-step, 0.5em);
+      }
+      :host([layout="row"]) .content.has-face .face-zone {
+        margin-top: var(--_face-mt, 0);
+        margin-bottom: var(--_face-mb, 0);
+      }
+      :host([layout="row"]) .content.has-face .words { flex: 1 1 auto; min-width: 0; }
     }
   `;
 
@@ -317,6 +341,16 @@ export class AffectKitResult extends LitElement {
   @property({ converter: themeConverter, reflect: true })
   theme: Theme = 'light';
 
+  /**
+   * Preferred face-vs-words orientation. See {@link Layout}.
+   * - `'auto'` (default) — container query at 360px decides.
+   * - `'stack'` — face on top of words at any width.
+   * - `'row'` — face beside words; threshold lowered to 240px, with a
+   *   stack fallback below the floor to avoid breakage.
+   */
+  @property({ converter: layoutConverter, reflect: true })
+  layout: Layout = 'auto';
+
   override render() {
     const r = this.rating;
     if (!r) return nothing;
@@ -353,8 +387,13 @@ export class AffectKitResult extends LitElement {
             </div>
           ` : nothing}
 
-          ${this.showLabels && r.labels.length > 0 ? html`
-            <div class="words">
+          ${this.showLabels && r.labels.length > 0 ? (() => {
+            // Bump font-size when few labels are present so a sparse rating
+            // reads as a deliberate statement rather than floating fragments.
+            // 1 label = 1.30x, 2 = 1.225x, 3 = 1.15x, 4 = 1.075x, 5+ = 1.0x.
+            const countScale = Math.max(1, 1.3 - (r.labels.length - 1) * 0.075);
+            return html`
+            <div class="words" style="--_count-scale:${countScale.toFixed(3)}">
               ${[...r.labels].sort((a, b) => b.level - a.level).map(l => {
                 const lv = Math.max(1, Math.min(3, l.level));
                 // Weight ramps gently with intensity. The dominant signal is
@@ -394,7 +433,8 @@ export class AffectKitResult extends LitElement {
                 `;
               })}
             </div>
-          ` : nothing}
+          `;
+          })() : nothing}
 
           ${this.showVad ? (() => {
             // Resolved VAD: composite (when labels selected) ?? face fallback with d=0.

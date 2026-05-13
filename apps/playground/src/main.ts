@@ -8,7 +8,7 @@ import type { AffectKitResult }  from 'affect-kit/result';
 import type { AffectKitRater }   from 'affect-kit/rater';
 import type { AffectKitCompare } from 'affect-kit/compare';
 import { createRating, averageRatings } from 'affect-kit';
-import type { ColorMode, Rating, Theme } from 'affect-kit';
+import type { ColorMode, Layout, Rating, Theme } from 'affect-kit';
 
 // ── Element refs ───────────────────────────────────────────────────────────
 const rater      = document.getElementById('rater')      as AffectKitRater  | null;
@@ -84,6 +84,21 @@ function makeThemeSeg(name: string, onChange: (value: Theme) => void) {
   });
 }
 
+// ── Segmented control helper for `layout` (auto / stack / row) ───────────
+function makeLayoutSeg(name: string, onChange: (value: Layout) => void) {
+  const group = document.querySelector<HTMLElement>(`[data-seg="${name}"]`);
+  if (!group) return;
+  const btns = [...group.querySelectorAll<HTMLButtonElement>('.seg-btn')];
+  btns.forEach(b => {
+    b.addEventListener('click', () => {
+      const value = (b.dataset.val ?? 'auto') as Layout;
+      group.dataset.value = value;
+      btns.forEach(other => other.setAttribute('aria-pressed', String(other === b)));
+      onChange(value);
+    });
+  });
+}
+
 // ── Code snippets that mirror toggle state ────────────────────────────────
 const codeRater  = document.getElementById('code-rater');
 const codeResult = document.getElementById('code-result');
@@ -104,6 +119,7 @@ const resultState = {
   align: 'center' as 'left' | 'center' | 'right',
   variant: 'default' as 'default' | 'compact',
   theme: 'light' as Theme,
+  layout: 'auto' as Layout,
 };
 
 function colorAttr(mode: ColorMode | null): string | null {
@@ -140,6 +156,7 @@ function renderResultCode() {
   const c = colorAttr(resultState.colorMode);
   if (c) attrs.push(c);
   if (resultState.theme !== 'light')  attrs.push(`theme="${resultState.theme}"`);
+  if (resultState.layout !== 'auto')  attrs.push(`layout="${resultState.layout}"`);
   if (resultState.showFace)   attrs.push('show-face');
   if (resultState.showLabels) attrs.push('show-labels');
   if (!resultState.animated)  attrs.push('animated="false"');
@@ -196,6 +213,10 @@ makeThemeSeg('result-theme', (theme) => {
   if (resultEl) resultEl.theme = theme;
   resultEl?.closest('[slot="demo"]')?.setAttribute('data-theme', theme);
   resultState.theme = theme; renderResultCode();
+});
+makeLayoutSeg('result-layout', (layout) => {
+  if (resultEl) resultEl.layout = layout;
+  resultState.layout = layout; renderResultCode();
 });
 makeToggle('result-face-toggle', (on) => {
   if (resultEl) resultEl.showFace = on;
@@ -310,6 +331,7 @@ const compareState = {
   beforeLabel: 'Yesterday',
   afterLabel: 'Today',
   theme: 'light' as Theme,
+  layout: 'auto' as Layout,
 };
 
 function fmtRatings(name: string, ratings: Rating[]): string {
@@ -335,6 +357,7 @@ function renderCompareCode() {
   const c = colorAttr(compareState.colorMode);
   if (c) attrs.push(c);
   if (compareState.theme !== 'light') attrs.push(`theme="${compareState.theme}"`);
+  if (compareState.layout !== 'auto') attrs.push(`layout="${compareState.layout}"`);
   if (compareState.showFace)  attrs.push('show-face');
   if (compareState.showLabels) attrs.push('show-labels');
   const html =
@@ -366,6 +389,10 @@ makeThemeSeg('compare-theme', (theme) => {
   if (compareEl) compareEl.theme = theme;
   compareEl?.closest('[slot="demo"]')?.setAttribute('data-theme', theme);
   compareState.theme = theme; renderCompareCode();
+});
+makeLayoutSeg('compare-layout', (layout) => {
+  if (compareEl) compareEl.layout = layout;
+  compareState.layout = layout; renderCompareCode();
 });
 makeToggle('compare-face-toggle', (on) => {
   if (compareEl) compareEl.showFace = on;

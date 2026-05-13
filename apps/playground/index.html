@@ -205,13 +205,15 @@
 
     /* Demo surface — follow the widget's theme so we can verify
        dark-mode widgets (especially the transparent color=off variant)
-       against an appropriate background. Default light; flips dark
-       when the theme control selects it. Auto follows OS preference. */
-    .demo-surface {
+       against an appropriate background. Padding + radius only kick
+       in when a non-light theme is set, so light theme stays at the
+       original card-padded width (don't shrink the rater chip layout). */
+    .demo-surface { transition: background-color 0.25s ease; }
+    .demo-surface[data-theme="dark"],
+    .demo-surface[data-theme="auto"] {
       border-radius: 10px;
       padding: 1rem;
       margin: -0.25rem;
-      transition: background-color 0.25s ease;
     }
     .demo-surface[data-theme="dark"] { background-color: #0d0d0d; }
     @media (prefers-color-scheme: dark) {
@@ -303,6 +305,14 @@
               <button class="seg-btn" type="button" data-val="light" aria-pressed="true">light</button>
               <button class="seg-btn" type="button" data-val="dark"  aria-pressed="false">dark</button>
               <button class="seg-btn" type="button" data-val="auto"  aria-pressed="false">auto</button>
+            </span>
+          </span>
+          <span class="seg">
+            layout
+            <span class="seg-group" data-seg="result-layout" data-value="auto">
+              <button class="seg-btn" type="button" data-val="auto"  aria-pressed="true">auto</button>
+              <button class="seg-btn" type="button" data-val="stack" aria-pressed="false">stack</button>
+              <button class="seg-btn" type="button" data-val="row"   aria-pressed="false">row</button>
             </span>
           </span>
           <label class="toggle-item">
@@ -461,6 +471,14 @@
               <button class="seg-btn" type="button" data-val="light" aria-pressed="true">light</button>
               <button class="seg-btn" type="button" data-val="dark"  aria-pressed="false">dark</button>
               <button class="seg-btn" type="button" data-val="auto"  aria-pressed="false">auto</button>
+            </span>
+          </span>
+          <span class="seg">
+            layout
+            <span class="seg-group" data-seg="compare-layout" data-value="auto">
+              <button class="seg-btn" type="button" data-val="auto"  aria-pressed="true">auto</button>
+              <button class="seg-btn" type="button" data-val="stack" aria-pressed="false">stack</button>
+              <button class="seg-btn" type="button" data-val="row"   aria-pressed="false">row</button>
             </span>
           </span>
           <label class="toggle-item">

@@ -158,6 +158,7 @@ export class AffectKitRater extends LitElement {
       flex-wrap: wrap;
       gap: 7px;
       align-items: baseline;
+      justify-content: center;
     }
 
     .chip {
@@ -296,16 +297,21 @@ export class AffectKitRater extends LitElement {
       opacity: 0;
     }
 
-    /* ── Submit button ────────────────────────────────────── */
+    /* ── Submit button ──────────────────────────────────────
+       Default: outline style — sits quietly against plain surfaces
+       (color-mode=null / "words"). Fills with ink on hover.
+       color-mode="background": filled style — the V/A wash beneath
+       would swallow an outline, so the button takes the V/A color
+       directly to stand against the background. */
     .submit-btn {
       align-self: stretch;
       margin: 0;
       display: block;
       width: 100%;
-      padding: 0.69em 1em;
-      background: var(--_ink);
-      color: var(--_paper);
-      border: none;
+      padding: 0.59em 1em;
+      background: transparent;
+      color: var(--_ink);
+      border: 1.5px solid var(--_ink);
       border-radius: 0.88em;
       font-family: inherit;
       font-size: 0.81em;
@@ -315,7 +321,9 @@ export class AffectKitRater extends LitElement {
       opacity: 0;
       transition:
         opacity    0.3s ease,
-        background 0.15s ease;
+        background 0.15s ease,
+        color      0.15s ease,
+        border-color 0.15s ease;
       pointer-events: none;
     }
     .submit-btn.visible {
@@ -323,13 +331,15 @@ export class AffectKitRater extends LitElement {
       pointer-events: auto;
     }
     .submit-btn:hover {
-      background: color-mix(in srgb, var(--_ink) 80%, var(--_paper));
+      background: var(--_ink);
+      color: var(--_paper);
     }
     .submit-btn:active { transform: scale(0.98); }
 
     :host([color-mode="background"]) .submit-btn {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
       color: var(--_text-l3, rgba(0,0,0,0.95));
+      border-color: transparent;
     }
     :host([color-mode="background"]) .submit-btn:hover {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.82);
@@ -703,10 +713,14 @@ export class AffectKitRater extends LitElement {
               // 'words' mode: each chip carries its own emotion's color
               // via inline --_l3-{r,g,b}, which shadows the host-level
               // (pad-V/A-derived) variables so the existing chip rules
-              // resolve to the per-emotion color.
+              // resolve to the per-emotion color. Uses the raw lexicon
+              // color (not darkerForChips) so chip backgrounds match the
+              // V/A panel color in <affect-kit-result> for the same
+              // emotion — keeps the language consistent across input
+              // (rater) and display (result/compare).
               let chipStyle = `order:${order}`;
               if (wordsMode) {
-                const [cr, cg, cb] = darkerForChips(colorForVA(emotion.v, emotion.a));
+                const [cr, cg, cb] = colorForVA(emotion.v, emotion.a);
                 chipStyle += `;--_l3-r:${cr};--_l3-g:${cg};--_l3-b:${cb}`;
               }
               return html`
