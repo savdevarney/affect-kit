@@ -2,9 +2,10 @@ import { LitElement, html, css, nothing, type PropertyValues } from 'lit';
 import { property, state, query } from 'lit/decorators.js';
 import { colorForVA, darkerForChips, surfaceIsLight, type Rgb } from '../core/color';
 import { colorModeConverter } from '../core/color-mode';
+import { themeConverter } from '../core/theme';
 import { buildRating } from '../core/vad';
 import { EMOTIONS } from '../vocabulary/en';
-import type { ColorMode, Rating, EmotionName } from '../core/types';
+import type { ColorMode, Rating, EmotionName, Theme } from '../core/types';
 import type { AffectKitFace } from './affect-kit-face';
 
 const DWELL_MS = 500;
@@ -34,27 +35,48 @@ export class AffectKitRater extends LitElement {
     :host {
       display: block;
       container-type: inline-size;
-      /* Inherit family; base font-size from --affect-kit-font-size.
-         All internal sizing is em-based off this so consumers can scale
-         the whole component with one variable. */
       font-family: inherit;
       font-size: var(--affect-kit-font-size, 1rem);
-      /* Cap so the widget doesn't stretch ugly in wide layouts. Override
-         via the custom property if you need something different. */
       max-width: var(--affect-kit-rater-max-width, 640px);
+
+      /* Theme: --_ink and --_paper are the polarity of the surface. Default
+         light; flipped by [theme="dark"] below. Everything else in this
+         stylesheet derives text/bg from these via color-mix. */
+      --_ink:   #1a1a1a;
+      --_paper: white;
+
+      /* V/A-driven (set by _updateColorVars at runtime; defaults are neutral). */
       --_r: 128; --_g: 128; --_b: 128;
       --_l3-r: 80; --_l3-g: 80; --_l3-b: 80;
       --_surface-is-light: 0;
     }
+    :host([theme="dark"]) {
+      --_ink:   white;
+      --_paper: #1a1a1a;
+    }
+    @media (prefers-color-scheme: dark) {
+      :host([theme="auto"]) {
+        --_ink:   white;
+        --_paper: #1a1a1a;
+      }
+    }
 
     .surface {
       position: relative;
-      background: white;
+      background: var(--_paper);
       border-radius: 24px;
       overflow: hidden;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+      box-shadow:
+        0 1px 2px color-mix(in srgb, var(--_ink) 4%, transparent),
+        0 8px 24px color-mix(in srgb, var(--_ink) 4%, transparent);
       display: flex;
       flex-direction: column;
+    }
+    /* color-mode off → composable surface. No paper, no card shadow, so
+       the rater drops onto whatever the host's background is. */
+    :host(:not([color-mode])) .surface {
+      background: transparent;
+      box-shadow: none;
     }
 
     .glow {
@@ -96,7 +118,7 @@ export class AffectKitRater extends LitElement {
       position: absolute;
       width: 9px;
       height: 9px;
-      background: rgba(0,0,0,0.28);
+      background: color-mix(in srgb, var(--_ink) 28%, transparent);
       border-radius: 50%;
       transform: translate(-50%, -50%);
       pointer-events: none;
@@ -140,8 +162,8 @@ export class AffectKitRater extends LitElement {
 
     .chip {
       padding: 0.38em 0.85em;
-      background: rgba(0,0,0,0.05);
-      color: rgba(0,0,0,0.55);
+      background: color-mix(in srgb, var(--_ink) 5%, transparent);
+      color:      color-mix(in srgb, var(--_ink) 55%, transparent);
       border: none;
       border-radius: 999px;
       font-family: inherit;
@@ -157,30 +179,40 @@ export class AffectKitRater extends LitElement {
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-    .chip:hover { background: rgba(0,0,0,0.10); color: rgba(0,0,0,0.85); }
+    .chip:hover {
+      background: color-mix(in srgb, var(--_ink) 10%, transparent);
+      color:      color-mix(in srgb, var(--_ink) 85%, transparent);
+    }
 
-    /* Mono: greyscale by intensity */
+    /*
+     * Mono: greyscale by intensity. The chip "fills with ink" as level
+     * increases — bg climbs from a faint tint to solid --_ink, and text
+     * flips from ink to paper for full contrast at high levels.
+     */
     .chip.level-1 {
-      background: rgba(0,0,0,0.16); color: rgba(0,0,0,0.85);
+      background: color-mix(in srgb, var(--_ink) 16%, transparent);
+      color:      color-mix(in srgb, var(--_ink) 85%, transparent);
       font-weight: 600; font-size: 0.81em; padding: 0.38em 0.91em;
     }
     .chip.level-2 {
-      background: #4a4a4a; color: white;
+      background: color-mix(in srgb, var(--_ink) 70%, var(--_paper));
+      color: var(--_paper);
       font-weight: 600; font-size: 0.84em; padding: 0.44em 0.97em;
     }
     .chip.level-3 {
-      background: #1a1a1a; color: white;
+      background: var(--_ink);
+      color: var(--_paper);
       font-weight: 700; font-size: 0.91em; padding: 0.5em 1.1em;
     }
 
     /* Color mode: unselected chips adapt to surface lightness */
     :host([color-mode]) .chip {
-      background: var(--_chip-bg, rgba(0,0,0,0.05));
-      color: var(--_chip-ink, rgba(0,0,0,0.55));
+      background: var(--_chip-bg, color-mix(in srgb, var(--_ink) 5%, transparent));
+      color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 55%, transparent));
     }
     :host([color-mode]) .chip:hover {
-      background: var(--_chip-hover-bg, rgba(0,0,0,0.10));
-      color: var(--_chip-ink, rgba(0,0,0,0.85));
+      background: var(--_chip-hover-bg, color-mix(in srgb, var(--_ink) 10%, transparent));
+      color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 85%, transparent));
     }
     /* Color mode: selected chips absorb the current V/A color */
     :host([color-mode]) .chip.level-1 {
@@ -215,20 +247,20 @@ export class AffectKitRater extends LitElement {
      */
     :host([color-mode="words"]) .chip {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.14);
-      color: rgba(0,0,0,0.68);
+      color: color-mix(in srgb, var(--_ink) 68%, transparent);
     }
     :host([color-mode="words"]) .chip:hover {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.24);
-      color: rgba(0,0,0,0.9);
+      color: color-mix(in srgb, var(--_ink) 90%, transparent);
     }
 
     .vad-readout {
       margin-top: 1.1em;
       padding-top: 0.88em;
-      border-top: 1px solid rgba(0,0,0,0.06);
+      border-top: 1px solid color-mix(in srgb, var(--_ink) 6%, transparent);
       font-family: inherit;
       font-size: 0.625em;
-      color: #6b7280;
+      color: color-mix(in srgb, var(--_ink) 50%, transparent);
       letter-spacing: 0.08em;
       text-transform: uppercase;
     }
@@ -253,7 +285,7 @@ export class AffectKitRater extends LitElement {
       margin: 0;
       font-family: inherit;
       font-size: 0.69em;
-      color: rgba(0,0,0,0.35);
+      color: color-mix(in srgb, var(--_ink) 35%, transparent);
       text-align: center;
       letter-spacing: 0.06em;
       text-transform: uppercase;
@@ -271,8 +303,8 @@ export class AffectKitRater extends LitElement {
       display: block;
       width: 100%;
       padding: 0.69em 1em;
-      background: rgba(0,0,0,0.88);
-      color: rgba(255,255,255,0.96);
+      background: var(--_ink);
+      color: var(--_paper);
       border: none;
       border-radius: 0.88em;
       font-family: inherit;
@@ -290,7 +322,9 @@ export class AffectKitRater extends LitElement {
       opacity: 1;
       pointer-events: auto;
     }
-    .submit-btn:hover  { background: rgba(0,0,0,0.72); }
+    .submit-btn:hover {
+      background: color-mix(in srgb, var(--_ink) 80%, var(--_paper));
+    }
     .submit-btn:active { transform: scale(0.98); }
 
     :host([color-mode="background"]) .submit-btn {
@@ -352,6 +386,17 @@ export class AffectKitRater extends LitElement {
   /** Label for the submit button. Override via the `submit-label` attribute. */
   @property({ attribute: 'submit-label' })
   submitLabel = 'Done';
+
+  /**
+   * Surface theme. See {@link Theme}.
+   * - `'light'` (default) — dark ink on white paper.
+   * - `'dark'` — white ink on dark paper. Chip backgrounds invert.
+   * - `'auto'` — follow `prefers-color-scheme`.
+   *
+   * Orthogonal to {@link ColorMode}.
+   */
+  @property({ converter: themeConverter, reflect: true })
+  theme: Theme = 'light';
 
   @state() private _padV = 0;
   @state() private _padA = 0;

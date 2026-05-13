@@ -168,6 +168,12 @@ function App() {
                 <td>How V/A color is applied. <code>'background'</code> tints the surface; chips adapt their contrast. <code>'words'</code> paints each chip with its own NRC lexicon color (rainbow constellation). Legacy boolean usage (<code>&lt;... color-mode&gt;</code>) maps to <code>'background'</code>.</td>
               </tr>
               <tr>
+                <td><code>theme</code></td>
+                <td><code>'light' | 'dark' | 'auto'</code></td>
+                <td><code>'light'</code></td>
+                <td>Surface theme. <code>'dark'</code> flips ink to white on a dark panel; mono chips invert (chip fills from a faint white tint up to solid white at level 3, with dark text). <code>'auto'</code> follows <code>prefers-color-scheme</code>. Orthogonal to <code>color-mode</code>.</td>
+              </tr>
+              <tr>
                 <td><code>animated</code></td>
                 <td>boolean</td>
                 <td><code>true</code></td>
@@ -330,6 +336,12 @@ function App() {
                 <td><code>'background'</code> paints a V/A glow on the panel; <code>'words'</code> colors each word by its own NRC lexicon V/A (background stays neutral — useful when averaging many ratings would wash out a single tint). Legacy boolean attribute maps to <code>'background'</code>.</td>
               </tr>
               <tr>
+                <td><code>theme</code></td>
+                <td><code>'light' | 'dark' | 'auto'</code></td>
+                <td><code>'light'</code></td>
+                <td>Surface theme. <code>'dark'</code> flips ink to white on a dark panel; in <code>color-mode="words"</code>, each label switches to a lighter V/A color variant so it stays legible against the dark surface. <code>'auto'</code> follows <code>prefers-color-scheme</code>.</td>
+              </tr>
+              <tr>
                 <td><code>show-vad</code></td>
                 <td>boolean</td>
                 <td><code>false</code></td>
@@ -459,6 +471,12 @@ function App() {
                 <td>Enables breath + tremor animation. Use <code>animated="false"</code> in HTML. Always respects <code>prefers-reduced-motion: reduce</code> regardless of this attribute.</td>
               </tr>
               <tr>
+                <td><code>theme</code></td>
+                <td><code>'light' | 'dark' | 'auto'</code></td>
+                <td><code>'light'</code></td>
+                <td>Stroke color. <code>'dark'</code> flips the face to white strokes (intended for dark surfaces). <code>'auto'</code> follows <code>prefers-color-scheme</code>. Strokes use <code>currentColor</code> internally so consumers can also set <code>color</code> directly.</td>
+              </tr>
+              <tr>
                 <td><code>motionScale</code> <span class="docs-prop-tag">prop only</span></td>
                 <td>number</td>
                 <td><code>1</code></td>
@@ -584,6 +602,12 @@ function App() {
                 <td><code>'background' | 'words' | null</code></td>
                 <td><code>null</code></td>
                 <td><code>'background'</code> paints a card gradient between the two ratings' V/A colors. <code>'words'</code> drops the gradient and colors each label in each half by its own lexicon V/A — keeps individual labels distinct even when averaging many ratings would otherwise wash the gradient to gray. Legacy boolean attribute maps to <code>'background'</code>.</td>
+              </tr>
+              <tr>
+                <td><code>theme</code></td>
+                <td><code>'light' | 'dark' | 'auto'</code></td>
+                <td><code>'light'</code></td>
+                <td>Surface theme; forwarded to each inner <code>&lt;affect-kit-result&gt;</code>. <code>'dark'</code> flips the card to dark with light captions; words mode picks lighter V/A variants. <code>'auto'</code> follows <code>prefers-color-scheme</code>.</td>
               </tr>
             </tbody>
           </table>

@@ -96,6 +96,9 @@ export function colorForVA(v: number, a: number): Rgb {
  * Darker variant of a color for level-3 chip backgrounds (figure/ground separation).
  * Hue-aware: yellow gets gentler darkening (lScale 0.92) to avoid olive shift;
  * all other hues use 0.80.
+ *
+ * For dark-theme surfaces, see {@link lighterForChips} — same hue/sat math,
+ * opposite lightness adjustment so the color reads against a dark background.
  */
 export function darkerForChips(rgb: Rgb): Rgb {
   const oklab = rgbToOklab(rgb[0], rgb[1], rgb[2]);
@@ -103,6 +106,25 @@ export function darkerForChips(rgb: Rgb): Rgb {
   const yellowFactor = Math.min(1, yellowness * Math.max(0, 1 - Math.abs(oklab[1]) / 0.15));
   const lScale = 0.80 + yellowFactor * 0.12;
   return oklabToRgb(oklab[0] * lScale, oklab[1], oklab[2]);
+}
+
+/**
+ * @internal
+ * Lighter variant of a color for level-3 chip backgrounds on **dark** surfaces.
+ * Mirror of {@link darkerForChips}: keeps the hue/sat, lifts L toward 1 so the
+ * color stays readable against a dark paper. Hue-aware in the same way —
+ * yellows lift more gently to stay yellow-tinted instead of going to cream.
+ */
+export function lighterForChips(rgb: Rgb): Rgb {
+  const oklab = rgbToOklab(rgb[0], rgb[1], rgb[2]);
+  const yellowness = Math.max(0, oklab[2]) / 0.20;
+  const yellowFactor = Math.min(1, yellowness * Math.max(0, 1 - Math.abs(oklab[1]) / 0.15));
+  // Map current L into [L_new, 1) — bigger lift for non-yellow hues so blues,
+  // pinks, greens read clearly on dark; yellow only nudges up so it doesn't
+  // wash to cream.
+  const targetL = 0.78 - yellowFactor * 0.06;          // floor we push toward
+  const newL    = oklab[0] + (targetL - oklab[0]) * 0.85;
+  return oklabToRgb(Math.max(oklab[0], newL), oklab[1], oklab[2]);
 }
 
 /**

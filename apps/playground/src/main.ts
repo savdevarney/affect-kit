@@ -8,7 +8,7 @@ import type { AffectKitResult }  from 'affect-kit/result';
 import type { AffectKitRater }   from 'affect-kit/rater';
 import type { AffectKitCompare } from 'affect-kit/compare';
 import { createRating, averageRatings } from 'affect-kit';
-import type { ColorMode, Rating } from 'affect-kit';
+import type { ColorMode, Rating, Theme } from 'affect-kit';
 
 // ── Element refs ───────────────────────────────────────────────────────────
 const rater      = document.getElementById('rater')      as AffectKitRater  | null;
@@ -69,6 +69,21 @@ function makeSeg(
   });
 }
 
+// ── Segmented control helper for `theme` (light / dark / auto) ───────────
+function makeThemeSeg(name: string, onChange: (value: Theme) => void) {
+  const group = document.querySelector<HTMLElement>(`[data-seg="${name}"]`);
+  if (!group) return;
+  const btns = [...group.querySelectorAll<HTMLButtonElement>('.seg-btn')];
+  btns.forEach(b => {
+    b.addEventListener('click', () => {
+      const value = (b.dataset.val ?? 'light') as Theme;
+      group.dataset.value = value;
+      btns.forEach(other => other.setAttribute('aria-pressed', String(other === b)));
+      onChange(value);
+    });
+  });
+}
+
 // ── Code snippets that mirror toggle state ────────────────────────────────
 const codeRater  = document.getElementById('code-rater');
 const codeResult = document.getElementById('code-result');
@@ -78,6 +93,7 @@ const raterState  = {
   animated: true,
   showVad: true,
   submitLabel: 'Done',
+  theme: 'light' as Theme,
 };
 const resultState = {
   colorMode: 'background' as ColorMode | null,
@@ -87,6 +103,7 @@ const resultState = {
   showVad: false,
   align: 'center' as 'left' | 'center' | 'right',
   variant: 'default' as 'default' | 'compact',
+  theme: 'light' as Theme,
 };
 
 function colorAttr(mode: ColorMode | null): string | null {
@@ -98,6 +115,7 @@ function renderRaterCode() {
   const attrs: string[] = [];
   const c = colorAttr(raterState.colorMode);
   if (c) attrs.push(c);
+  if (raterState.theme !== 'light') attrs.push(`theme="${raterState.theme}"`);
   if (!raterState.animated) attrs.push('animated="false"');
   if (raterState.showVad)   attrs.push('show-vad');
   if (raterState.submitLabel !== 'Done') attrs.push(`submit-label="${raterState.submitLabel}"`);
@@ -121,6 +139,7 @@ function renderResultCode() {
   const attrs: string[] = [];
   const c = colorAttr(resultState.colorMode);
   if (c) attrs.push(c);
+  if (resultState.theme !== 'light')  attrs.push(`theme="${resultState.theme}"`);
   if (resultState.showFace)   attrs.push('show-face');
   if (resultState.showLabels) attrs.push('show-labels');
   if (!resultState.animated)  attrs.push('animated="false"');
@@ -147,6 +166,11 @@ makeSeg('rater-color', (mode) => {
   if (rater) rater.colorMode = mode;
   raterState.colorMode = mode; renderRaterCode();
 });
+makeThemeSeg('rater-theme', (theme) => {
+  if (rater) rater.theme = theme;
+  rater?.closest('[slot="demo"]')?.setAttribute('data-theme', theme);
+  raterState.theme = theme; renderRaterCode();
+});
 makeToggle('rater-animated-toggle', (on) => {
   if (rater) rater.animated = on;
   raterState.animated = on; renderRaterCode();
@@ -167,6 +191,11 @@ submitInput?.addEventListener('input', () => {
 makeSeg('result-color', (mode) => {
   if (resultEl) resultEl.colorMode = mode;
   resultState.colorMode = mode; renderResultCode();
+});
+makeThemeSeg('result-theme', (theme) => {
+  if (resultEl) resultEl.theme = theme;
+  resultEl?.closest('[slot="demo"]')?.setAttribute('data-theme', theme);
+  resultState.theme = theme; renderResultCode();
 });
 makeToggle('result-face-toggle', (on) => {
   if (resultEl) resultEl.showFace = on;
@@ -217,6 +246,10 @@ function updateFace() {
 vSlider?.addEventListener('input', updateFace);
 aSlider?.addEventListener('input', updateFace);
 document.getElementById('shock-btn')?.addEventListener('click', () => face?.triggerShock());
+makeThemeSeg('face-theme', (theme) => {
+  if (face) face.theme = theme;
+  face?.closest('[slot="demo"]')?.setAttribute('data-theme', theme);
+});
 
 // ── Reset ──────────────────────────────────────────────────────────────────
 document.getElementById('reset-btn')?.addEventListener('click', () => {
@@ -276,6 +309,7 @@ const compareState = {
   showLabels: true,
   beforeLabel: 'Yesterday',
   afterLabel: 'Today',
+  theme: 'light' as Theme,
 };
 
 function fmtRatings(name: string, ratings: Rating[]): string {
@@ -300,6 +334,7 @@ function renderCompareCode() {
   ];
   const c = colorAttr(compareState.colorMode);
   if (c) attrs.push(c);
+  if (compareState.theme !== 'light') attrs.push(`theme="${compareState.theme}"`);
   if (compareState.showFace)  attrs.push('show-face');
   if (compareState.showLabels) attrs.push('show-labels');
   const html =
@@ -326,6 +361,11 @@ renderCompareCode();
 makeSeg('compare-color', (mode) => {
   if (compareEl) compareEl.colorMode = mode;
   compareState.colorMode = mode; renderCompareCode();
+});
+makeThemeSeg('compare-theme', (theme) => {
+  if (compareEl) compareEl.theme = theme;
+  compareEl?.closest('[slot="demo"]')?.setAttribute('data-theme', theme);
+  compareState.theme = theme; renderCompareCode();
 });
 makeToggle('compare-face-toggle', (on) => {
   if (compareEl) compareEl.showFace = on;

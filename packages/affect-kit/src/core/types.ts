@@ -19,6 +19,21 @@ export type { EmotionName };
 export type ColorMode = 'background' | 'words';
 
 /**
+ * Light vs dark surface treatment. Orthogonal to {@link ColorMode}:
+ * theme picks the page (paper + ink polarity); color-mode picks what
+ * gets painted on it. All six combinations are valid.
+ *
+ * - `'light'` (default) — dark ink on white paper.
+ * - `'dark'` — white ink on dark paper. Words mode uses lighter V/A
+ *   color variants to stay legible on the dark surface.
+ * - `'auto'` — follow the user's `prefers-color-scheme` setting. The
+ *   explicit `'light'` and `'dark'` values always override OS preference.
+ *
+ * Set via the `theme` HTML attribute.
+ */
+export type Theme = 'light' | 'dark' | 'auto';
+
+/**
  * A single emotion label attached to a rating, with intensity level in [1, 3].
  *
  * `name` is strictly typed to {@link EmotionName} — only words from the validated

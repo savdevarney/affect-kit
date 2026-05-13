@@ -8,3 +8,4 @@ if (!customElements.get('affect-kit-face')) {
 }
 
 export { AffectKitFace };
+export type { Theme } from './core/types';

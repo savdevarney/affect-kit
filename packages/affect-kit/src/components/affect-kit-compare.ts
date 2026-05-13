@@ -1,8 +1,9 @@
 import { LitElement, html, css } from 'lit';
 import { property } from 'lit/decorators.js';
-import type { ColorMode, Rating } from '../core/types';
+import type { ColorMode, Rating, Theme } from '../core/types';
 import { colorForVA } from '../core/color';
 import { colorModeConverter } from '../core/color-mode';
+import { themeConverter } from '../core/theme';
 
 /**
  * `<affect-kit-compare>` — paired side-by-side word-cloud / face / color
@@ -58,17 +59,39 @@ export class AffectKitCompare extends LitElement {
       container-type: inline-size;
       font-family: inherit;
       font-size: var(--affect-kit-font-size, 1rem);
-      /* Cap so the widget doesn't stretch ugly in wide layouts. Override
-         via the custom property if you need something different. */
       max-width: var(--affect-kit-compare-max-width, 880px);
+
+      /* Theme: --_ink and --_paper polarity. */
+      --_ink:   #1a1a1a;
+      --_paper: white;
+      color: var(--_ink);
+    }
+    :host([theme="dark"]) {
+      --_ink:   white;
+      --_paper: #1a1a1a;
+    }
+    @media (prefers-color-scheme: dark) {
+      :host([theme="auto"]) {
+        --_ink:   white;
+        --_paper: #1a1a1a;
+      }
     }
     .panel {
       position: relative;
-      background: white;
+      background: var(--_paper);
       border-radius: 1.5em;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.04);
+      box-shadow:
+        0 1px 2px color-mix(in srgb, var(--_ink) 4%, transparent),
+        0 8px 24px color-mix(in srgb, var(--_ink) 4%, transparent);
       overflow: hidden;
       isolation: isolate;
+    }
+    /* color-mode off → composable surface. The two halves keep their
+       caption pills and divider; only the card itself disappears so
+       compare blends with the host background. */
+    :host(:not([color-mode])) .panel {
+      background: transparent;
+      box-shadow: none;
     }
     /*
      * The gradient layer paints the V/A → color transition from one side
@@ -134,17 +157,17 @@ export class AffectKitCompare extends LitElement {
     /* Divider (STACKED default — sits below the top half). */
     .side.left {
       border-right: none;
-      border-bottom: 1px solid rgba(0,0,0,0.08);
+      border-bottom: 1px solid color-mix(in srgb, var(--_ink) 8%, transparent);
     }
     /* Gradient flow (STACKED default — top to bottom). */
     .gradient { --_grad-dir: to bottom; }
 
-    /* White-pill captions; dark text stays legible against any V/A color. */
+    /* Paper-pill captions; ink-on-paper stays legible against any V/A color. */
     .caption {
       display: inline-block;
       align-self: center;  /* STACKED default — centered above each half */
-      background: white;
-      color: #1a1a1a;
+      background: var(--_paper);
+      color: var(--_ink);
       font-family: inherit;
       font-size: 0.62em;
       font-weight: 600;
@@ -152,7 +175,7 @@ export class AffectKitCompare extends LitElement {
       text-transform: uppercase;
       padding: 0.35em 0.7em;
       border-radius: 999px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+      box-shadow: 0 1px 2px color-mix(in srgb, var(--_ink) 6%, transparent);
       margin: 0;
     }
 
@@ -196,7 +219,7 @@ export class AffectKitCompare extends LitElement {
     @container (min-width: 720px) {
       .row { grid-template-columns: 1fr 1fr; }
       .side.left {
-        border-right: 1px solid rgba(0,0,0,0.08);
+        border-right: 1px solid color-mix(in srgb, var(--_ink) 8%, transparent);
         border-bottom: none;
       }
       .gradient { --_grad-dir: to right; }
@@ -219,7 +242,7 @@ export class AffectKitCompare extends LitElement {
       :host(:where(:not([show-face]), :not([show-labels]))) {
         & .row { grid-template-columns: 1fr 1fr; }
         & .side.left {
-          border-right: 1px solid rgba(0,0,0,0.08);
+          border-right: 1px solid color-mix(in srgb, var(--_ink) 8%, transparent);
           border-bottom: none;
         }
         & .gradient { --_grad-dir: to right; }
@@ -280,6 +303,14 @@ export class AffectKitCompare extends LitElement {
   @property({ type: Boolean, attribute: 'show-labels', reflect: true })
   showLabels = true;
 
+  /**
+   * Surface theme. See {@link Theme}. Forwarded to each inner
+   * `<affect-kit-result>` so both halves render consistently. Orthogonal to
+   * {@link ColorMode} — picks the page; color-mode picks what's painted.
+   */
+  @property({ converter: themeConverter, reflect: true })
+  theme: Theme = 'light';
+
   override render() {
     const left  = this.beforeRating;
     const right = this.afterRating;
@@ -307,6 +338,7 @@ export class AffectKitCompare extends LitElement {
             <affect-kit-result
               .rating=${left}
               .colorMode=${innerColorMode}
+              .theme=${this.theme}
               ?show-face=${this.showFace}
               ?show-labels=${this.showLabels}
             ></affect-kit-result>
@@ -316,6 +348,7 @@ export class AffectKitCompare extends LitElement {
             <affect-kit-result
               .rating=${right}
               .colorMode=${innerColorMode}
+              .theme=${this.theme}
               ?show-face=${this.showFace}
               ?show-labels=${this.showLabels}
             ></affect-kit-result>

@@ -203,6 +203,21 @@
     }
     .reset-btn:hover { background: #f5f5f3; color: #444; }
 
+    /* Demo surface — follow the widget's theme so we can verify
+       dark-mode widgets (especially the transparent color=off variant)
+       against an appropriate background. Default light; flips dark
+       when the theme control selects it. Auto follows OS preference. */
+    .demo-surface {
+      border-radius: 10px;
+      padding: 1rem;
+      margin: -0.25rem;
+      transition: background-color 0.25s ease;
+    }
+    .demo-surface[data-theme="dark"] { background-color: #0d0d0d; }
+    @media (prefers-color-scheme: dark) {
+      .demo-surface[data-theme="auto"] { background-color: #0d0d0d; }
+    }
+
     /* Note card at the bottom — design-rationale callout. */
     .note-card {
       grid-column: 1 / -1;
@@ -234,6 +249,14 @@
               <button class="seg-btn" type="button" data-val="words"      aria-pressed="false">words</button>
             </span>
           </span>
+          <span class="seg">
+            theme
+            <span class="seg-group" data-seg="rater-theme" data-value="light">
+              <button class="seg-btn" type="button" data-val="light" aria-pressed="true">light</button>
+              <button class="seg-btn" type="button" data-val="dark"  aria-pressed="false">dark</button>
+              <button class="seg-btn" type="button" data-val="auto"  aria-pressed="false">auto</button>
+            </span>
+          </span>
           <label class="toggle-item">
             <button class="toggle-switch" id="rater-animated-toggle" type="button" aria-pressed="true">
               <span class="toggle-thumb" style="transform:translateX(14px)"></span>
@@ -254,7 +277,7 @@
         </div>
       </div>
       <example-tabs>
-        <div slot="demo">
+        <div slot="demo" class="demo-surface">
           <affect-kit-rater id="rater" show-vad></affect-kit-rater>
         </div>
         <pre slot="code"><code id="code-rater"></code></pre>
@@ -272,6 +295,14 @@
               <button class="seg-btn" type="button" data-val="off"        aria-pressed="false">off</button>
               <button class="seg-btn" type="button" data-val="background" aria-pressed="true">bg</button>
               <button class="seg-btn" type="button" data-val="words"      aria-pressed="false">words</button>
+            </span>
+          </span>
+          <span class="seg">
+            theme
+            <span class="seg-group" data-seg="result-theme" data-value="light">
+              <button class="seg-btn" type="button" data-val="light" aria-pressed="true">light</button>
+              <button class="seg-btn" type="button" data-val="dark"  aria-pressed="false">dark</button>
+              <button class="seg-btn" type="button" data-val="auto"  aria-pressed="false">auto</button>
             </span>
           </span>
           <label class="toggle-item">
@@ -316,7 +347,7 @@
         </div>
       </div>
       <example-tabs>
-        <div slot="demo">
+        <div slot="demo" class="demo-surface">
           <affect-kit-result id="result" show-face show-labels color-mode="background"></affect-kit-result>
         </div>
         <pre slot="code"><code id="code-result"></code></pre>
@@ -327,7 +358,7 @@
     <div class="card">
       <p class="card-label" style="margin-bottom:1rem">&lt;affect-kit-face&gt; — quadrant corners</p>
       <example-tabs>
-        <div slot="demo">
+        <div slot="demo" class="demo-surface">
           <div class="face-row">
             <div class="face-item">
               <affect-kit-face v="-0.8" a="0.8" style="width:80px;height:80px"></affect-kit-face>
@@ -366,9 +397,21 @@
 
     <!-- affect-kit-face: interactive -->
     <div class="card">
-      <p class="card-label" style="margin-bottom:1rem">&lt;affect-kit-face&gt; — interactive</p>
+      <div class="card-header">
+        <p class="card-label">&lt;affect-kit-face&gt; — interactive</p>
+        <div class="toggles">
+          <span class="seg">
+            theme
+            <span class="seg-group" data-seg="face-theme" data-value="light">
+              <button class="seg-btn" type="button" data-val="light" aria-pressed="true">light</button>
+              <button class="seg-btn" type="button" data-val="dark"  aria-pressed="false">dark</button>
+              <button class="seg-btn" type="button" data-val="auto"  aria-pressed="false">auto</button>
+            </span>
+          </span>
+        </div>
+      </div>
       <example-tabs>
-        <div slot="demo">
+        <div slot="demo" class="demo-surface">
           <div class="interactive-face-row">
             <affect-kit-face id="interactive-face" v="0" a="0" style="width:120px;height:120px"></affect-kit-face>
             <div style="flex:1">
@@ -412,6 +455,14 @@
               <button class="seg-btn" type="button" data-val="words"      aria-pressed="false">words</button>
             </span>
           </span>
+          <span class="seg">
+            theme
+            <span class="seg-group" data-seg="compare-theme" data-value="light">
+              <button class="seg-btn" type="button" data-val="light" aria-pressed="true">light</button>
+              <button class="seg-btn" type="button" data-val="dark"  aria-pressed="false">dark</button>
+              <button class="seg-btn" type="button" data-val="auto"  aria-pressed="false">auto</button>
+            </span>
+          </span>
           <label class="toggle-item">
             <button class="toggle-switch" id="compare-face-toggle" type="button" aria-pressed="true">
               <span class="toggle-thumb" style="transform:translateX(14px)"></span>
@@ -443,7 +494,7 @@
         color (rainbow constellation).
       </p>
       <example-tabs>
-        <div slot="demo">
+        <div slot="demo" class="demo-surface">
           <affect-kit-compare
             id="demo-compare"
             show-face
