@@ -197,29 +197,46 @@ export class AffectKitRater extends LitElement {
      * increases — bg climbs from a faint tint to solid --_ink, and text
      * flips from ink to paper for full contrast at high levels.
      *
-     * Size/weight/padding here apply across ALL color modes (not just
-     * mono) so the level signal isn't carried by color alone — bigger
-     * chip = stronger selection. Step deltas are kept modest (~6-10%
-     * per level) so growing one chip is unlikely to push a neighbor
-     * across the wrap line; combined with the 12px chip-list gap and
-     * the smooth 0.35s transition above, the few reflows that DO
-     * happen feel intentional rather than jumpy.
+     * Level signal across ALL color modes (a11y: not color-alone):
+     *  - bg/fill ramp (existing per color mode)
+     *  - font-weight (500 / 600 / 700 / 800)
+     *  - font-size: only modest growth (~7% total levels 0→3) so chips
+     *    rarely push neighbors across the wrap line on click
+     *  - padding: CONSTANT across levels — chip outer height stays
+     *    fixed; most of the width is fixed too
+     *  - dots via ::after (• / •• / •••) — the dominant intensity
+     *    signal, small and faint so they read as pips not text
      */
     .chip.level-1 {
       background: color-mix(in srgb, var(--_ink) 16%, transparent);
       color:      color-mix(in srgb, var(--_ink) 85%, transparent);
-      font-weight: 600; font-size: 0.88em; padding: 0.42em 0.95em;
+      font-weight: 600; font-size: 0.84em;
     }
     .chip.level-2 {
       background: color-mix(in srgb, var(--_ink) 70%, var(--_paper));
       color: var(--_paper);
-      font-weight: 700; font-size: 0.95em; padding: 0.46em 1.02em;
+      font-weight: 700; font-size: 0.86em;
     }
     .chip.level-3 {
       background: var(--_ink);
       color: var(--_paper);
-      font-weight: 800; font-size: 1.05em; padding: 0.50em 1.10em;
+      font-weight: 800; font-size: 0.88em;
     }
+    /* Intensity pips. Sized small + faint so they read as a count
+       indicator rather than text. */
+    .chip.level-1::after,
+    .chip.level-2::after,
+    .chip.level-3::after {
+      margin-left: 0.45em;
+      letter-spacing: 0.15em;
+      font-weight: 400;
+      opacity: 0.65;
+      font-size: 0.85em;
+      vertical-align: 0.05em;
+    }
+    .chip.level-1::after { content: '\\2022'; }
+    .chip.level-2::after { content: '\\2022\\2022'; }
+    .chip.level-3::after { content: '\\2022\\2022\\2022'; }
 
     /* Color mode: unselected chips adapt to surface lightness */
     :host([color-mode]) .chip {
