@@ -142,20 +142,22 @@ export class AffectKitResult extends LitElement {
     .word {
       --_lv: clamp(1, var(--_level, 1), 3);
       /*
-       * Level scaling: linear 1em / 2em / 3em at typical container widths.
-       * In narrow containers, font-size shrinks via container-relative
-       * cqi units so long words ("compassionate", "overwhelmed") don't
-       * burst out of the card. The 4cqi-per-level coefficient was tuned
-       * so the longest emotion in the vocabulary (13 chars) fits
-       * comfortably at every container width >= ~200px; below that, the
-       * 0.5em-per-level floor keeps level-3 visibly distinct rather than
-       * collapsing to unreadable. overflow-wrap is the last-resort escape
-       * hatch when even the floor doesn't fit.
+       * Level scaling is purely container-relative: each level is a fixed
+       * percentage of the content's inline size (3.3cqi per level → level
+       * 3 is ~10% of inline width). This guarantees the longest word in
+       * the vocabulary ("compassionate", 13 chars at semibold weight)
+       * fits inside the card at every container width. The .content
+       * declares container-type: inline-size so cqi measures the actual
+       * post-padding usable space, not the raw host width.
+       *
+       * max() provides an em-relative floor so words don't collapse to
+       * unreadable in extreme cases — consumers can still scale the floor
+       * by setting --affect-kit-font-size. overflow-wrap is the final
+       * escape hatch for absurdly narrow containers.
        */
-      font-size: clamp(
+      font-size: max(
         calc(var(--_lv) * 0.5em),
-        calc(var(--_lv) * 4cqi),
-        calc(var(--_lv) * 1em)
+        calc(var(--_lv) * 3.3cqi)
       );
       opacity:   calc(0.6 + (var(--_lv) - 1) * 0.2);
       font-family: inherit;
