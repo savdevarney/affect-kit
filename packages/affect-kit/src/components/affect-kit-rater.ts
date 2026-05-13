@@ -189,21 +189,26 @@ export class AffectKitRater extends LitElement {
      * Mono: greyscale by intensity. The chip "fills with ink" as level
      * increases — bg climbs from a faint tint to solid --_ink, and text
      * flips from ink to paper for full contrast at high levels.
+     *
+     * Size/weight/padding here apply across ALL color modes (not just
+     * mono) so the level signal isn't carried by color alone — bigger
+     * chip = stronger selection. Color-mode rules below override only
+     * bg + color, inheriting the size from these base rules.
      */
     .chip.level-1 {
       background: color-mix(in srgb, var(--_ink) 16%, transparent);
       color:      color-mix(in srgb, var(--_ink) 85%, transparent);
-      font-weight: 600; font-size: 0.81em; padding: 0.38em 0.91em;
+      font-weight: 600; font-size: 0.88em; padding: 0.42em 0.95em;
     }
     .chip.level-2 {
       background: color-mix(in srgb, var(--_ink) 70%, var(--_paper));
       color: var(--_paper);
-      font-weight: 600; font-size: 0.84em; padding: 0.44em 0.97em;
+      font-weight: 700; font-size: 1.0em;  padding: 0.5em 1.1em;
     }
     .chip.level-3 {
       background: var(--_ink);
       color: var(--_paper);
-      font-weight: 700; font-size: 0.91em; padding: 0.5em 1.1em;
+      font-weight: 800; font-size: 1.15em; padding: 0.58em 1.25em;
     }
 
     /* Color mode: unselected chips adapt to surface lightness */
@@ -215,14 +220,15 @@ export class AffectKitRater extends LitElement {
       background: var(--_chip-hover-bg, color-mix(in srgb, var(--_ink) 10%, transparent));
       color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 85%, transparent));
     }
-    /* Color mode: selected chips absorb the current V/A color */
+    /* Color mode: selected chips absorb the current V/A color. Size /
+       weight / padding inherit from the base .chip.level-N rules above
+       so the level signal stays consistent across color modes. */
     :host([color-mode]) .chip.level-1 {
       background: rgba(
         var(--_l3-r), var(--_l3-g), var(--_l3-b),
         calc(0.30 + var(--_surface-is-light) * 0.30)
       );
       color: rgba(0,0,0,0.88);
-      font-weight: 600; font-size: 0.81em; padding: 0.38em 0.91em;
       box-shadow: 0 1px 2px rgba(0,0,0,0.08);
     }
     :host([color-mode]) .chip.level-2 {
@@ -231,13 +237,11 @@ export class AffectKitRater extends LitElement {
         calc(0.65 + var(--_surface-is-light) * 0.20)
       );
       color: rgba(0,0,0,0.94);
-      font-weight: 600; font-size: 0.84em; padding: 0.44em 0.97em;
       box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 1px 1px rgba(0,0,0,0.06);
     }
     :host([color-mode]) .chip.level-3 {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
       color: var(--_text-l3, rgba(0,0,0,0.95));
-      font-weight: 700; font-size: 0.91em; padding: 0.5em 1.1em;
       box-shadow: 0 2px 6px rgba(0,0,0,0.16), 0 1px 2px rgba(0,0,0,0.10);
     }
 
@@ -290,6 +294,7 @@ export class AffectKitRater extends LitElement {
       color: rgba(0,0,0,0.94);
     }
     :host([color-mode="words"][theme="dark"]) .chip.level-3 {
+      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
       color: rgba(0,0,0,0.95);
     }
     @media (prefers-color-scheme: dark) {
@@ -310,6 +315,7 @@ export class AffectKitRater extends LitElement {
         color: rgba(0,0,0,0.94);
       }
       :host([color-mode="words"][theme="auto"]) .chip.level-3 {
+        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
         color: rgba(0,0,0,0.95);
       }
     }
