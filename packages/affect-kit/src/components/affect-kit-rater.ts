@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing, type PropertyValues } from 'lit';
 import { property, state, query } from 'lit/decorators.js';
-import { colorForVA, darkerForChips, surfaceIsLight, type Rgb } from '../core/color';
+import { colorForVA, darkerForChips, lighterForChips, surfaceIsLight, type Rgb } from '../core/color';
 import { colorModeConverter } from '../core/color-mode';
 import { themeConverter } from '../core/theme';
 import { buildRating } from '../core/vad';
@@ -253,6 +253,24 @@ export class AffectKitRater extends LitElement {
     :host([color-mode="words"]) .chip:hover {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.24);
       color: color-mix(in srgb, var(--_ink) 90%, transparent);
+    }
+    /* Dark theme: bump unselected tint alpha so the V/A colors read
+       through against a dark surface. (14% of a color on dark paper is
+       nearly invisible; 28% gives the chips body without competing
+       with the selected-level fill rules below.) */
+    :host([color-mode="words"][theme="dark"]) .chip {
+      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.28);
+    }
+    :host([color-mode="words"][theme="dark"]) .chip:hover {
+      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.40);
+    }
+    @media (prefers-color-scheme: dark) {
+      :host([color-mode="words"][theme="auto"]) .chip {
+        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.28);
+      }
+      :host([color-mode="words"][theme="auto"]) .chip:hover {
+        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.40);
+      }
     }
 
     .vad-readout {
@@ -714,13 +732,19 @@ export class AffectKitRater extends LitElement {
               // via inline --_l3-{r,g,b}, which shadows the host-level
               // (pad-V/A-derived) variables so the existing chip rules
               // resolve to the per-emotion color. Uses the raw lexicon
-              // color (not darkerForChips) so chip backgrounds match the
-              // V/A panel color in <affect-kit-result> for the same
-              // emotion — keeps the language consistent across input
-              // (rater) and display (result/compare).
+              // color on light theme (chips match the result's V/A panel
+              // for the same emotion), and lighterForChips on dark theme
+              // so dim hues (cobalt, deep magenta) read through the 14%
+              // alpha unselected tint against a dark surface.
               let chipStyle = `order:${order}`;
               if (wordsMode) {
-                const [cr, cg, cb] = colorForVA(emotion.v, emotion.a);
+                const raw = colorForVA(emotion.v, emotion.a);
+                const useDark =
+                  this.theme === 'dark' ||
+                  (this.theme === 'auto' &&
+                    typeof matchMedia !== 'undefined' &&
+                    matchMedia('(prefers-color-scheme: dark)').matches);
+                const [cr, cg, cb] = useDark ? lighterForChips(raw) : raw;
                 chipStyle += `;--_l3-r:${cr};--_l3-g:${cg};--_l3-b:${cb}`;
               }
               return html`
