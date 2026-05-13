@@ -341,6 +341,7 @@ export class AffectKitCompare extends LitElement {
             <affect-kit-result
               .rating=${right}
               .colorMode=${innerColorMode}
+              .theme=${this.theme}
               ?show-face=${this.showFace}
               ?show-labels=${this.showLabels}
             ></affect-kit-result>
