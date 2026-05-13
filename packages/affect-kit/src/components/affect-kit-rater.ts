@@ -254,22 +254,63 @@ export class AffectKitRater extends LitElement {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.24);
       color: color-mix(in srgb, var(--_ink) 90%, transparent);
     }
-    /* Dark theme: bump unselected tint alpha so the V/A colors read
-       through against a dark surface. (14% of a color on dark paper is
-       nearly invisible; 28% gives the chips body without competing
-       with the selected-level fill rules below.) */
+    /* Dark theme: the whole alpha ramp is rebuilt so V/A colors don't
+       mix into muddy hues against the dark surface.
+
+       Light theme: 14% tint reads as a clear pastel on white because
+       alpha blending toward white preserves saturation perception.
+       Dark theme: 14-28% tint blends toward #1a1a1a, killing saturation
+       and pulling distinct hues toward similar olive/gray. So the dark
+       ramp is bumped:
+
+         unselected: 0.14 → 0.36 (colors actually look like colors)
+         level 1:    0.30 → 0.55 (visibly distinct from unselected step)
+         level 2:    0.65 → 0.78 (stronger step toward level 3)
+         level 3:    1.00     (unchanged — full V/A color)
+
+       Text color is also re-set per level: level 1 keeps light text
+       (chip bg is still mostly dark); level 2/3 use dark text (chip
+       bg is bright enough). The pad-derived --_text-l3 is overridden
+       because in words mode each chip has its own V/A color, not the
+       pad's. */
     :host([color-mode="words"][theme="dark"]) .chip {
-      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.28);
+      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.36);
+      color: color-mix(in srgb, var(--_ink) 85%, transparent);
     }
     :host([color-mode="words"][theme="dark"]) .chip:hover {
-      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.40);
+      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.48);
+      color: var(--_ink);
+    }
+    :host([color-mode="words"][theme="dark"]) .chip.level-1 {
+      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.55);
+      color: rgba(0,0,0,0.88);
+    }
+    :host([color-mode="words"][theme="dark"]) .chip.level-2 {
+      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.78);
+      color: rgba(0,0,0,0.94);
+    }
+    :host([color-mode="words"][theme="dark"]) .chip.level-3 {
+      color: rgba(0,0,0,0.95);
     }
     @media (prefers-color-scheme: dark) {
       :host([color-mode="words"][theme="auto"]) .chip {
-        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.28);
+        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.36);
+        color: color-mix(in srgb, var(--_ink) 85%, transparent);
       }
       :host([color-mode="words"][theme="auto"]) .chip:hover {
-        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.40);
+        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.48);
+        color: var(--_ink);
+      }
+      :host([color-mode="words"][theme="auto"]) .chip.level-1 {
+        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.55);
+        color: rgba(0,0,0,0.88);
+      }
+      :host([color-mode="words"][theme="auto"]) .chip.level-2 {
+        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.78);
+        color: rgba(0,0,0,0.94);
+      }
+      :host([color-mode="words"][theme="auto"]) .chip.level-3 {
+        color: rgba(0,0,0,0.95);
       }
     }
 
