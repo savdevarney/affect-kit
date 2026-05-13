@@ -261,10 +261,12 @@ export class AffectKitResult extends LitElement {
       :host(:not([layout="stack"])) .content.has-face .words { flex: 1 1 auto; min-width: 0; }
     }
 
-    /* layout="row" — unlock face-on-the-side at a much lower threshold
-       (240px instead of 360px). Below the floor we still stack rather
-       than letting cramped row overflow the panel. */
-    @container (min-width: 240px) {
+    /* layout="row" — unlock face-on-the-side at a lower threshold (300px
+       instead of 360px). Each half of compare passes ~half its host width
+       to its inner result, so a too-low floor here breaks compare's
+       layout="row" with full content. Below the floor we still stack
+       rather than letting cramped row overflow the panel. */
+    @container (min-width: 300px) {
       :host([layout="row"]) .content.has-face {
         flex-direction: var(--_face-dir, row);
         align-items: var(--_face-align, center);

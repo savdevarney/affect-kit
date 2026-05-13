@@ -345,7 +345,7 @@ function App() {
                 <td><code>layout</code></td>
                 <td><code>'auto' | 'stack' | 'row'</code></td>
                 <td><code>'auto'</code></td>
-                <td>Preferred face-vs-words orientation. <code>'auto'</code> uses a container query at 360px. <code>'stack'</code> keeps face above words at any width. <code>'row'</code> unlocks side-by-side from 240px, falling back to stacked below the floor rather than overflowing.</td>
+                <td>Preferred face-vs-words orientation. <code>'auto'</code> uses a container query at 360px. <code>'stack'</code> keeps face above words at any width. <code>'row'</code> unlocks side-by-side from 300px, falling back to stacked below the floor rather than overflowing.</td>
               </tr>
               <tr>
                 <td><code>show-vad</code></td>
@@ -619,7 +619,7 @@ function App() {
                 <td><code>layout</code></td>
                 <td><code>'auto' | 'stack' | 'row'</code></td>
                 <td><code>'auto'</code></td>
-                <td>Preferred halves orientation. <code>'auto'</code> uses container queries (720px full content / 380px with face-or-labels off). <code>'stack'</code> keeps halves vertically stacked at any width. <code>'row'</code> unlocks side-by-side from 320px, falling back to stacked below the floor.</td>
+                <td>Preferred halves orientation. <code>'auto'</code> uses container queries (720px full content / 380px with face-or-labels off). <code>'stack'</code> keeps halves vertically stacked at any width. <code>'row'</code> uses content-aware thresholds (640px full content / 260px light content), falling back to stacked below the floor.</td>
               </tr>
             </tbody>
           </table>

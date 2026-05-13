@@ -259,11 +259,36 @@ export class AffectKitCompare extends LitElement {
       }
     }
 
-    /* layout="row" — unlock side-by-side at a much lower threshold (320px).
-       Below the floor we still stack rather than letting two halves with
-       face+words side-by-side burst the panel. */
-    @container (min-width: 320px) {
+    /* layout="row" — unlock side-by-side at lower thresholds than auto.
+       Content-aware so we never break: full content (face + labels) still
+       needs ~640px because each half has to fit a face + a word area,
+       only ~80px lower than auto's 720px. Light content (face OR labels
+       off) drops to 260px since each half is single-column. Below the
+       floor we still stack rather than letting halves burst the panel. */
+    @container (min-width: 640px) {
       :host([layout="row"]) {
+        & .row { grid-template-columns: 1fr 1fr; }
+        & .side.left {
+          border-right: 1px solid color-mix(in srgb, var(--_ink) 8%, transparent);
+          border-bottom: none;
+        }
+        & .gradient { --_grad-dir: to right; }
+        & .side .caption { align-self: flex-start; }
+        & .side.right .caption { align-self: flex-end; }
+        & affect-kit-result {
+          --_face-dir: row;
+          --_face-align: center;
+          --_face-gap: 2em;
+          --_face-step: 0.5em;
+          --_face-mb: 0;
+          --_face-mt: 0;
+        }
+        & .side.right affect-kit-result { --_face-dir: row-reverse; }
+      }
+    }
+
+    @container (min-width: 260px) {
+      :host([layout="row"]:where(:not([show-face]), :not([show-labels]))) {
         & .row { grid-template-columns: 1fr 1fr; }
         & .side.left {
           border-right: 1px solid color-mix(in srgb, var(--_ink) 8%, transparent);
