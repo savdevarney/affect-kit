@@ -231,14 +231,16 @@ export class AffectKitRater extends LitElement {
      * spread uses --_chip-fill to mask the ring behind it.
      */
     /*
-     * Ring stack geometry (experiment: outer ring thicker, inner
-     * thinner — like a visible hierarchy):
+     * Ring stack geometry: rings decrease in thickness from outer to
+     * inner (2px → 1.5px → 1.2px) but the GAPS between rings are
+     * uniform 1.5px — so the visual rhythm reads as consistent
+     * spacing with rings that recede in weight.
      *
-     *   outer ring: 0–2px   (2px thick)
-     *   gap 1:      2–3.5px (1.5px gap of chip-fill)
-     *   middle:     3.5–5px (1.5px thick)
-     *   gap 2:      5–6.2px (1.2px gap of chip-fill)
-     *   inner:      6.2–7.4px (1.2px thick)
+     *   outer ring: 0–2px     (2px thick)
+     *   gap 1:      2–3.5px   (1.5px chip-fill)
+     *   middle:     3.5–5px   (1.5px thick)
+     *   gap 2:      5–6.5px   (1.5px chip-fill)
+     *   inner:      6.5–7.7px (1.2px thick)
      */
     .chip.level-1 {
       --_chip-rings: inset 0 0 0 2px var(--_ring-color);
@@ -254,8 +256,8 @@ export class AffectKitRater extends LitElement {
         inset 0 0 0 2px   var(--_ring-color),
         inset 0 0 0 3.5px var(--_chip-fill),
         inset 0 0 0 5px   var(--_ring-color),
-        inset 0 0 0 6.2px var(--_chip-fill),
-        inset 0 0 0 7.4px var(--_ring-color);
+        inset 0 0 0 6.5px var(--_chip-fill),
+        inset 0 0 0 7.7px var(--_ring-color);
     }
 
     /* Color mode: unselected chips adapt to surface lightness */
