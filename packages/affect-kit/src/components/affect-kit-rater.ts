@@ -156,7 +156,9 @@ export class AffectKitRater extends LitElement {
     .chip-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px 8px;
+      /* extra gap so the outward rings on level-2/3 chips have room
+         to extend into the margin without colliding with neighbours */
+      gap: 18px 14px;
       align-items: center;
       justify-content: center;
     }
@@ -198,15 +200,16 @@ export class AffectKitRater extends LitElement {
       font-weight: 500;
       --_chip-rings: 0 0 transparent;
       --_chip-lift:  0 0 transparent;
-      /* Mono ring color leans heavily toward --_paper (the opposite
-         polarity of the chip fill in both themes), so rings show
-         strong contrast against the solid --_ink fill:
-           light theme: ~75% white + 25% dark = pale gray lines on
-                        near-black chip
-           dark theme:  ~75% dark + 25% white = near-black lines on
-                        white chip */
+      /* Mono ring color leans heavily toward --_paper (opposite
+         polarity of the chip fill in both themes) for strong contrast. */
       --_ring-color: color-mix(in srgb, var(--_paper) 75%, var(--_ink));
       --_chip-fill:  var(--_ink);
+      /* --_surface is the color BEHIND the chip — used as 'gap mask'
+         in the outward ring stack so each ring reads as a distinct
+         stroke against the surrounding surface. Defaults to --_paper
+         (mono + words modes both sit on a paper-colored surface);
+         color-mode=background overrides to the V/A pad color. */
+      --_surface: var(--_paper);
       box-shadow: var(--_chip-rings), var(--_chip-lift);
       cursor: pointer;
       transition:
@@ -240,38 +243,51 @@ export class AffectKitRater extends LitElement {
      * spread uses --_chip-fill to mask the ring behind it.
      */
     /*
-     * Ring stack geometry: the outermost ring is now the chip's
-     * 2px border (renders cleanly at rounded corners). The inset
-     * box-shadows draw the inner rings starting just inside the
-     * border. Spacing is uniform 1.5px gap, ring weights still
-     * decrease toward the center (1.5px middle, 1.2px inner).
+     * Ring stack geometry: rings now extend OUTWARD from the chip
+     * into the margin (rather than inset). The chip's interior size
+     * never changes — higher levels just radiate more rings into the
+     * surrounding space, like ripples of intensity.
      *
-     *   outer (border): 2px thick
-     *   gap 1:          1.5px (chip-fill) — inset 0 0 0 1.5px
-     *   middle:         1.5px              — inset 0 0 0 3px
-     *   gap 2:          1.5px (chip-fill) — inset 0 0 0 4.5px
-     *   inner:          1.2px              — inset 0 0 0 5.7px
+     * The innermost ring is the chip's 2px border. Outward rings
+     * use stacked box-shadows masked by --_surface so each ring
+     * reads as a discrete stroke separated by the surface color.
+     *
+     *   border (chip edge): 2px ring color
+     *   gap 1:              1.5px surface mask — 0 0 0 1.5px
+     *   middle:             1.5px ring         — 0 0 0 3px
+     *   gap 2:              1.5px surface mask — 0 0 0 4.5px
+     *   outer:              1.2px ring         — 0 0 0 5.7px
+     *
+     * Box-shadow stack order: first-listed shadow is on top. The
+     * smaller-spread shadow masks the larger one inside it, so
+     * outward rings appear as nested concentric strokes.
      */
     .chip.level-1 {
       --_chip-rings: 0 0 transparent;
     }
     .chip.level-2 {
       --_chip-rings:
-        inset 0 0 0 1.5px var(--_chip-fill),
-        inset 0 0 0 3px   var(--_ring-color);
+        0 0 0 1.5px var(--_surface),
+        0 0 0 3px   var(--_ring-color);
     }
     .chip.level-3 {
       --_chip-rings:
-        inset 0 0 0 1.5px var(--_chip-fill),
-        inset 0 0 0 3px   var(--_ring-color),
-        inset 0 0 0 4.5px var(--_chip-fill),
-        inset 0 0 0 5.7px var(--_ring-color);
+        0 0 0 1.5px var(--_surface),
+        0 0 0 3px   var(--_ring-color),
+        0 0 0 4.5px var(--_surface),
+        0 0 0 5.7px var(--_ring-color);
     }
 
     /* Color mode: unselected chips adapt to surface lightness */
     :host([color-mode]) .chip {
       background: var(--_chip-bg, color-mix(in srgb, var(--_ink) 5%, transparent));
       color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 55%, transparent));
+    }
+    /* Background mode: the rater pad is washed in the current V/A
+       color, so the outward ring 'gap' shadows need to match that
+       color (not --_paper) to blend invisibly with the surrounding. */
+    :host([color-mode="background"]) .chip {
+      --_surface: rgb(var(--_r), var(--_g), var(--_b));
     }
     /* Color mode: selected chips absorb the V/A color. Ring + fill
        vars retarget to the V/A palette so the inset rings appear in
