@@ -191,7 +191,10 @@ export class AffectKitRater extends LitElement {
       font-weight: 500;
       --_chip-rings: 0 0 transparent;
       --_chip-lift:  0 0 transparent;
-      --_ring-color: color-mix(in srgb, var(--_paper) 22%, var(--_ink));
+      /* Mono ring color mixes more aggressively toward --_paper (the
+         opposite polarity of the chip fill, in both themes) so rings
+         have strong contrast against the solid ink fill. */
+      --_ring-color: color-mix(in srgb, var(--_paper) 55%, var(--_ink));
       --_chip-fill:  var(--_ink);
       box-shadow: var(--_chip-rings), var(--_chip-lift);
       cursor: pointer;
@@ -223,22 +226,32 @@ export class AffectKitRater extends LitElement {
      * solid inset shadow with a spread; the "gap" shadow at a larger
      * spread uses --_chip-fill to mask the ring behind it.
      */
+    /*
+     * Ring stack geometry (experiment: outer ring thicker, inner
+     * thinner — like a visible hierarchy):
+     *
+     *   outer ring: 0–2px   (2px thick)
+     *   gap 1:      2–3.5px (1.5px gap of chip-fill)
+     *   middle:     3.5–5px (1.5px thick)
+     *   gap 2:      5–6.2px (1.2px gap of chip-fill)
+     *   inner:      6.2–7.4px (1.2px thick)
+     */
     .chip.level-1 {
-      --_chip-rings: inset 0 0 0 1.5px var(--_ring-color);
+      --_chip-rings: inset 0 0 0 2px var(--_ring-color);
     }
     .chip.level-2 {
       --_chip-rings:
-        inset 0 0 0 1.5px var(--_ring-color),
-        inset 0 0 0 3px   var(--_chip-fill),
-        inset 0 0 0 4.5px var(--_ring-color);
+        inset 0 0 0 2px   var(--_ring-color),
+        inset 0 0 0 3.5px var(--_chip-fill),
+        inset 0 0 0 5px   var(--_ring-color);
     }
     .chip.level-3 {
       --_chip-rings:
-        inset 0 0 0 1.5px var(--_ring-color),
-        inset 0 0 0 3px   var(--_chip-fill),
-        inset 0 0 0 4.5px var(--_ring-color),
-        inset 0 0 0 6px   var(--_chip-fill),
-        inset 0 0 0 7.5px var(--_ring-color);
+        inset 0 0 0 2px   var(--_ring-color),
+        inset 0 0 0 3.5px var(--_chip-fill),
+        inset 0 0 0 5px   var(--_ring-color),
+        inset 0 0 0 6.2px var(--_chip-fill),
+        inset 0 0 0 7.4px var(--_ring-color);
     }
 
     /* Color mode: unselected chips adapt to surface lightness */
@@ -248,16 +261,39 @@ export class AffectKitRater extends LitElement {
     }
     /* Color mode: selected chips absorb the V/A color. Ring + fill
        vars retarget to the V/A palette so the inset rings appear in
-       the chip's own hue family (darkened) against its V/A fill. */
+       the chip's own hue family (darkened) against its V/A fill.
+       In light theme --_ink is the dark color → rings darken nicely.
+       In dark theme --_ink is white → rings would LIGHTEN (no contrast),
+       so the dark-theme overrides below remix toward --_paper which
+       is the dark color in dark theme. */
     :host([color-mode]) .chip:is(.level-1, .level-2, .level-3) {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
       color: var(--_text-l3, rgba(0,0,0,0.95));
       --_chip-fill: rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b));
       --_ring-color: color-mix(
         in srgb,
-        rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b)) 55%,
+        rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b)) 50%,
         var(--_ink)
       );
+    }
+    /* Dark theme: rings need to go DARKER than the (already lifted)
+       V/A chip fill. --_paper in dark mode = #1a1a1a, so mixing toward
+       it darkens the V/A color and gives the rings strong contrast. */
+    :host([color-mode][theme="dark"]) .chip:is(.level-1, .level-2, .level-3) {
+      --_ring-color: color-mix(
+        in srgb,
+        rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b)) 45%,
+        var(--_paper)
+      );
+    }
+    @media (prefers-color-scheme: dark) {
+      :host([color-mode][theme="auto"]) .chip:is(.level-1, .level-2, .level-3) {
+        --_ring-color: color-mix(
+          in srgb,
+          rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b)) 45%,
+          var(--_paper)
+        );
+      }
     }
 
     /*
