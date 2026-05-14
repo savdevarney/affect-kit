@@ -1,6 +1,6 @@
 {
   "name": "@affect-kit/react",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "React wrappers for affect-kit web components — typed props, idiomatic onChange handlers.",
   "license": "MIT",
   "author": "Savannah DeVarney <savannah.devarney@gmail.com>",
