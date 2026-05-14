@@ -241,7 +241,11 @@ export class AffectKitRater extends LitElement {
       background: var(--_chip-bg, color-mix(in srgb, var(--_ink) 5%, transparent));
       color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 55%, transparent));
     }
-    :host([color-mode]) .chip:hover {
+    /* Hover only changes bg for UNSELECTED chips; for selected chips
+       the directional gradient must stay visible (otherwise clicking
+       a chip would replace the fill with a solid hover bg and the
+       level indicator vanishes until the pointer leaves). */
+    :host([color-mode]) .chip:not(.level-1):not(.level-2):not(.level-3):hover {
       background: var(--_chip-hover-bg, color-mix(in srgb, var(--_ink) 10%, transparent));
       color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 85%, transparent));
     }
@@ -283,7 +287,7 @@ export class AffectKitRater extends LitElement {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.14);
       color: color-mix(in srgb, var(--_ink) 68%, transparent);
     }
-    :host([color-mode="words"]) .chip:hover {
+    :host([color-mode="words"]) .chip:not(.level-1):not(.level-2):not(.level-3):hover {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.24);
       color: color-mix(in srgb, var(--_ink) 90%, transparent);
     }
@@ -310,7 +314,7 @@ export class AffectKitRater extends LitElement {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.36);
       color: color-mix(in srgb, var(--_ink) 85%, transparent);
     }
-    :host([color-mode="words"][theme="dark"]) .chip:hover {
+    :host([color-mode="words"][theme="dark"]) .chip:not(.level-1):not(.level-2):not(.level-3):hover {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.48);
       color: var(--_ink);
     }
@@ -339,7 +343,7 @@ export class AffectKitRater extends LitElement {
         background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.36);
         color: color-mix(in srgb, var(--_ink) 85%, transparent);
       }
-      :host([color-mode="words"][theme="auto"]) .chip:hover {
+      :host([color-mode="words"][theme="auto"]) .chip:not(.level-1):not(.level-2):not(.level-3):hover {
         background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.48);
         color: var(--_ink);
       }
