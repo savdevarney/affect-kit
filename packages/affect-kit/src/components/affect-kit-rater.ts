@@ -181,10 +181,17 @@ export class AffectKitRater extends LitElement {
      * They merge into one box-shadow on the base .chip rule.
      */
     .chip {
+      box-sizing: border-box;
       padding: 0.55em 1.30em;
       background: color-mix(in srgb, var(--_ink) 5%, transparent);
       color:      color-mix(in srgb, var(--_ink) 55%, transparent);
-      border: none;
+      /* Transparent border on every chip — sizes are stable across
+         selection. When selected the border-color flips to the ring
+         color, becoming the outermost ring. Borders render with the
+         same anti-aliasing as the bg at rounded corners (unlike inset
+         box-shadows, which leave a thin halo where chip-fill bleeds
+         through the AA pixels at the pill edge). */
+      border: 2px solid transparent;
       border-radius: 999px;
       font-family: inherit;
       font-size: 0.90em;
@@ -214,11 +221,13 @@ export class AffectKitRater extends LitElement {
     }
 
     /* Binary color flip: selected chips (any level) take the full
-       ink fill in mono mode. Weight bumps for emphasis. */
+       ink fill in mono mode. Weight bumps for emphasis. Border-color
+       flips to the ring color — this is now the outermost ring. */
     .chip:is(.level-1, .level-2, .level-3) {
       background: var(--_ink);
       color: var(--_paper);
       font-weight: 700;
+      border-color: var(--_ring-color);
     }
 
     /*
@@ -231,33 +240,32 @@ export class AffectKitRater extends LitElement {
      * spread uses --_chip-fill to mask the ring behind it.
      */
     /*
-     * Ring stack geometry: rings decrease in thickness from outer to
-     * inner (2px → 1.5px → 1.2px) but the GAPS between rings are
-     * uniform 1.5px — so the visual rhythm reads as consistent
-     * spacing with rings that recede in weight.
+     * Ring stack geometry: the outermost ring is now the chip's
+     * 2px border (renders cleanly at rounded corners). The inset
+     * box-shadows draw the inner rings starting just inside the
+     * border. Spacing is uniform 1.5px gap, ring weights still
+     * decrease toward the center (1.5px middle, 1.2px inner).
      *
-     *   outer ring: 0–2px     (2px thick)
-     *   gap 1:      2–3.5px   (1.5px chip-fill)
-     *   middle:     3.5–5px   (1.5px thick)
-     *   gap 2:      5–6.5px   (1.5px chip-fill)
-     *   inner:      6.5–7.7px (1.2px thick)
+     *   outer (border): 2px thick
+     *   gap 1:          1.5px (chip-fill) — inset 0 0 0 1.5px
+     *   middle:         1.5px              — inset 0 0 0 3px
+     *   gap 2:          1.5px (chip-fill) — inset 0 0 0 4.5px
+     *   inner:          1.2px              — inset 0 0 0 5.7px
      */
     .chip.level-1 {
-      --_chip-rings: inset 0 0 0 2px var(--_ring-color);
+      --_chip-rings: 0 0 transparent;
     }
     .chip.level-2 {
       --_chip-rings:
-        inset 0 0 0 2px   var(--_ring-color),
-        inset 0 0 0 3.5px var(--_chip-fill),
-        inset 0 0 0 5px   var(--_ring-color);
+        inset 0 0 0 1.5px var(--_chip-fill),
+        inset 0 0 0 3px   var(--_ring-color);
     }
     .chip.level-3 {
       --_chip-rings:
-        inset 0 0 0 2px   var(--_ring-color),
-        inset 0 0 0 3.5px var(--_chip-fill),
-        inset 0 0 0 5px   var(--_ring-color),
-        inset 0 0 0 6.5px var(--_chip-fill),
-        inset 0 0 0 7.7px var(--_ring-color);
+        inset 0 0 0 1.5px var(--_chip-fill),
+        inset 0 0 0 3px   var(--_ring-color),
+        inset 0 0 0 4.5px var(--_chip-fill),
+        inset 0 0 0 5.7px var(--_ring-color);
     }
 
     /* Color mode: unselected chips adapt to surface lightness */
