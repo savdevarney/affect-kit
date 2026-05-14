@@ -230,19 +230,31 @@ export class AffectKitRater extends LitElement {
       box-shadow: 0 6px 16px rgba(0,0,0,0.20), 0 2px 4px rgba(0,0,0,0.10);
     }
 
-    /* Color mode (background AND words): selected chips get a thin
-       outline in the same V/A hue, darkened toward --_ink. Reads as
-       a deeper shade of the chip's color — reinforces selection
-       without introducing a contrasting ring.
-       outline-offset: -1.5px keeps it inside the chip's edge (no
-       layout impact) and inherits border-radius along the pill. */
+    /* Selected chips get an inset outline that thickens with level.
+       Outline width is the secondary level signal (alongside size +
+       weight) — gives a clearer 1/2/3 hierarchy at a glance, and works
+       in mono mode too where chips don't have a V/A color difference.
+       outline-offset is negative so the ring sits inside the chip's
+       edge (no layout impact) and inherits the pill border-radius. */
+    .chip.level-1 { outline-width: 1px;   outline-style: solid; outline-offset: -1px; }
+    .chip.level-2 { outline-width: 1.75px; outline-style: solid; outline-offset: -1.75px; }
+    .chip.level-3 { outline-width: 2.5px; outline-style: solid; outline-offset: -2.5px; }
+
+    /* Mono: outline blends with the ink fill — uses --_paper mixed
+       with --_ink so it reads as a quiet inset on the solid chip. */
+    .chip:is(.level-1, .level-2, .level-3) {
+      outline-color: color-mix(in srgb, var(--_paper) 22%, var(--_ink));
+    }
+
+    /* Color mode (background AND words): outline color sits in the
+       V/A hue family but darkens toward --_ink so it reads as a
+       deeper shade of the chip's color, not a contrasting ring. */
     :host([color-mode]) .chip:is(.level-1, .level-2, .level-3) {
-      outline: 1.5px solid color-mix(
+      outline-color: color-mix(
         in srgb,
         rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b)) 55%,
         var(--_ink)
       );
-      outline-offset: -1.5px;
     }
 
     /*
