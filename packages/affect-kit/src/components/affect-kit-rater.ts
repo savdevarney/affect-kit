@@ -156,45 +156,36 @@ export class AffectKitRater extends LitElement {
     .chip-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
-      /* Switched from baseline to center because selected chips have
-         the dots-below pseudo, making them taller than unselected.
-         Center keeps the row visually balanced. */
+      gap: 18px 16px;
       align-items: center;
       justify-content: center;
     }
 
+    /*
+     * Two-element chip:
+     *   <button class="chip">  ← fixed size per chip; never grows
+     *     <span class="chip-text level-N">word</span>  ← scales w/ level
+     *   </button>
+     * The chip box never changes dimensions. The word scales up via
+     * transform per level (no layout impact). Color is binary
+     * (unsaturated when unselected → saturated when selected at any
+     * level) — selection is shown by the color flip, intensity by
+     * text scale.
+     */
     .chip {
-      /* inline-flex column so the ::after dots stack below the text
-         instead of inline-after — that keeps the chip width determined
-         by the text only, so growing levels never widens the chip and
-         never reflows the chip-list horizontally. */
-      display: inline-flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 0.40em 0.88em;
+      padding: 0.42em 0.95em;
       background: color-mix(in srgb, var(--_ink) 5%, transparent);
       color:      color-mix(in srgb, var(--_ink) 55%, transparent);
       border: none;
       border-radius: 999px;
       font-family: inherit;
-      font-size: 0.82em;
-      font-weight: 500;
+      font-size: 0.85em;
+      font-weight: 600;
       cursor: pointer;
-      /* Color/bg feedback fires immediately on click (0.18s) so the
-         user feels the press right away. The size morph is slower
-         (0.35s) and starts after a tiny 50ms delay — neighbouring
-         chips get a beat to settle into a new wrap line instead of
-         jumping mid-click. Standard ease-in-out (not the bouncy
-         overshoot curve) keeps the reflow calm. */
+      overflow: visible;
       transition:
-        background 0.18s ease,
-        color      0.18s ease,
-        padding    0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s,
-        font-size  0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s,
-        font-weight 0.18s ease,
-        transform  0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        background 0.22s ease,
+        color      0.22s ease;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
@@ -202,80 +193,38 @@ export class AffectKitRater extends LitElement {
       background: color-mix(in srgb, var(--_ink) 10%, transparent);
       color:      color-mix(in srgb, var(--_ink) 85%, transparent);
     }
+    .chip-text {
+      display: inline-block;
+      transform-origin: center;
+      transform: scale(1);
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .chip-text.level-1 { transform: scale(1.08); }
+    .chip-text.level-2 { transform: scale(1.18); }
+    .chip-text.level-3 { transform: scale(1.30); }
 
-    /*
-     * Mono: greyscale by intensity. The chip "fills with ink" as level
-     * increases — bg climbs from a faint tint to solid --_ink, and text
-     * flips from ink to paper for full contrast at high levels.
-     *
-     * Level signal across ALL color modes (a11y: not color-alone):
-     *  - bg/fill ramp (existing per color mode)
-     *  - font-weight (500 / 600 / 700 / 800)
-     *  - font-size: only modest growth (~7% total levels 0→3) so chips
-     *    rarely push neighbors across the wrap line on click
-     *  - padding: CONSTANT across levels — chip outer height stays
-     *    fixed; most of the width is fixed too
-     *  - dots via ::after (• / •• / •••) — the dominant intensity
-     *    signal, small and faint so they read as pips not text
-     */
-    .chip.level-1 {
-      background: color-mix(in srgb, var(--_ink) 16%, transparent);
-      color:      color-mix(in srgb, var(--_ink) 85%, transparent);
-      font-weight: 600;
-    }
-    .chip.level-2 {
-      background: color-mix(in srgb, var(--_ink) 70%, var(--_paper));
-      color: var(--_paper);
-      font-weight: 700;
-    }
-    .chip.level-3 {
+    /* Mono: selected chips (any level) take the full ink fill.
+       Binary saturation — intensity is signaled by the text scale,
+       not by chip color. */
+    .chip:is(.level-1, .level-2, .level-3) {
       background: var(--_ink);
       color: var(--_paper);
-      font-weight: 800;
     }
-    /* (Level indicator moved to the chip background as a directional
-       fill — see the level-N rules below and per-mode overrides.) */
 
     /* Color mode: unselected chips adapt to surface lightness */
     :host([color-mode]) .chip {
       background: var(--_chip-bg, color-mix(in srgb, var(--_ink) 5%, transparent));
       color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 55%, transparent));
     }
-    /* Hover only changes bg for UNSELECTED chips; for selected chips
-       the directional gradient must stay visible (otherwise clicking
-       a chip would replace the fill with a solid hover bg and the
-       level indicator vanishes until the pointer leaves). */
     :host([color-mode]) .chip:not(.level-1):not(.level-2):not(.level-3):hover {
       background: var(--_chip-hover-bg, color-mix(in srgb, var(--_ink) 10%, transparent));
       color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 85%, transparent));
     }
-    /* Color mode: selected chips fill left-to-right with the V/A color.
-       The fill portion grows with level (33% / 66% / 100%); the
-       remainder shows the V/A color at a medium-tint base. The fill
-       direction itself communicates intensity — no separate indicator
-       needed. */
-    :host([color-mode]) .chip.level-1 {
-      background: linear-gradient(
-        to top,
-        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 33.333%,
-        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.10) 33.333% 100%
-      );
-      color: rgba(0,0,0,0.88);
-      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-    }
-    :host([color-mode]) .chip.level-2 {
-      background: linear-gradient(
-        to top,
-        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 66.666%,
-        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.10) 66.666% 100%
-      );
-      color: rgba(0,0,0,0.94);
-      box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 1px 1px rgba(0,0,0,0.06);
-    }
-    :host([color-mode]) .chip.level-3 {
+    /* Color mode: selected chips (any level) absorb the full V/A color. */
+    :host([color-mode]) .chip:is(.level-1, .level-2, .level-3) {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
       color: var(--_text-l3, rgba(0,0,0,0.95));
-      box-shadow: 0 2px 6px rgba(0,0,0,0.16), 0 1px 2px rgba(0,0,0,0.10);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.14), 0 1px 2px rgba(0,0,0,0.08);
     }
 
     /*
@@ -318,23 +267,9 @@ export class AffectKitRater extends LitElement {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.48);
       color: var(--_ink);
     }
-    :host([color-mode="words"][theme="dark"]) .chip.level-1 {
-      background: linear-gradient(
-        to top,
-        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 33.333%,
-        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.50) 33.333% 100%
-      );
-      color: rgba(0,0,0,0.88);
-    }
-    :host([color-mode="words"][theme="dark"]) .chip.level-2 {
-      background: linear-gradient(
-        to top,
-        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 66.666%,
-        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.50) 66.666% 100%
-      );
-      color: rgba(0,0,0,0.94);
-    }
-    :host([color-mode="words"][theme="dark"]) .chip.level-3 {
+    /* Selected (any level): full V/A color on dark — single binary
+       saturation flip. Intensity comes from .chip-text transform scale. */
+    :host([color-mode="words"][theme="dark"]) .chip:is(.level-1, .level-2, .level-3) {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
       color: rgba(0,0,0,0.95);
     }
@@ -347,23 +282,7 @@ export class AffectKitRater extends LitElement {
         background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.48);
         color: var(--_ink);
       }
-      :host([color-mode="words"][theme="auto"]) .chip.level-1 {
-        background: linear-gradient(
-          to top,
-          rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 33.333%,
-          rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.50) 33.333% 100%
-        );
-        color: rgba(0,0,0,0.88);
-      }
-      :host([color-mode="words"][theme="auto"]) .chip.level-2 {
-        background: linear-gradient(
-          to top,
-          rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 66.666%,
-          rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.50) 66.666% 100%
-        );
-        color: rgba(0,0,0,0.94);
-      }
-      :host([color-mode="words"][theme="auto"]) .chip.level-3 {
+      :host([color-mode="words"][theme="auto"]) .chip:is(.level-1, .level-2, .level-3) {
         background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
         color: rgba(0,0,0,0.95);
       }
@@ -849,7 +768,8 @@ export class AffectKitRater extends LitElement {
                   data-name="${emotion.name}"
                   style="${chipStyle}"
                   @click=${() => this._cycleChip(emotion.name)}
-                >${emotion.name}</button>
+                ><span class="chip-text${level > 0 ? ` level-${level}` : ''}"
+                  >${emotion.name}</span></button>
               `;
             })}
           </div>
