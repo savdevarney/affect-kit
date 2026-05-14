@@ -169,8 +169,19 @@ export class AffectKitRater extends LitElement {
      * smoothed by a 0.35s ease-in-out transition with a small delay
      * so neighbours settle gracefully rather than jumping.
      */
+    /*
+     * Chip: pill button. Uniform size across ALL states (selected or
+     * not, any level) — selection is signaled by COLOR (binary
+     * unmuted → saturated) and LEVEL is signaled by RING COUNT (1, 2,
+     * or 3 concentric inset rings).
+     *
+     * Shadows compose via two CSS vars:
+     *  --_chip-rings: the inset ring stack (set by .level-N rules)
+     *  --_chip-lift:  the hover lift (set by :hover rules)
+     * They merge into one box-shadow on the base .chip rule.
+     */
     .chip {
-      padding: 0.50em 1.20em;
+      padding: 0.55em 1.30em;
       background: color-mix(in srgb, var(--_ink) 5%, transparent);
       color:      color-mix(in srgb, var(--_ink) 55%, transparent);
       border: none;
@@ -178,79 +189,71 @@ export class AffectKitRater extends LitElement {
       font-family: inherit;
       font-size: 0.90em;
       font-weight: 500;
+      --_chip-rings: 0 0 transparent;
+      --_chip-lift:  0 0 transparent;
+      --_ring-color: color-mix(in srgb, var(--_paper) 22%, var(--_ink));
+      --_chip-fill:  var(--_ink);
+      box-shadow: var(--_chip-rings), var(--_chip-lift);
       cursor: pointer;
       transition:
         background 0.22s ease,
         color      0.22s ease,
-        padding    0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s,
-        font-size  0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s,
         box-shadow 0.18s ease;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-    /* Hover: a noticeable box-shadow lift. Doesn't touch bg/color so
-       it works the same on selected and unselected chips and never
-       fights with the binary saturation flip on click. */
     .chip:hover {
-      box-shadow: 0 4px 12px rgba(0,0,0,0.16), 0 2px 4px rgba(0,0,0,0.10);
+      --_chip-lift: 0 4px 12px rgba(0,0,0,0.16), 0 2px 4px rgba(0,0,0,0.10);
     }
 
-    /* Mono: selected chips (any level) take the full ink fill —
-       binary saturation. Intensity comes from size growth below. */
+    /* Binary color flip: selected chips (any level) take the full
+       ink fill in mono mode. Weight bumps for emphasis. */
     .chip:is(.level-1, .level-2, .level-3) {
       background: var(--_ink);
       color: var(--_paper);
+      font-weight: 700;
     }
 
-    /* Size + weight growth per level. Every state has a distinct
-       weight (500 / 600 / 700 / 800) and the font-size deltas are
-       wider (~10-15% per step) so the 1/2/3 hierarchy reads clearly.
-       Step-up still keeps reflow modest because padding scales with. */
-    .chip.level-1 { font-size: 0.96em; padding: 0.52em 1.24em; font-weight: 600; }
-    .chip.level-2 { font-size: 1.10em; padding: 0.56em 1.32em; font-weight: 700; }
-    .chip.level-3 { font-size: 1.28em; padding: 0.62em 1.42em; font-weight: 800; }
+    /*
+     * Level signal: 1 / 2 / 3 concentric inset rings inside the chip's
+     * pill edge, separated by gaps that are the chip's own bg color
+     * (so the rings read as distinct strokes against the fill).
+     *
+     * Stack order: first-listed shadow is drawn ON TOP. Each ring is a
+     * solid inset shadow with a spread; the "gap" shadow at a larger
+     * spread uses --_chip-fill to mask the ring behind it.
+     */
+    .chip.level-1 {
+      --_chip-rings: inset 0 0 0 1.5px var(--_ring-color);
+    }
+    .chip.level-2 {
+      --_chip-rings:
+        inset 0 0 0 1.5px var(--_ring-color),
+        inset 0 0 0 3px   var(--_chip-fill),
+        inset 0 0 0 4.5px var(--_ring-color);
+    }
+    .chip.level-3 {
+      --_chip-rings:
+        inset 0 0 0 1.5px var(--_ring-color),
+        inset 0 0 0 3px   var(--_chip-fill),
+        inset 0 0 0 4.5px var(--_ring-color),
+        inset 0 0 0 6px   var(--_chip-fill),
+        inset 0 0 0 7.5px var(--_ring-color);
+    }
 
     /* Color mode: unselected chips adapt to surface lightness */
     :host([color-mode]) .chip {
       background: var(--_chip-bg, color-mix(in srgb, var(--_ink) 5%, transparent));
       color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 55%, transparent));
     }
-    /* Hover bg shift removed across all color modes — see the base
-       .chip:hover rule which adds a subtle box-shadow lift instead. */
-    /* Color mode: selected chips (any level) absorb the full V/A color. */
+    /* Color mode: selected chips absorb the V/A color. Ring + fill
+       vars retarget to the V/A palette so the inset rings appear in
+       the chip's own hue family (darkened) against its V/A fill. */
     :host([color-mode]) .chip:is(.level-1, .level-2, .level-3) {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
       color: var(--_text-l3, rgba(0,0,0,0.95));
-      box-shadow: 0 2px 6px rgba(0,0,0,0.14), 0 1px 2px rgba(0,0,0,0.08);
-    }
-    /* Hover on selected chips (color mode): stronger lift than the
-       resting selected-chip shadow so the hover affordance is visible
-       even when a chip is already selected. */
-    :host([color-mode]) .chip:is(.level-1, .level-2, .level-3):hover {
-      box-shadow: 0 6px 16px rgba(0,0,0,0.20), 0 2px 4px rgba(0,0,0,0.10);
-    }
-
-    /* Selected chips get an inset outline that thickens with level.
-       Outline width is the secondary level signal (alongside size +
-       weight) — gives a clearer 1/2/3 hierarchy at a glance, and works
-       in mono mode too where chips don't have a V/A color difference.
-       outline-offset is negative so the ring sits inside the chip's
-       edge (no layout impact) and inherits the pill border-radius. */
-    .chip.level-1 { outline-width: 1px;   outline-style: solid; outline-offset: -1px; }
-    .chip.level-2 { outline-width: 1.75px; outline-style: solid; outline-offset: -1.75px; }
-    .chip.level-3 { outline-width: 2.5px; outline-style: solid; outline-offset: -2.5px; }
-
-    /* Mono: outline blends with the ink fill — uses --_paper mixed
-       with --_ink so it reads as a quiet inset on the solid chip. */
-    .chip:is(.level-1, .level-2, .level-3) {
-      outline-color: color-mix(in srgb, var(--_paper) 22%, var(--_ink));
-    }
-
-    /* Color mode (background AND words): outline color sits in the
-       V/A hue family but darkens toward --_ink so it reads as a
-       deeper shade of the chip's color, not a contrasting ring. */
-    :host([color-mode]) .chip:is(.level-1, .level-2, .level-3) {
-      outline-color: color-mix(
+      --_chip-fill: rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b));
+      --_ring-color: color-mix(
         in srgb,
         rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b)) 55%,
         var(--_ink)
