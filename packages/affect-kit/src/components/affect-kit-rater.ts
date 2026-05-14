@@ -162,30 +162,29 @@ export class AffectKitRater extends LitElement {
     }
 
     /*
-     * Two-element chip:
-     *   <button class="chip">  ← fixed size per chip; never grows
-     *     <span class="chip-text level-N">word</span>  ← scales w/ level
-     *   </button>
-     * The chip box never changes dimensions. The word scales up via
-     * transform per level (no layout impact). Color is binary
-     * (unsaturated when unselected → saturated when selected at any
-     * level) — selection is shown by the color flip, intensity by
-     * text scale.
+     * Chip: pill button. Color is BINARY — muted at rest, full
+     * saturation when selected (any level). Intensity (1/2/3) is
+     * carried by chip SIZE growth (font-size + padding). Sizes grow
+     * modestly per level to minimize reflow; what reflow remains is
+     * smoothed by a 0.35s ease-in-out transition with a small delay
+     * so neighbours settle gracefully rather than jumping.
      */
     .chip {
-      padding: 0.42em 1.05em;
+      padding: 0.50em 1.20em;
       background: color-mix(in srgb, var(--_ink) 5%, transparent);
       color:      color-mix(in srgb, var(--_ink) 55%, transparent);
       border: none;
       border-radius: 999px;
       font-family: inherit;
-      font-size: 0.78em;
+      font-size: 0.92em;
       font-weight: 600;
       cursor: pointer;
-      overflow: visible;
       transition:
         background 0.22s ease,
-        color      0.22s ease;
+        color      0.22s ease,
+        padding    0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s,
+        font-size  0.35s cubic-bezier(0.4, 0, 0.2, 1) 0.05s,
+        box-shadow 0.18s ease;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
@@ -195,23 +194,20 @@ export class AffectKitRater extends LitElement {
     .chip:hover {
       box-shadow: 0 4px 12px rgba(0,0,0,0.16), 0 2px 4px rgba(0,0,0,0.10);
     }
-    .chip-text {
-      display: inline-block;
-      transform-origin: center;
-      transform: scale(1);
-      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .chip-text.level-1 { transform: scale(1.15); }
-    .chip-text.level-2 { transform: scale(1.32); }
-    .chip-text.level-3 { transform: scale(1.55); }
 
-    /* Mono: selected chips (any level) take the full ink fill.
-       Binary saturation — intensity is signaled by the text scale,
-       not by chip color. */
+    /* Mono: selected chips (any level) take the full ink fill —
+       binary saturation. Intensity comes from size growth below. */
     .chip:is(.level-1, .level-2, .level-3) {
       background: var(--_ink);
       color: var(--_paper);
     }
+
+    /* Size growth per level (applies across all color modes — a11y:
+       intensity is signaled by size, not by color alone). Deltas are
+       modest (~7-8% per step) to keep reflow minimal. */
+    .chip.level-1 { font-size: 0.96em; padding: 0.52em 1.24em; font-weight: 700; }
+    .chip.level-2 { font-size: 1.05em; padding: 0.55em 1.30em; font-weight: 700; }
+    .chip.level-3 { font-size: 1.18em; padding: 0.58em 1.36em; font-weight: 800; }
 
     /* Color mode: unselected chips adapt to surface lightness */
     :host([color-mode]) .chip {
@@ -756,8 +752,7 @@ export class AffectKitRater extends LitElement {
                   data-name="${emotion.name}"
                   style="${chipStyle}"
                   @click=${() => this._cycleChip(emotion.name)}
-                ><span class="chip-text${level > 0 ? ` level-${level}` : ''}"
-                  >${emotion.name}</span></button>
+                >${emotion.name}</button>
               `;
             })}
           </div>
