@@ -198,16 +198,13 @@ export class AffectKitRater extends LitElement {
       font-weight: 500;
       --_chip-rings: 0 0 transparent;
       --_chip-lift:  0 0 transparent;
-      /* Two-tone ring system in mono mode:
-         - --_outer-ring is the border (chip's outline) — leans MORE
-           toward --_ink so it reads as a deeper-weight perimeter that
-           contrasts strongly with the surrounding surface
-         - --_ring-color is the INNER inset rings — leans toward
-           --_paper for high contrast against the chip's fill
-         The two together produce a graduated step from chip → outer
-         ring (closer to chip) → inner rings (closer to surface) →
-         surrounding surface. */
-      --_outer-ring: color-mix(in srgb, var(--_paper) 40%, var(--_ink));
+      /* Mono ring color leans heavily toward --_paper (the opposite
+         polarity of the chip fill in both themes), so rings show
+         strong contrast against the solid --_ink fill:
+           light theme: ~75% white + 25% dark = pale gray lines on
+                        near-black chip
+           dark theme:  ~75% dark + 25% white = near-black lines on
+                        white chip */
       --_ring-color: color-mix(in srgb, var(--_paper) 75%, var(--_ink));
       --_chip-fill:  var(--_ink);
       box-shadow: var(--_chip-rings), var(--_chip-lift);
@@ -230,7 +227,7 @@ export class AffectKitRater extends LitElement {
       background: var(--_ink);
       color: var(--_paper);
       font-weight: 700;
-      border-color: var(--_outer-ring);
+      border-color: var(--_ring-color);
     }
 
     /*
@@ -292,9 +289,6 @@ export class AffectKitRater extends LitElement {
         rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b)) 50%,
         var(--_ink)
       );
-      /* Color modes use the same V/A-derived hue for outer and inner
-         rings — no two-tone split (which only applies in mono). */
-      --_outer-ring: var(--_ring-color);
     }
     /* Dark theme: rings need to go DARKER than the (already lifted)
        V/A chip fill. --_paper in dark mode = #1a1a1a, so mixing toward
