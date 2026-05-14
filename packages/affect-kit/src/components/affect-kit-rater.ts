@@ -221,17 +221,17 @@ export class AffectKitRater extends LitElement {
     .chip.level-1 {
       background: color-mix(in srgb, var(--_ink) 16%, transparent);
       color:      color-mix(in srgb, var(--_ink) 85%, transparent);
-      font-weight: 600; font-size: 0.84em;
+      font-weight: 600;
     }
     .chip.level-2 {
       background: color-mix(in srgb, var(--_ink) 70%, var(--_paper));
       color: var(--_paper);
-      font-weight: 700; font-size: 0.86em;
+      font-weight: 700;
     }
     .chip.level-3 {
       background: var(--_ink);
       color: var(--_paper);
-      font-weight: 800; font-size: 0.88em;
+      font-weight: 800;
     }
     /* (Level indicator moved to the chip background as a directional
        fill — see the level-N rules below and per-mode overrides.) */
@@ -254,7 +254,7 @@ export class AffectKitRater extends LitElement {
       background: linear-gradient(
         to right,
         rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 33.333%,
-        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.35) 33.333% 100%
+        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.10) 33.333% 100%
       );
       color: rgba(0,0,0,0.88);
       box-shadow: 0 1px 2px rgba(0,0,0,0.08);
@@ -263,7 +263,7 @@ export class AffectKitRater extends LitElement {
       background: linear-gradient(
         to right,
         rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 66.666%,
-        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.35) 66.666% 100%
+        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.10) 66.666% 100%
       );
       color: rgba(0,0,0,0.94);
       box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 1px 1px rgba(0,0,0,0.06);
