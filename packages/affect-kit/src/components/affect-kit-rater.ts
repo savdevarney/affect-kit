@@ -233,26 +233,38 @@ export class AffectKitRater extends LitElement {
       color: var(--_paper);
       font-weight: 800; font-size: 0.88em;
     }
-    /* Intensity pips, stacked BELOW the word so the chip width is
-       determined entirely by the text — selecting a chip can never
-       widen it, so the chip-list never reflows horizontally on click. */
+    /* Intensity bar below the word — thin progress bar that fills
+       left-to-right with level (1/3, 2/3, 3/3). Fixed footprint so the
+       chip width is text-determined (no reflow on selection); fill
+       portion grows with level, the remainder shows as a faint track. */
     .chip.level-1::after,
     .chip.level-2::after,
     .chip.level-3::after {
-      letter-spacing: 0.2em;
-      font-weight: 400;
-      opacity: 0.6;
-      font-size: 0.65em;
-      line-height: 1;
-      margin-top: 0.2em;
+      content: '';
+      display: block;
+      width: 1.8em;
+      height: 2px;
+      margin-top: 0.4em;
+      border-radius: 1px;
+      opacity: 0.7;
     }
-    /* Show three pips on every selected chip; filled (●) for the
-       reached level, empty (○) for the remaining. Constant footprint
-       across levels reinforces the 1/2/3 scale (it's a tier indicator,
-       not a count). */
-    .chip.level-1::after { content: '\\25CF\\25CB\\25CB'; }
-    .chip.level-2::after { content: '\\25CF\\25CF\\25CB'; }
-    .chip.level-3::after { content: '\\25CF\\25CF\\25CF'; }
+    .chip.level-1::after {
+      background: linear-gradient(
+        to right,
+        currentColor 0% 33.333%,
+        color-mix(in srgb, currentColor 18%, transparent) 33.333% 100%
+      );
+    }
+    .chip.level-2::after {
+      background: linear-gradient(
+        to right,
+        currentColor 0% 66.666%,
+        color-mix(in srgb, currentColor 18%, transparent) 66.666% 100%
+      );
+    }
+    .chip.level-3::after {
+      background: currentColor;
+    }
 
     /* Color mode: unselected chips adapt to surface lightness */
     :host([color-mode]) .chip {
