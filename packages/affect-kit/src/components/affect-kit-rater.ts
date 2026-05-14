@@ -1,6 +1,6 @@
 import { LitElement, html, css, nothing, type PropertyValues } from 'lit';
 import { property, state, query } from 'lit/decorators.js';
-import { colorForVA, darkerForChips, surfaceIsLight, type Rgb } from '../core/color';
+import { colorForVA, darkerForChips, lighterForChips, surfaceIsLight, type Rgb } from '../core/color';
 import { colorModeConverter } from '../core/color-mode';
 import { themeConverter } from '../core/theme';
 import { buildRating } from '../core/vad';
@@ -156,54 +156,132 @@ export class AffectKitRater extends LitElement {
     .chip-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 7px;
-      align-items: baseline;
+      /* Tightened so unselected chips sit close together; level-3
+         outward rings (5.7px each side, so 11.4px ring-to-ring) come
+         within ~0.5px of touching when adjacent — by design, conveys
+         density without overlap. */
+      gap: 14px 12px;
+      align-items: center;
       justify-content: center;
     }
 
+    /*
+     * Chip: pill button. Color is BINARY — muted at rest, full
+     * saturation when selected (any level). Intensity (1/2/3) is
+     * carried by chip SIZE growth (font-size + padding). Sizes grow
+     * modestly per level to minimize reflow; what reflow remains is
+     * smoothed by a 0.35s ease-in-out transition with a small delay
+     * so neighbours settle gracefully rather than jumping.
+     */
+    /*
+     * Chip: pill button. Uniform size across ALL states (selected or
+     * not, any level) — selection is signaled by COLOR (binary
+     * unmuted → saturated) and LEVEL is signaled by RING COUNT (1, 2,
+     * or 3 concentric inset rings).
+     *
+     * Shadows compose via two CSS vars:
+     *  --_chip-rings: the inset ring stack (set by .level-N rules)
+     *  --_chip-lift:  the hover lift (set by :hover rules)
+     * They merge into one box-shadow on the base .chip rule.
+     */
     .chip {
-      padding: 0.38em 0.85em;
+      box-sizing: border-box;
+      padding: 0.55em 1.30em;
       background: color-mix(in srgb, var(--_ink) 5%, transparent);
       color:      color-mix(in srgb, var(--_ink) 55%, transparent);
-      border: none;
+      /* Transparent border on every chip — sizes are stable across
+         selection. When selected the border-color flips to the ring
+         color, becoming the outermost ring. Borders render with the
+         same anti-aliasing as the bg at rounded corners (unlike inset
+         box-shadows, which leave a thin halo where chip-fill bleeds
+         through the AA pixels at the pill edge). */
+      border: 2px solid transparent;
       border-radius: 999px;
       font-family: inherit;
-      font-size: 0.78em;
+      font-size: 0.90em;
       font-weight: 500;
+      --_chip-rings: 0 0 transparent;
+      --_chip-lift:  0 0 transparent;
+      /* Now that rings extend OUTWARD into the surrounding surface,
+         flip the mix: ring color leans toward --_ink (same polarity
+         as the chip fill, opposite of the surface) so rings have
+         strong contrast against the surrounding paper:
+           light theme: ~75% dark + 25% white = dark rings on white
+           dark theme:  ~75% white + 25% dark = light rings on dark */
+      --_ring-color: color-mix(in srgb, var(--_ink) 75%, var(--_paper));
+      --_chip-fill:  var(--_ink);
+      /* --_surface is the color BEHIND the chip — used as 'gap mask'
+         in the outward ring stack so each ring reads as a distinct
+         stroke against the surrounding surface. Defaults to --_paper
+         (mono + words modes both sit on a paper-colored surface);
+         color-mode=background overrides to the V/A pad color. */
+      --_surface: var(--_paper);
+      box-shadow: var(--_chip-rings), var(--_chip-lift);
       cursor: pointer;
       transition:
-        background 0.18s ease,
-        color      0.18s ease,
-        padding    0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-        font-size  0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
-        transform  0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        background 0.22s ease,
+        color      0.22s ease,
+        box-shadow 0.18s ease;
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
     .chip:hover {
-      background: color-mix(in srgb, var(--_ink) 10%, transparent);
-      color:      color-mix(in srgb, var(--_ink) 85%, transparent);
+      --_chip-lift: 0 4px 12px rgba(0,0,0,0.16), 0 2px 4px rgba(0,0,0,0.10);
+    }
+
+    /* Binary color flip: selected chips (any level) take the full
+       ink fill in mono mode. Weight bumps for emphasis. Border-color
+       flips to the ring color — this is now the outermost ring. */
+    .chip:is(.level-1, .level-2, .level-3) {
+      background: var(--_ink);
+      color: var(--_paper);
+      font-weight: 700;
+      border-color: var(--_ring-color);
     }
 
     /*
-     * Mono: greyscale by intensity. The chip "fills with ink" as level
-     * increases — bg climbs from a faint tint to solid --_ink, and text
-     * flips from ink to paper for full contrast at high levels.
+     * Level signal: 1 / 2 / 3 concentric inset rings inside the chip's
+     * pill edge, separated by gaps that are the chip's own bg color
+     * (so the rings read as distinct strokes against the fill).
+     *
+     * Stack order: first-listed shadow is drawn ON TOP. Each ring is a
+     * solid inset shadow with a spread; the "gap" shadow at a larger
+     * spread uses --_chip-fill to mask the ring behind it.
+     */
+    /*
+     * Ring stack geometry: rings now extend OUTWARD from the chip
+     * into the margin (rather than inset). The chip's interior size
+     * never changes — higher levels just radiate more rings into the
+     * surrounding space, like ripples of intensity.
+     *
+     * The innermost ring is the chip's 2px border. Outward rings
+     * use stacked box-shadows masked by --_surface so each ring
+     * reads as a discrete stroke separated by the surface color.
+     *
+     *   border (chip edge): 2px ring color
+     *   gap 1:              1.5px surface mask — 0 0 0 1.5px
+     *   middle:             1.5px ring         — 0 0 0 3px
+     *   gap 2:              1.5px surface mask — 0 0 0 4.5px
+     *   outer:              1.2px ring         — 0 0 0 5.7px
+     *
+     * Box-shadow stack order: first-listed shadow is on top. The
+     * smaller-spread shadow masks the larger one inside it, so
+     * outward rings appear as nested concentric strokes.
      */
     .chip.level-1 {
-      background: color-mix(in srgb, var(--_ink) 16%, transparent);
-      color:      color-mix(in srgb, var(--_ink) 85%, transparent);
-      font-weight: 600; font-size: 0.81em; padding: 0.38em 0.91em;
+      --_chip-rings: 0 0 transparent;
     }
     .chip.level-2 {
-      background: color-mix(in srgb, var(--_ink) 70%, var(--_paper));
-      color: var(--_paper);
-      font-weight: 600; font-size: 0.84em; padding: 0.44em 0.97em;
+      --_chip-rings:
+        0 0 0 1.5px var(--_surface),
+        0 0 0 3px   var(--_ring-color);
     }
     .chip.level-3 {
-      background: var(--_ink);
-      color: var(--_paper);
-      font-weight: 700; font-size: 0.91em; padding: 0.5em 1.1em;
+      --_chip-rings:
+        0 0 0 1.5px var(--_surface),
+        0 0 0 3px   var(--_ring-color),
+        0 0 0 4.5px var(--_surface),
+        0 0 0 5.7px var(--_ring-color);
     }
 
     /* Color mode: unselected chips adapt to surface lightness */
@@ -211,34 +289,47 @@ export class AffectKitRater extends LitElement {
       background: var(--_chip-bg, color-mix(in srgb, var(--_ink) 5%, transparent));
       color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 55%, transparent));
     }
-    :host([color-mode]) .chip:hover {
-      background: var(--_chip-hover-bg, color-mix(in srgb, var(--_ink) 10%, transparent));
-      color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 85%, transparent));
+    /* Background mode: the rater pad is washed in the current V/A
+       color, so the outward ring 'gap' shadows need to match that
+       color (not --_paper) to blend invisibly with the surrounding. */
+    :host([color-mode="background"]) .chip {
+      --_surface: rgb(var(--_r), var(--_g), var(--_b));
     }
-    /* Color mode: selected chips absorb the current V/A color */
-    :host([color-mode]) .chip.level-1 {
-      background: rgba(
-        var(--_l3-r), var(--_l3-g), var(--_l3-b),
-        calc(0.30 + var(--_surface-is-light) * 0.30)
-      );
-      color: rgba(0,0,0,0.88);
-      font-weight: 600; font-size: 0.81em; padding: 0.38em 0.91em;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.08);
-    }
-    :host([color-mode]) .chip.level-2 {
-      background: rgba(
-        var(--_l3-r), var(--_l3-g), var(--_l3-b),
-        calc(0.65 + var(--_surface-is-light) * 0.20)
-      );
-      color: rgba(0,0,0,0.94);
-      font-weight: 600; font-size: 0.84em; padding: 0.44em 0.97em;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 1px 1px rgba(0,0,0,0.06);
-    }
-    :host([color-mode]) .chip.level-3 {
+    /* Color mode: selected chips absorb the V/A color. Ring + fill
+       vars retarget to the V/A palette so the inset rings appear in
+       the chip's own hue family (darkened) against its V/A fill.
+       In light theme --_ink is the dark color → rings darken nicely.
+       In dark theme --_ink is white → rings would LIGHTEN (no contrast),
+       so the dark-theme overrides below remix toward --_paper which
+       is the dark color in dark theme. */
+    :host([color-mode]) .chip:is(.level-1, .level-2, .level-3) {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
       color: var(--_text-l3, rgba(0,0,0,0.95));
-      font-weight: 700; font-size: 0.91em; padding: 0.5em 1.1em;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.16), 0 1px 2px rgba(0,0,0,0.10);
+      --_chip-fill: rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b));
+      --_ring-color: color-mix(
+        in srgb,
+        rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b)) 50%,
+        var(--_ink)
+      );
+    }
+    /* Dark theme: rings need to go DARKER than the (already lifted)
+       V/A chip fill. --_paper in dark mode = #1a1a1a, so mixing toward
+       it darkens the V/A color and gives the rings strong contrast. */
+    :host([color-mode][theme="dark"]) .chip:is(.level-1, .level-2, .level-3) {
+      --_ring-color: color-mix(
+        in srgb,
+        rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b)) 45%,
+        var(--_paper)
+      );
+    }
+    @media (prefers-color-scheme: dark) {
+      :host([color-mode][theme="auto"]) .chip:is(.level-1, .level-2, .level-3) {
+        --_ring-color: color-mix(
+          in srgb,
+          rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b)) 45%,
+          var(--_paper)
+        );
+      }
     }
 
     /*
@@ -250,9 +341,44 @@ export class AffectKitRater extends LitElement {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.14);
       color: color-mix(in srgb, var(--_ink) 68%, transparent);
     }
-    :host([color-mode="words"]) .chip:hover {
-      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.24);
-      color: color-mix(in srgb, var(--_ink) 90%, transparent);
+    /* Dark theme: the whole alpha ramp is rebuilt so V/A colors don't
+       mix into muddy hues against the dark surface.
+
+       Light theme: 14% tint reads as a clear pastel on white because
+       alpha blending toward white preserves saturation perception.
+       Dark theme: 14-28% tint blends toward #1a1a1a, killing saturation
+       and pulling distinct hues toward similar olive/gray. So the dark
+       ramp is bumped:
+
+         unselected: 0.14 → 0.36 (colors actually look like colors)
+         level 1:    0.30 → 0.55 (visibly distinct from unselected step)
+         level 2:    0.65 → 0.78 (stronger step toward level 3)
+         level 3:    1.00     (unchanged — full V/A color)
+
+       Text color is also re-set per level: level 1 keeps light text
+       (chip bg is still mostly dark); level 2/3 use dark text (chip
+       bg is bright enough). The pad-derived --_text-l3 is overridden
+       because in words mode each chip has its own V/A color, not the
+       pad's. */
+    :host([color-mode="words"][theme="dark"]) .chip {
+      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.36);
+      color: color-mix(in srgb, var(--_ink) 85%, transparent);
+    }
+    /* Selected (any level): full V/A color on dark — single binary
+       saturation flip. Intensity comes from .chip-text transform scale. */
+    :host([color-mode="words"][theme="dark"]) .chip:is(.level-1, .level-2, .level-3) {
+      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
+      color: rgba(0,0,0,0.95);
+    }
+    @media (prefers-color-scheme: dark) {
+      :host([color-mode="words"][theme="auto"]) .chip {
+        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.36);
+        color: color-mix(in srgb, var(--_ink) 85%, transparent);
+      }
+      :host([color-mode="words"][theme="auto"]) .chip:is(.level-1, .level-2, .level-3) {
+        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
+        color: rgba(0,0,0,0.95);
+      }
     }
 
     .vad-readout {
@@ -714,13 +840,19 @@ export class AffectKitRater extends LitElement {
               // via inline --_l3-{r,g,b}, which shadows the host-level
               // (pad-V/A-derived) variables so the existing chip rules
               // resolve to the per-emotion color. Uses the raw lexicon
-              // color (not darkerForChips) so chip backgrounds match the
-              // V/A panel color in <affect-kit-result> for the same
-              // emotion — keeps the language consistent across input
-              // (rater) and display (result/compare).
+              // color on light theme (chips match the result's V/A panel
+              // for the same emotion), and lighterForChips on dark theme
+              // so dim hues (cobalt, deep magenta) read through the 14%
+              // alpha unselected tint against a dark surface.
               let chipStyle = `order:${order}`;
               if (wordsMode) {
-                const [cr, cg, cb] = colorForVA(emotion.v, emotion.a);
+                const raw = colorForVA(emotion.v, emotion.a);
+                const useDark =
+                  this.theme === 'dark' ||
+                  (this.theme === 'auto' &&
+                    typeof matchMedia !== 'undefined' &&
+                    matchMedia('(prefers-color-scheme: dark)').matches);
+                const [cr, cg, cb] = useDark ? lighterForChips(raw) : raw;
                 chipStyle += `;--_l3-r:${cr};--_l3-g:${cg};--_l3-b:${cb}`;
               }
               return html`
