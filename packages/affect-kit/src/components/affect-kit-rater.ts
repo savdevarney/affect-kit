@@ -191,10 +191,14 @@ export class AffectKitRater extends LitElement {
       font-weight: 500;
       --_chip-rings: 0 0 transparent;
       --_chip-lift:  0 0 transparent;
-      /* Mono ring color mixes more aggressively toward --_paper (the
-         opposite polarity of the chip fill, in both themes) so rings
-         have strong contrast against the solid ink fill. */
-      --_ring-color: color-mix(in srgb, var(--_paper) 55%, var(--_ink));
+      /* Mono ring color leans heavily toward --_paper (the opposite
+         polarity of the chip fill in both themes), so rings show
+         strong contrast against the solid --_ink fill:
+           light theme: ~75% white + 25% dark = pale gray lines on
+                        near-black chip
+           dark theme:  ~75% dark + 25% white = near-black lines on
+                        white chip */
+      --_ring-color: color-mix(in srgb, var(--_paper) 75%, var(--_ink));
       --_chip-fill:  var(--_ink);
       box-shadow: var(--_chip-rings), var(--_chip-lift);
       cursor: pointer;
