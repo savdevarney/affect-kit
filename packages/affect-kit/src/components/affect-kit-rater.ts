@@ -189,9 +189,11 @@ export class AffectKitRater extends LitElement {
       user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
+    /* Hover: a noticeable box-shadow lift. Doesn't touch bg/color so
+       it works the same on selected and unselected chips and never
+       fights with the binary saturation flip on click. */
     .chip:hover {
-      background: color-mix(in srgb, var(--_ink) 10%, transparent);
-      color:      color-mix(in srgb, var(--_ink) 85%, transparent);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.16), 0 2px 4px rgba(0,0,0,0.10);
     }
     .chip-text {
       display: inline-block;
@@ -216,10 +218,8 @@ export class AffectKitRater extends LitElement {
       background: var(--_chip-bg, color-mix(in srgb, var(--_ink) 5%, transparent));
       color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 55%, transparent));
     }
-    :host([color-mode]) .chip:not(.level-1):not(.level-2):not(.level-3):hover {
-      background: var(--_chip-hover-bg, color-mix(in srgb, var(--_ink) 10%, transparent));
-      color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 85%, transparent));
-    }
+    /* Hover bg shift removed across all color modes — see the base
+       .chip:hover rule which adds a subtle box-shadow lift instead. */
     /* Color mode: selected chips (any level) absorb the full V/A color. */
     :host([color-mode]) .chip:is(.level-1, .level-2, .level-3) {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
@@ -235,10 +235,6 @@ export class AffectKitRater extends LitElement {
     :host([color-mode="words"]) .chip {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.14);
       color: color-mix(in srgb, var(--_ink) 68%, transparent);
-    }
-    :host([color-mode="words"]) .chip:not(.level-1):not(.level-2):not(.level-3):hover {
-      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.24);
-      color: color-mix(in srgb, var(--_ink) 90%, transparent);
     }
     /* Dark theme: the whole alpha ramp is rebuilt so V/A colors don't
        mix into muddy hues against the dark surface.
@@ -263,10 +259,6 @@ export class AffectKitRater extends LitElement {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.36);
       color: color-mix(in srgb, var(--_ink) 85%, transparent);
     }
-    :host([color-mode="words"][theme="dark"]) .chip:not(.level-1):not(.level-2):not(.level-3):hover {
-      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.48);
-      color: var(--_ink);
-    }
     /* Selected (any level): full V/A color on dark — single binary
        saturation flip. Intensity comes from .chip-text transform scale. */
     :host([color-mode="words"][theme="dark"]) .chip:is(.level-1, .level-2, .level-3) {
@@ -277,10 +269,6 @@ export class AffectKitRater extends LitElement {
       :host([color-mode="words"][theme="auto"]) .chip {
         background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.36);
         color: color-mix(in srgb, var(--_ink) 85%, transparent);
-      }
-      :host([color-mode="words"][theme="auto"]) .chip:not(.level-1):not(.level-2):not(.level-3):hover {
-        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.48);
-        color: var(--_ink);
       }
       :host([color-mode="words"][theme="auto"]) .chip:is(.level-1, .level-2, .level-3) {
         background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
