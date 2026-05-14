@@ -176,8 +176,8 @@ export class AffectKitRater extends LitElement {
       border: none;
       border-radius: 999px;
       font-family: inherit;
-      font-size: 0.92em;
-      font-weight: 600;
+      font-size: 0.90em;
+      font-weight: 500;
       cursor: pointer;
       transition:
         background 0.22s ease,
@@ -202,12 +202,13 @@ export class AffectKitRater extends LitElement {
       color: var(--_paper);
     }
 
-    /* Size growth per level (applies across all color modes — a11y:
-       intensity is signaled by size, not by color alone). Deltas are
-       modest (~7-8% per step) to keep reflow minimal. */
-    .chip.level-1 { font-size: 0.96em; padding: 0.52em 1.24em; font-weight: 700; }
-    .chip.level-2 { font-size: 1.05em; padding: 0.55em 1.30em; font-weight: 700; }
-    .chip.level-3 { font-size: 1.18em; padding: 0.58em 1.36em; font-weight: 800; }
+    /* Size + weight growth per level. Every state has a distinct
+       weight (500 / 600 / 700 / 800) and the font-size deltas are
+       wider (~10-15% per step) so the 1/2/3 hierarchy reads clearly.
+       Step-up still keeps reflow modest because padding scales with. */
+    .chip.level-1 { font-size: 0.96em; padding: 0.52em 1.24em; font-weight: 600; }
+    .chip.level-2 { font-size: 1.10em; padding: 0.56em 1.32em; font-weight: 700; }
+    .chip.level-3 { font-size: 1.28em; padding: 0.62em 1.42em; font-weight: 800; }
 
     /* Color mode: unselected chips adapt to surface lightness */
     :host([color-mode]) .chip {
