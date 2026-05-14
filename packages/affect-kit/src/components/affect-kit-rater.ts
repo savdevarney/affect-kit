@@ -173,13 +173,13 @@ export class AffectKitRater extends LitElement {
      * text scale.
      */
     .chip {
-      padding: 0.50em 1.20em;
+      padding: 0.42em 1.05em;
       background: color-mix(in srgb, var(--_ink) 5%, transparent);
       color:      color-mix(in srgb, var(--_ink) 55%, transparent);
       border: none;
       border-radius: 999px;
       font-family: inherit;
-      font-size: 0.92em;
+      font-size: 0.78em;
       font-weight: 600;
       cursor: pointer;
       overflow: visible;
