@@ -233,38 +233,8 @@ export class AffectKitRater extends LitElement {
       color: var(--_paper);
       font-weight: 800; font-size: 0.88em;
     }
-    /* Intensity bar below the word — thin progress bar that fills
-       left-to-right with level (1/3, 2/3, 3/3). Fixed footprint so the
-       chip width is text-determined (no reflow on selection); fill
-       portion grows with level, the remainder shows as a faint track. */
-    .chip.level-1::after,
-    .chip.level-2::after,
-    .chip.level-3::after {
-      content: '';
-      display: block;
-      width: 1.8em;
-      height: 2px;
-      margin-top: 0.4em;
-      border-radius: 1px;
-      opacity: 0.7;
-    }
-    .chip.level-1::after {
-      background: linear-gradient(
-        to right,
-        currentColor 0% 33.333%,
-        color-mix(in srgb, currentColor 18%, transparent) 33.333% 100%
-      );
-    }
-    .chip.level-2::after {
-      background: linear-gradient(
-        to right,
-        currentColor 0% 66.666%,
-        color-mix(in srgb, currentColor 18%, transparent) 66.666% 100%
-      );
-    }
-    .chip.level-3::after {
-      background: currentColor;
-    }
+    /* (Level indicator moved to the chip background as a directional
+       fill — see the level-N rules below and per-mode overrides.) */
 
     /* Color mode: unselected chips adapt to surface lightness */
     :host([color-mode]) .chip {
@@ -275,21 +245,25 @@ export class AffectKitRater extends LitElement {
       background: var(--_chip-hover-bg, color-mix(in srgb, var(--_ink) 10%, transparent));
       color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 85%, transparent));
     }
-    /* Color mode: selected chips absorb the current V/A color. Size /
-       weight / padding inherit from the base .chip.level-N rules above
-       so the level signal stays consistent across color modes. */
+    /* Color mode: selected chips fill left-to-right with the V/A color.
+       The fill portion grows with level (33% / 66% / 100%); the
+       remainder shows the V/A color at a medium-tint base. The fill
+       direction itself communicates intensity — no separate indicator
+       needed. */
     :host([color-mode]) .chip.level-1 {
-      background: rgba(
-        var(--_l3-r), var(--_l3-g), var(--_l3-b),
-        calc(0.30 + var(--_surface-is-light) * 0.30)
+      background: linear-gradient(
+        to right,
+        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 33.333%,
+        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.35) 33.333% 100%
       );
       color: rgba(0,0,0,0.88);
       box-shadow: 0 1px 2px rgba(0,0,0,0.08);
     }
     :host([color-mode]) .chip.level-2 {
-      background: rgba(
-        var(--_l3-r), var(--_l3-g), var(--_l3-b),
-        calc(0.65 + var(--_surface-is-light) * 0.20)
+      background: linear-gradient(
+        to right,
+        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 66.666%,
+        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.35) 66.666% 100%
       );
       color: rgba(0,0,0,0.94);
       box-shadow: 0 1px 3px rgba(0,0,0,0.10), 0 1px 1px rgba(0,0,0,0.06);
@@ -341,11 +315,19 @@ export class AffectKitRater extends LitElement {
       color: var(--_ink);
     }
     :host([color-mode="words"][theme="dark"]) .chip.level-1 {
-      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.55);
+      background: linear-gradient(
+        to right,
+        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 33.333%,
+        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.50) 33.333% 100%
+      );
       color: rgba(0,0,0,0.88);
     }
     :host([color-mode="words"][theme="dark"]) .chip.level-2 {
-      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.78);
+      background: linear-gradient(
+        to right,
+        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 66.666%,
+        rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.50) 66.666% 100%
+      );
       color: rgba(0,0,0,0.94);
     }
     :host([color-mode="words"][theme="dark"]) .chip.level-3 {
@@ -362,11 +344,19 @@ export class AffectKitRater extends LitElement {
         color: var(--_ink);
       }
       :host([color-mode="words"][theme="auto"]) .chip.level-1 {
-        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.55);
+        background: linear-gradient(
+          to right,
+          rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 33.333%,
+          rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.50) 33.333% 100%
+        );
         color: rgba(0,0,0,0.88);
       }
       :host([color-mode="words"][theme="auto"]) .chip.level-2 {
-        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.78);
+        background: linear-gradient(
+          to right,
+          rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 66.666%,
+          rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.50) 66.666% 100%
+        );
         color: rgba(0,0,0,0.94);
       }
       :host([color-mode="words"][theme="auto"]) .chip.level-3 {
