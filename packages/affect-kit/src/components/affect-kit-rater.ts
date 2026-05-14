@@ -222,6 +222,12 @@ export class AffectKitRater extends LitElement {
       color: var(--_text-l3, rgba(0,0,0,0.95));
       box-shadow: 0 2px 6px rgba(0,0,0,0.14), 0 1px 2px rgba(0,0,0,0.08);
     }
+    /* Hover on selected chips (color mode): stronger lift than the
+       resting selected-chip shadow so the hover affordance is visible
+       even when a chip is already selected. */
+    :host([color-mode]) .chip:is(.level-1, .level-2, .level-3):hover {
+      box-shadow: 0 6px 16px rgba(0,0,0,0.20), 0 2px 4px rgba(0,0,0,0.10);
+    }
 
     /*
      * 'words' mode: unselected chips get a faint tint of their OWN
