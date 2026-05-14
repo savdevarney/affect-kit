@@ -202,9 +202,13 @@ export class AffectKitRater extends LitElement {
       font-weight: 500;
       --_chip-rings: 0 0 transparent;
       --_chip-lift:  0 0 transparent;
-      /* Mono ring color leans heavily toward --_paper (opposite
-         polarity of the chip fill in both themes) for strong contrast. */
-      --_ring-color: color-mix(in srgb, var(--_paper) 75%, var(--_ink));
+      /* Now that rings extend OUTWARD into the surrounding surface,
+         flip the mix: ring color leans toward --_ink (same polarity
+         as the chip fill, opposite of the surface) so rings have
+         strong contrast against the surrounding paper:
+           light theme: ~75% dark + 25% white = dark rings on white
+           dark theme:  ~75% white + 25% dark = light rings on dark */
+      --_ring-color: color-mix(in srgb, var(--_ink) 75%, var(--_paper));
       --_chip-fill:  var(--_ink);
       /* --_surface is the color BEHIND the chip — used as 'gap mask'
          in the outward ring stack so each ring reads as a distinct
