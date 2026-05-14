@@ -256,7 +256,7 @@ export class AffectKitRater extends LitElement {
        needed. */
     :host([color-mode]) .chip.level-1 {
       background: linear-gradient(
-        to right,
+        to top,
         rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 33.333%,
         rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.10) 33.333% 100%
       );
@@ -265,7 +265,7 @@ export class AffectKitRater extends LitElement {
     }
     :host([color-mode]) .chip.level-2 {
       background: linear-gradient(
-        to right,
+        to top,
         rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 66.666%,
         rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.10) 66.666% 100%
       );
@@ -320,7 +320,7 @@ export class AffectKitRater extends LitElement {
     }
     :host([color-mode="words"][theme="dark"]) .chip.level-1 {
       background: linear-gradient(
-        to right,
+        to top,
         rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 33.333%,
         rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.50) 33.333% 100%
       );
@@ -328,7 +328,7 @@ export class AffectKitRater extends LitElement {
     }
     :host([color-mode="words"][theme="dark"]) .chip.level-2 {
       background: linear-gradient(
-        to right,
+        to top,
         rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 66.666%,
         rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.50) 66.666% 100%
       );
@@ -349,7 +349,7 @@ export class AffectKitRater extends LitElement {
       }
       :host([color-mode="words"][theme="auto"]) .chip.level-1 {
         background: linear-gradient(
-          to right,
+          to top,
           rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 33.333%,
           rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.50) 33.333% 100%
         );
@@ -357,7 +357,7 @@ export class AffectKitRater extends LitElement {
       }
       :host([color-mode="words"][theme="auto"]) .chip.level-2 {
         background: linear-gradient(
-          to right,
+          to top,
           rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1) 0% 66.666%,
           rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.50) 66.666% 100%
         );
