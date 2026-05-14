@@ -156,7 +156,7 @@ export class AffectKitRater extends LitElement {
     .chip-list {
       display: flex;
       flex-wrap: wrap;
-      gap: 18px 16px;
+      gap: 10px 8px;
       align-items: center;
       justify-content: center;
     }
@@ -173,13 +173,13 @@ export class AffectKitRater extends LitElement {
      * text scale.
      */
     .chip {
-      padding: 0.42em 0.95em;
+      padding: 0.50em 1.20em;
       background: color-mix(in srgb, var(--_ink) 5%, transparent);
       color:      color-mix(in srgb, var(--_ink) 55%, transparent);
       border: none;
       border-radius: 999px;
       font-family: inherit;
-      font-size: 0.85em;
+      font-size: 0.92em;
       font-weight: 600;
       cursor: pointer;
       overflow: visible;
@@ -201,9 +201,9 @@ export class AffectKitRater extends LitElement {
       transform: scale(1);
       transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .chip-text.level-1 { transform: scale(1.08); }
-    .chip-text.level-2 { transform: scale(1.18); }
-    .chip-text.level-3 { transform: scale(1.30); }
+    .chip-text.level-1 { transform: scale(1.15); }
+    .chip-text.level-2 { transform: scale(1.32); }
+    .chip-text.level-3 { transform: scale(1.55); }
 
     /* Mono: selected chips (any level) take the full ink fill.
        Binary saturation — intensity is signaled by the text scale,
