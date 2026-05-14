@@ -231,13 +231,17 @@ export class AffectKitRater extends LitElement {
 
     /* Background mode: the rater surface is washed in the current V/A
        color, so selected chips (which take that same V/A color) can
-       blend into the background. Add a thin --_ink outline to selected
-       chips here to reinforce their boundary against the colored
-       surface. outline-offset: -1.5px keeps the outline inside the
-       chip's edge (no layout impact) and inherits the chip's
-       border-radius so it pills along the chip. */
+       blend into the background. Outline color stays in the V/A hue
+       family but is darkened (mix toward --_ink) so it reads as a
+       deeper shade of the same color rather than a contrasting ring.
+       outline-offset: -1.5px keeps the outline inside the chip's edge
+       (no layout impact) and inherits the chip's border-radius. */
     :host([color-mode="background"]) .chip:is(.level-1, .level-2, .level-3) {
-      outline: 1.5px solid color-mix(in srgb, var(--_ink) 70%, transparent);
+      outline: 1.5px solid color-mix(
+        in srgb,
+        rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b)) 55%,
+        var(--_ink)
+      );
       outline-offset: -1.5px;
     }
 
