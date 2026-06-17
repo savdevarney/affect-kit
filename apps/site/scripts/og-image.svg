@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="g-pink" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="720">
+      <stop offset="0" stop-color="#FF1457" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#FF1457" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g-gold" gradientUnits="userSpaceOnUse" cx="1200" cy="0" r="720">
+      <stop offset="0" stop-color="#FFC700" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#FFC700" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g-green" gradientUnits="userSpaceOnUse" cx="1200" cy="630" r="720">
+      <stop offset="0" stop-color="#1FE085" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#1FE085" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="g-blue" gradientUnits="userSpaceOnUse" cx="0" cy="630" r="720">
+      <stop offset="0" stop-color="#2D72F0" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#2D72F0" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- base + four-corner brand glow -->
+  <rect width="1200" height="630" fill="#f5f5f3"/>
+  <rect width="1200" height="630" fill="url(#g-pink)"/>
+  <rect width="1200" height="630" fill="url(#g-gold)"/>
+  <rect width="1200" height="630" fill="url(#g-green)"/>
+  <rect width="1200" height="630" fill="url(#g-blue)"/>
+
+  <!-- wordmark -->
+  <text x="90" y="118" font-family="'SF Mono','Menlo','Consolas',monospace" font-size="40" font-weight="800" letter-spacing="-2" fill="#1a1a1a">affect-kit</text>
+
+  <!-- headline -->
+  <text x="88" y="312" font-family="'Helvetica Neue','Helvetica','Arial',sans-serif" font-size="86" font-weight="700" letter-spacing="-3" fill="#1a1a1a">Capture feeling.</text>
+  <text x="88" y="406" font-family="'Helvetica Neue','Helvetica','Arial',sans-serif" font-size="86" font-weight="700" letter-spacing="-3" fill="#1a1a1a">Track it over time.</text>
+
+  <!-- subtext -->
+  <text x="90" y="516" font-family="'Helvetica Neue','Helvetica','Arial',sans-serif" font-size="29" font-weight="400" fill="#666">Open-source web components for dimensional</text>
+  <text x="90" y="554" font-family="'Helvetica Neue','Helvetica','Arial',sans-serif" font-size="29" font-weight="400" fill="#666">emotion rating &#8212; grounded in affective science.</text>
+
+  <!-- domain -->
+  <text x="1110" y="586" text-anchor="end" font-family="'SF Mono','Menlo','Consolas',monospace" font-size="24" font-weight="600" letter-spacing="-1" fill="#999">affectkit.com</text>
+
+  <!-- joy-face brand mark -->
+  <g transform="translate(975 300)">
+    <g transform="scale(1.9)">
+      <!-- brows -->
+      <path stroke="#1a1a1a" stroke-width="4.5" stroke-linecap="round" fill="none" d="M -42 -39 Q -27 -36 -12 -35"/>
+      <path stroke="#1a1a1a" stroke-width="4.5" stroke-linecap="round" fill="none" d="M 12 -35 Q 27 -36 42 -39"/>
+      <!-- eyes -->
+      <path stroke="#1a1a1a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M -36 -12 C -34 -23 -22 -23 -20 -12 Q -28 -6 -36 -12 Z"/>
+      <path stroke="#1a1a1a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M 36 -12 C 34 -23 22 -23 20 -12 Q 28 -6 36 -12 Z"/>
+      <!-- nose -->
+      <path stroke="#1a1a1a" stroke-width="2.8" stroke-linecap="round" fill="none" d="M -3 5 Q 0 9 3 5"/>
+      <!-- mouth -->
+      <path fill="#1a1a1a" stroke="#1a1a1a" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" d="M -24 23 Q 0 44 24 23 Q 0 50 -24 23 Z"/>
+    </g>
+  </g>
+</svg>
