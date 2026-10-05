@@ -15,6 +15,8 @@ test('rate, say a sentence, edit the chips, and see it on the day', async ({ pag
   await page.goto('/');
   await expect(page.getByRole('heading', { name: 'How are you?' })).toBeVisible();
   await placeFace(page, { x: 0.62, y: 0.7 });
+  await expect(page.locator('affect-kit-rater .submit-btn')).toHaveClass(/visible/);
+  await page.waitForTimeout(400); // the button fades in; let the picture show it
   await page.screenshot({ path: testInfo.outputPath('1-face.png'), fullPage: true });
   await page.locator('affect-kit-rater .submit-btn').click();
 
