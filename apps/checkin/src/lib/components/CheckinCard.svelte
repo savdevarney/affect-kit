@@ -21,7 +21,7 @@
 
 <article class="checkin">
   <time datetime={checkin.createdAt}>{time}</time>
-  <affect-kit-face v={checkin.face.v} a={checkin.face.a} theme="auto" animated="false"></affect-kit-face>
+  <affect-kit-face v={checkin.face.v} a={checkin.face.a} theme="auto" animated={false}></affect-kit-face>
   <div class="body">
     {#if checkin.words.length || checkin.unmatched.length}
       <div class="chips">

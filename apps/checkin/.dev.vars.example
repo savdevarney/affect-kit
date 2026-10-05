@@ -1,0 +1,5 @@
+# Local dev only. Copy to .dev.vars (gitignored); wrangler never deploys it.
+# Who you are without sign-in, for requests from this machine only.
+DEV_USER_ID=local-dev-user
+# Uncomment to find words with a model (remote even in local dev, and billed).
+# EXTRACTOR_MODEL=@cf/meta/llama-3.3-70b-instruct-fp8-fast

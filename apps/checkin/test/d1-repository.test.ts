@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { getPlatformProxy } from 'wrangler';
 import { CheckinService } from '@affect-kit/checkin-core/service';
@@ -17,13 +17,15 @@ const NOW = new Date('2026-10-05T18:30:00Z');
 beforeAll(async () => {
   proxy = await getPlatformProxy<{ DB: D1Database }>({ configPath: 'wrangler.jsonc', persist: false, remoteBindings: false });
   db = proxy.env.DB;
-  const migration = await readFile(new URL('../migrations/0001_checkins.sql', import.meta.url), 'utf8');
-  const statements = migration
-    .replace(/--.*$/gm, '')
-    .split(';')
-    .map((s) => s.trim())
-    .filter(Boolean);
-  for (const statement of statements) await db.prepare(statement).run();
+  const folder = new URL('../migrations/', import.meta.url);
+  for (const file of (await readdir(folder)).filter((f) => f.endsWith('.sql')).sort()) {
+    const statements = (await readFile(new URL(file, folder), 'utf8'))
+      .replace(/--.*$/gm, '')
+      .split(';')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    for (const statement of statements) await db.prepare(statement).run();
+  }
   const lexicon = new LexiconExtractor();
   service = new CheckinService(new D1CheckinRepository(db), lexicon, lexicon, new PhraseSafetyScreen(), { now: () => NOW }, uuidv7Ids);
 }, 60_000);

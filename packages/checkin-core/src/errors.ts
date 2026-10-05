@@ -16,7 +16,7 @@ export class CheckinError extends Error {
   override readonly name = 'CheckinError';
   constructor(
     message: string,
-    readonly code: 'NOT_FOUND' | 'INVALID',
+    readonly code: 'NOT_FOUND' | 'INVALID' | 'CONFLICT',
   ) {
     super(message);
   }

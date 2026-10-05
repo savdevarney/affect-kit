@@ -9,13 +9,14 @@ The design, the evals and the rules it keeps are in [docs/checkin](../../docs/ch
 ```bash
 pnpm install
 pnpm --filter affect-kit build                   # the app uses the package's build
+cp apps/checkin/.dev.vars.example apps/checkin/.dev.vars   # who you are locally; never deployed
 pnpm --filter @affect-kit/checkin db:migrate     # local D1
 pnpm --filter @affect-kit/checkin dev            # http://localhost:5277
 ```
 
 It runs offline by default:
 - `EXTRACTOR_MODEL` is empty in `wrangler.jsonc`, so the lexicon finds the words and no model is called. The review step says "Found with simple word matching".
-- You're signed in as `DEV_USER_ID`, which is honored only for requests to localhost.
+- You're signed in as `DEV_USER_ID`, from `.dev.vars`. It's never deployed, and the API honors it only for callers on this machine: it checks the client's address, not the host name, which anyone can set.
 
 To try a model, set `EXTRACTOR_MODEL` to a Workers AI id, for example `@cf/meta/llama-3.3-70b-instruct-fp8-fast`. The AI binding is remote even in local dev, so this needs `wrangler login`, and the calls are billed. Pick models with the evals (`pnpm --filter @affect-kit/checkin-core eval feelings`), not here.
 

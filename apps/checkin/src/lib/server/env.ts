@@ -7,6 +7,13 @@ export interface Env {
   EXTRACTOR_MODEL?: string;
   /** An AI Gateway id. Its log settings must be off as well; requests also say collectLog: false. */
   AI_GATEWAY_ID?: string;
-  /** Local dev only: the user id to act as, honored only for requests to localhost. */
+  /** Local dev only, from .dev.vars (never deployed): the user to act as, for loopback requests only. */
   DEV_USER_ID?: string;
+  /**
+   * Not a binding: the caller's address, which the SvelteKit route takes from
+   * getClientAddress() and passes in with each request. On Cloudflare it's the
+   * real client's IP; in `vite dev` it's the socket's, so it can't be faked
+   * with a Host header the way the request URL can.
+   */
+  CLIENT_ADDRESS?: string;
 }

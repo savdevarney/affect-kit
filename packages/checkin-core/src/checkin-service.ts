@@ -5,7 +5,7 @@ import { inject, injectable } from 'tsyringe';
 import { CheckinError, ExtractionTimeout, OutputError } from './errors.ts';
 import { localDate, addDays } from './day.ts';
 import { finalize, reviewDiff, suggestions } from './policy.ts';
-import { MAX_TEXT, type CheckinInput, type ReviewInput } from './schema.ts';
+import type { CheckinInput, ReviewInput } from './schema.ts';
 import { VOCABULARY_ID, type EmotionName } from './vocabulary.ts';
 import {
   CHECKIN_REPOSITORY,
@@ -76,14 +76,20 @@ export class CheckinService {
     @inject(ID_FACTORY) private readonly ids: IdFactory,
   ) {}
 
-  /** Idempotent on the client's id: a retry returns the check-in it already made. */
+  /**
+   * Idempotent on the client's id: a retry of the same check-in returns the one
+   * it already made. The same id with different content is a conflict, never a
+   * silent overwrite or a silently dropped edit.
+   */
   async create(userId: string, input: CheckinInput): Promise<CreatedCheckin> {
+    const body = input.text.trim();
     const existing = await this.repo.find(userId, input.id);
     if (existing) {
-      return { ...view(existing), safety: { show: this.safety.screen(existing.body).show }, suggestions: [], foundWith: null };
+      const same = existing.body === body && existing.face.v === input.face.v && existing.face.a === input.face.a && existing.timezone === input.timezone;
+      if (!same) throw new CheckinError('That id belongs to a different check-in', 'CONFLICT');
+      return { ...view(existing), safety: { show: this.safety.screen(existing.body).show }, suggestions: suggestions(existing.face, existing.words), foundWith: null };
     }
 
-    const body = input.text.trim().slice(0, MAX_TEXT);
     const now = this.clock.now();
     const safety = this.safety.screen(body);
     const extraction = body ? await this.extract(body, input.face, now) : null;
@@ -133,7 +139,7 @@ export class CheckinService {
 
   /** Check-ins from one local date to another, inclusive, oldest first. */
   async days(userId: string, from: string, to: string): Promise<CheckinView[]> {
-    if (to < from || addDays(from, MAX_DAYS) < to) throw new CheckinError(`Ask for 1 to ${MAX_DAYS} days`, 'INVALID');
+    if (to < from || addDays(from, MAX_DAYS - 1) < to) throw new CheckinError(`Ask for 1 to ${MAX_DAYS} days`, 'INVALID');
     return (await this.repo.days(userId, from, to)).map(view);
   }
 

@@ -62,6 +62,17 @@ test('crisis words show resources at once, and the check-in carries on', async (
   await page.screenshot({ path: testInfo.outputPath('5-crisis.png'), fullPage: true });
 });
 
+test('crisis words show resources even when only the face is saved', async ({ page }) => {
+  await page.goto('/');
+  await placeFace(page, { x: 0.3, y: 0.75 });
+  await page.locator('affect-kit-rater .submit-btn').click();
+  await page.getByRole('textbox').fill('I just want to die');
+  await page.getByRole('button', { name: 'Save the face only' }).click();
+  await expect(page.getByRole('region', { name: 'You can talk to someone right now' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Your feeling words' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'You can talk to someone right now' })).toBeVisible();
+});
+
 test('the week prototype is a table of words by day', async ({ page }, testInfo) => {
   await page.goto('/prototypes/weeks');
   await expect(page.getByText('Prototype · synthetic data')).toBeVisible();

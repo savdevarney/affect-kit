@@ -66,6 +66,12 @@ describe('CheckinService.create', () => {
     expect(ctx.repo.checkins.size).toBe(1);
   });
 
+  it('refuses the same id with different words, instead of dropping the edit', async () => {
+    const request = input('Kind of proud, and wiped');
+    await ctx.service.create(USER, request);
+    await expect(ctx.service.create(USER, { ...request, text: 'Actually just tired' })).rejects.toMatchObject({ code: 'CONFLICT' });
+  });
+
   it('falls back to the lexicon when the model fails, and records both runs', async () => {
     const failing = setup(async () => {
       throw new OutputError('not JSON');
@@ -129,6 +135,8 @@ describe('CheckinService.days', () => {
     const { service } = setup(async () => ({ words: [], unmatched: [] }));
     await expect(service.days(USER, '2026-01-01', '2026-12-31')).rejects.toThrow('Ask for 1 to 62 days');
     await expect(service.days(USER, '2026-10-05', '2026-10-04')).rejects.toBeInstanceOf(CheckinError);
+    expect(await service.days(USER, '2026-10-01', '2026-12-01')).toEqual([]); // 62 days, inclusive
+    await expect(service.days(USER, '2026-10-01', '2026-12-02')).rejects.toBeInstanceOf(CheckinError);
     expect(await service.days(USER, '2026-10-01', '2026-10-07')).toEqual([]);
   });
 });

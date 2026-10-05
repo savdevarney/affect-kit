@@ -46,6 +46,11 @@ describe('scoreCase', () => {
 });
 
 describe('summarize', () => {
+  it('counts any word on an events-only case, even one that would be fine', () => {
+    const events: FeelingCase = { ...proudWiped, id: 'events', expected: [], alsoFine: ['tired'], forbidden: [], tags: ['events-only'] };
+    expect(summarize([scoreCase(events, { words: [word('tired')], unmatched: [] })]).eventsOnlyWithWords).toEqual({ count: 1, of: 1 });
+  });
+
   it('reports precision, recall, over-labelling on events-only cases and forbidden words', () => {
     const events: FeelingCase = { ...proudWiped, id: 'events', expected: [], alsoFine: [], forbidden: [], tags: ['events-only'] };
     const summary = summarize([

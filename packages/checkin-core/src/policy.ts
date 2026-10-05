@@ -18,11 +18,25 @@ export function normalize(text: string): string {
     .trim();
 }
 
-/** True when the evidence really is in their text. A model can invent a quote; this catches it. */
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+/** True when `phrase` appears in `text` as whole words: "mad" is in "so mad", not in "made". */
+function containsWords(text: string, phrase: string): boolean {
+  return new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(phrase)}(?![\\p{L}\\p{N}])`, 'u').test(text);
+}
+
+/**
+ * True when the evidence really is in their text, as whole words and long
+ * enough to mean something (three characters, at least one a letter). A model
+ * can invent a quote, or "quote" a single letter; this catches both.
+ */
 export function isGrounded(text: string, evidence: string): boolean {
   const quote = normalize(evidence);
-  return quote.length > 0 && normalize(text).includes(quote);
+  return quote.length >= 3 && /\p{L}/u.test(quote) && containsWords(normalize(text), quote);
 }
+
+/** Their own word, as shown under "(your word)", is at most three words long. */
+const MAX_OWN_WORDS = 3;
 
 export interface Finalized extends Extraction {
   /** What the policy removed, for evals and run records. */
@@ -31,11 +45,13 @@ export interface Finalized extends Extraction {
 
 /**
  * What reaches the person, from an extractor's proposal:
- * 1. Evidence must be in their text.
- * 2. One entry per word: the stronger level, the higher confidence.
+ * 1. Evidence must be in their text, as whole words.
+ * 2. One entry per word: the strongest level, with the evidence that gave it.
  * 3. At most five words (the rater's cap), most confident first.
- * 4. Their own words are kept only when nothing in the vocabulary was used for
- *    them already, and only if they aren't vocabulary words themselves.
+ * 4. Their own words are shown as theirs, so they must be exactly theirs: a
+ *    phrase of at most three words that appears in their text, not a
+ *    vocabulary word, and not already the evidence for a vocabulary word.
+ *    Nothing a model writes can reach the person this way.
  */
 export function finalize(text: string, proposal: Extraction, max = MAX_WORDS): Finalized {
   const grounded = proposal.words.filter((w) => isGrounded(text, w.evidence));
@@ -46,26 +62,24 @@ export function finalize(text: string, proposal: Extraction, max = MAX_WORDS): F
       byName.set(word.name, word);
       continue;
     }
-    const stronger = word.confidence > seen.confidence ? word : seen;
-    byName.set(word.name, {
-      ...stronger,
-      level: Math.max(word.level, seen.level) as Level,
-      confidence: Math.max(word.confidence, seen.confidence),
-    });
+    // The entry that sets the level brings its own evidence: "so tired" shows with level 3, not "kind of tired".
+    const primary = word.level !== seen.level ? (word.level > seen.level ? word : seen) : word.confidence > seen.confidence ? word : seen;
+    byName.set(word.name, { ...primary, confidence: Math.max(word.confidence, seen.confidence) });
   }
   const merged = [...byName.values()].sort((x, y) => y.confidence - x.confidence);
   const words = merged.slice(0, max);
 
+  const said = normalize(text);
   const usedEvidence = words.map((w) => normalize(w.evidence));
   const unmatched: UnmatchedWord[] = [];
-  const saidSeen = new Set<string>();
+  const seenOwn = new Set<string>();
   for (const item of proposal.unmatched) {
-    const said = normalize(item.said);
-    if (!said || saidSeen.has(said) || isEmotionName(said)) continue;
-    if (!isGrounded(text, item.evidence)) continue;
-    if (usedEvidence.some((evidence) => evidence.includes(said))) continue;
-    saidSeen.add(said);
-    unmatched.push({ said, evidence: item.evidence });
+    const own = normalize(item.said);
+    if (!own || seenOwn.has(own) || isEmotionName(own)) continue;
+    if (own.split(' ').length > MAX_OWN_WORDS || !isGrounded(text, own)) continue;
+    if (usedEvidence.some((evidence) => containsWords(evidence, own))) continue;
+    seenOwn.add(own);
+    unmatched.push({ said: own, evidence: containsWords(said, normalize(item.evidence)) ? item.evidence : own });
   }
 
   return {
@@ -80,7 +94,7 @@ export function finalize(text: string, proposal: Extraction, max = MAX_WORDS): F
 }
 
 /** When no words came through: the words nearest their face, offered unselected. Nothing is saved unless they tap one. */
-export function suggestions(face: Face, found: readonly FoundWord[]): EmotionName[] {
+export function suggestions(face: Face, found: readonly { name: EmotionName }[]): EmotionName[] {
   return found.length === 0 ? nearestWords(face, 3) : [];
 }
 

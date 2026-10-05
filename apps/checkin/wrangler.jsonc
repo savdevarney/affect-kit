@@ -17,8 +17,18 @@
 	"vars": {
 		// Unset: the lexicon finds words (no model). Set it to compare a model locally.
 		"EXTRACTOR_MODEL": "",
-		"AI_GATEWAY_ID": "",
-		// Local dev only: who you are without sign-in. Ignored unless the request is to localhost.
-		"DEV_USER_ID": "local-dev-user"
+		"AI_GATEWAY_ID": ""
+		// DEV_USER_ID lives in .dev.vars (copy .dev.vars.example), so it's never deployed.
+	},
+	"env": {
+		// The e2e tests' environment: the same database name on its own local
+		// state, no AI binding (so no network), and its own vars file
+		// (.dev.vars.e2e), so a model you set in .dev.vars never reaches them.
+		"e2e": {
+			"d1_databases": [
+				{ "binding": "DB", "database_name": "checkin", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+			],
+			"vars": { "EXTRACTOR_MODEL": "", "AI_GATEWAY_ID": "" }
+		}
 	}
 }

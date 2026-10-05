@@ -21,6 +21,7 @@ describe('LexiconExtractor', () => {
     expect((await run('Exhausted')).words).toEqual([['tired', 3, 'Exhausted']]);
     expect((await run('I am FURIOUS')).words).toEqual([['enraged', 3, 'FURIOUS']]);
     expect((await run('less anxious than yesterday')).words).toEqual([['anxious', 1, 'less anxious']]);
+    expect((await run('so moved by the letter')).words).toEqual([['moved', 3, 'so moved']]);
   });
 
   it('skips negated feelings', async () => {

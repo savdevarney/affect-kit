@@ -1,0 +1,2 @@
+# The e2e tests' local identity (wrangler.jsonc › env.e2e). Not a secret: a fixture.
+DEV_USER_ID=e2e-user

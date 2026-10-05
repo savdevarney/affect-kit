@@ -47,7 +47,7 @@ const ROWS: Record<EmotionName, Row[]> = {
   curious: [['curious', 0.9], ['curiosity', 0.85], ['intrigued', 0.8], ['fascinated', 0.65], ['interested', 0.55]],
   determined: [['determined', 0.9], ['determination', 0.85], ['driven', 0.6]],
   enchanted: [['enchanted', 0.9], ['charmed', 0.75], ['spellbound', 0.7], ['smitten', 0.6]],
-  moved: [['moved to tears', 0.85, 3], ['deeply moved', 0.85], ['felt moved', 0.8], ['so moved', 0.8], ['touched', 0.6]],
+  moved: [['moved to tears', 0.85, 3], ['deeply moved', 0.85, 3], ['so moved', 0.8, 3], ['really moved', 0.8, 3], ['felt moved', 0.8], ['touched', 0.6]],
   hopeful: [['hopeful', 0.9]],
   optimistic: [['optimistic', 0.9], ['optimism', 0.85], ['upbeat', 0.7]],
   confident: [['confident', 0.9], ['self-assured', 0.8], ['sure of myself', 0.8], ['confidence', 0.7]],

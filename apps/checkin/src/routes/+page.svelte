@@ -26,8 +26,9 @@
   let step = $state<Step>('face');
   let face = $state<Face>({ v: 0, a: 0 });
   let text = $state('');
-  // Made once per check-in: a retry after a network error sends the same id, so it can't be saved twice.
-  let checkinId = uuidv7();
+  // One id per thing they send: a retry of the same words reuses it, so it can't be saved twice;
+  // edited words get a new id, so an edit is never mistaken for a retry.
+  let attempt: { id: string; body: string } | null = null;
   let busy = $state(false);
   let failed = $state<string | null>(null);
   let showCrisis = $state(false);
@@ -47,11 +48,13 @@
   async function findWords(withText: boolean) {
     const body = withText ? text : '';
     // The screen runs here first, so resources show the moment they press, before the network.
-    showCrisis = screen.screen(body).show;
+    // It reads what they typed whichever button they pressed, and once shown, the panel stays.
+    showCrisis ||= screen.screen(text).show;
+    if (!attempt || attempt.body !== body) attempt = { id: uuidv7(), body };
     busy = true;
     failed = null;
     try {
-      created = await createCheckin({ id: checkinId, face, text: body, timezone });
+      created = await createCheckin({ id: attempt.id, face, text: body, timezone });
       showCrisis ||= created.safety.show;
       chosen = created.words.map((w) => ({ name: w.name, level: w.level, said: w.evidence }));
       step = 'review';
@@ -140,10 +143,10 @@
     {/if}
 
     <!-- Under crisis resources, no nudges toward words: they can still add their own. -->
-    {#if created.suggestions.length && !chosen.length && !showCrisis}
+    {#if created.suggestions.length && !created.words.length && !showCrisis}
       <p class="note">{COPY.reviewStep.noneFound}</p>
       <div class="chips">
-        {#each created.suggestions as name (name)}
+        {#each created.suggestions.filter((name) => !chosenNames.has(name)) as name (name)}
           <WordChip {name} level={0} onpress={() => add(name)} />
         {/each}
       </div>

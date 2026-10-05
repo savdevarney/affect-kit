@@ -26,7 +26,7 @@ export const CheckinInputSchema = z.object({
   /** A UUIDv7 made on the client, so a retry is the same check-in, never a second one. */
   id: z.uuid(),
   face: FaceSchema,
-  text: z.string().max(MAX_TEXT * 2),
+  text: z.string().max(MAX_TEXT),
   timezone: z.string().refine(isTimeZone, 'Not a time zone'),
 });
 export type CheckinInput = z.infer<typeof CheckinInputSchema>;

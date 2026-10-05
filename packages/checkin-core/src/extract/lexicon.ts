@@ -45,7 +45,7 @@ export class LexiconExtractor implements FeelingExtractor {
       }
     }
 
-    // In the order they wrote them, which is how they'll read them back.
+    // In the order they wrote them. (The policy re-ranks by confidence only when it caps at five.)
     const inOrder = <T extends { at: number }>(items: T[]) => items.sort((x, y) => x.at - y.at).map(({ at: _at, ...item }) => item);
     return { words: inOrder(words), unmatched: inOrder(unmatched) };
   }

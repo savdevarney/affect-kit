@@ -146,7 +146,7 @@ export interface RunSummary {
   meanPredicted: number;
   meanSlots: number;
   casesWithExtra: number;
-  /** Events-only cases where any word was put in their mouth. */
+  /** Events-only cases where any word at all was put in their mouth, fine-or-not. */
   eventsOnlyWithWords: { count: number; of: number };
   forbiddenCases: string[];
   unmatchedRecall: number | null;
@@ -201,7 +201,7 @@ export function summarize(scores: readonly CaseScore[]): RunSummary {
     meanPredicted: ratio(sum((s) => s.filled + s.extra.length + s.neutral.length), scores.length) ?? 0,
     meanSlots: ratio(slots, scores.length) ?? 0,
     casesWithExtra: scores.filter((s) => s.extra.length > 0).length,
-    eventsOnlyWithWords: { count: events.filter((s) => s.extra.length > 0).length, of: events.length },
+    eventsOnlyWithWords: { count: events.filter((s) => s.extra.length + s.neutral.length > 0).length, of: events.length },
     forbiddenCases: scores.filter((s) => s.forbidden.length > 0).map((s) => s.id),
     unmatchedRecall: ratio(sum((s) => s.unmatchedFound), sum((s) => s.unmatchedExpected)),
     ece,

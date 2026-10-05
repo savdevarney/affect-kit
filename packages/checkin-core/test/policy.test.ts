@@ -12,6 +12,11 @@ describe('isGrounded', () => {
     expect(isGrounded('Long day.', 'exhausted')).toBe(false);
     expect(isGrounded('Long day.', '  ')).toBe(false);
   });
+  it('matches whole words only, and nothing too short to mean anything', () => {
+    expect(isGrounded('Meetings all day, then made dinner.', 'mad')).toBe(false);
+    expect(isGrounded('Meetings all day, then made dinner.', 'a')).toBe(false);
+    expect(isGrounded('So mad at the landlord', 'mad')).toBe(true);
+  });
 });
 
 describe('finalize', () => {
@@ -21,6 +26,14 @@ describe('finalize', () => {
     const result = finalize(text, { words: [word('tired', 'wiped', 3), word('joy', 'thrilled')], unmatched: [] });
     expect(result.words.map((w) => w.name)).toEqual(['tired']);
     expect(result.dropped.ungrounded).toBe(1);
+  });
+
+  it('takes the evidence from the entry that sets the level', () => {
+    const result = finalize('Kind of tired this morning, so tired now.', {
+      words: [word('tired', 'Kind of tired', 1, 0.9), word('tired', 'so tired', 3, 0.7)],
+      unmatched: [],
+    });
+    expect(result.words).toEqual([{ name: 'tired', level: 3, evidence: 'so tired', confidence: 0.9 }]);
   });
 
   it('merges a repeated word, keeping the stronger level and higher confidence', () => {
@@ -50,6 +63,18 @@ describe('finalize', () => {
       ],
     });
     expect(result.unmatched).toEqual([{ said: 'relieved', evidence: 'a bit relieved' }]);
+  });
+
+  it('never shows model-written text as their own word', () => {
+    const result = finalize('Such a relief. Somehow anxious, and meh.', {
+      words: [word('anxious', 'Somehow anxious')],
+      unmatched: [
+        { said: 'relieved', evidence: 'Such a relief' }, // a word they didn't write
+        { said: 'You should talk to someone about this', evidence: 'relief' }, // a model's sentence
+        { said: 'meh', evidence: 'meh' }, // theirs, and "Somehow" doesn't contain it as a word
+      ],
+    });
+    expect(result.unmatched).toEqual([{ said: 'meh', evidence: 'meh' }]);
   });
 });
 

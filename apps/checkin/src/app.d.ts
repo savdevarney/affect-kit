@@ -23,7 +23,8 @@ declare module 'svelte/elements' {
       theme?: Theme;
       oncommit?: (event: CustomEvent<Rating>) => void;
     };
-    'affect-kit-face': HTMLAttributes<HTMLElement> & { v?: number; a?: number; animated?: 'true' | 'false'; theme?: Theme };
+    // `animated` is set as a property on the upgraded element, so it takes a boolean: the string "false" would be truthy.
+    'affect-kit-face': HTMLAttributes<HTMLElement> & { v?: number; a?: number; animated?: boolean; theme?: Theme };
     'affect-kit-result': HTMLAttributes<HTMLElement> & {
       rating?: Rating | null;
       'show-face'?: boolean;
