@@ -1,0 +1,24 @@
+// The check-in Worker: SvelteKit's build (UI, SSR and the Hono API) plus its
+// bindings. In `vite dev` the same bindings come through Wrangler's platform
+// proxy: D1 runs locally; AI is remote (billed), so leave EXTRACTOR_MODEL unset
+// to run fully offline with the lexicon.
+{
+	"name": "affect-kit-checkin",
+	"main": ".svelte-kit/cloudflare/_worker.js",
+	"compatibility_date": "2026-09-28",
+	"compatibility_flags": ["nodejs_compat"],
+	"assets": { "binding": "ASSETS", "directory": ".svelte-kit/cloudflare" },
+	"d1_databases": [
+		{ "binding": "DB", "database_name": "checkin", "database_id": "00000000-0000-0000-0000-000000000000", "migrations_dir": "migrations" }
+	],
+	"ai": { "binding": "AI", "remote": true },
+	// Requests and errors only: the app never logs anyone's words (they'd be kept in Workers Logs).
+	"observability": { "enabled": true },
+	"vars": {
+		// Unset: the lexicon finds words (no model). Set it to compare a model locally.
+		"EXTRACTOR_MODEL": "",
+		"AI_GATEWAY_ID": "",
+		// Local dev only: who you are without sign-in. Ignored unless the request is to localhost.
+		"DEV_USER_ID": "local-dev-user"
+	}
+}

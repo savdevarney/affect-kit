@@ -1,0 +1,133 @@
+@layer base, layout, components;
+
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  :root {
+    color-scheme: light dark;
+    --ink: light-dark(#1a1a1a, #f1f1ef);
+    --ink-muted: light-dark(#5f5f5c, #a9a9a5);
+    --ink-faint: light-dark(#8f8f8b, #74746f);
+    --bg: light-dark(#f5f5f3, #141413);
+    --surface: light-dark(#ffffff, #1f1f1d);
+    --line: light-dark(rgb(0 0 0 / 0.08), rgb(255 255 255 / 0.1));
+    --focus: light-dark(#1a1a1a, #f1f1ef);
+    --radius: 14px;
+    --space: clamp(1rem, 4vw, 2rem);
+
+    /* affect-kit's four V/A corners (the package's public custom properties). */
+    --affect-kit-color-pink: #ff1457;
+    --affect-kit-color-gold: #ffc700;
+    --affect-kit-color-green: #1fe085;
+    --affect-kit-color-blue: #2d72f0;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    margin: 0;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  p {
+    margin: 0;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  button,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 3px;
+  }
+
+  /* No flash of an un-upgraded custom element. */
+  :is(affect-kit-rater, affect-kit-face, affect-kit-result):not(:defined) {
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition-duration: 0s !important;
+    }
+  }
+}
+
+@layer components {
+  /*
+   * A word's color: affect-kit's own blend, done in CSS. The package mixes its
+   * four corner colors bilinearly in OKLab by valence (left → right) and
+   * arousal (bottom → top); color-mix(in oklab) does the same here, from the
+   * --v and --a an element sets for its word.
+   */
+  .word-color {
+    --u: calc((var(--v, 0) + 1) / 2);
+    --w: calc((var(--a, 0) + 1) / 2);
+    --word-top: color-mix(in oklab, var(--affect-kit-color-pink) calc((1 - var(--u)) * 100%), var(--affect-kit-color-gold));
+    --word-bottom: color-mix(in oklab, var(--affect-kit-color-blue) calc((1 - var(--u)) * 100%), var(--affect-kit-color-green));
+    --word: color-mix(in oklab, var(--word-bottom) calc((1 - var(--w)) * 100%), var(--word-top));
+  }
+
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4em;
+    min-height: 2.75rem;
+    padding: 0.55em 1.2em;
+    border: 1.5px solid var(--ink);
+    border-radius: 999px;
+    background: var(--ink);
+    color: var(--surface);
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+
+    &.quiet {
+      background: transparent;
+      color: var(--ink);
+      border-color: var(--line);
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .note {
+    font-size: 0.875rem;
+    color: var(--ink-muted);
+  }
+}

@@ -13,6 +13,7 @@
     "@affect-kit-harness/react",
     "@affect-kit/tsconfig",
     "@affect-kit/eslint-config",
-    "@affect-kit/checkin-core"
+    "@affect-kit/checkin-core",
+    "@affect-kit/checkin"
   ]
 }
