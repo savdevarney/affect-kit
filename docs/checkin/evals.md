@@ -17,6 +17,7 @@
 9. [The path to a fast classifier](#9-the-path-to-a-fast-classifier)
 10. [What fine-tuning would take](#10-what-fine-tuning-would-take)
 11. [Sources](#11-sources)
+12. [First results](#12-first-results)
 
 ## 1. What's evaluated
 
@@ -232,3 +233,41 @@ The flywheel: people write, the LLM proposes, people correct, and the correction
   - That's why self-report, through blind picks, is the target (§ 4, § 8).
 - **The human ceiling** is a guide, not a hard limit (Boguslav & Cohen 2017, [doi](https://doi.org/10.3233/978-1-61499-830-3-298)).
 - **Workers AI and Clef:** model pages and pricing, checked 2026-10-05 ([catalog](https://developers.cloudflare.com/workers-ai/models/), [pricing](https://developers.cloudflare.com/workers-ai/platform/pricing/), [Clef input schema](https://developers.cloudflare.com/workers-ai/models/clef/schema-input.json)).
+
+## 12. First results
+
+**2026-10-05: one run, 48 cases, draft labels.** Calls went through Wrangler's platform proxy from a laptop, two at a time, with transient errors retried. Every miss is listed in `packages/checkin-core/evals/baseline.md` (PR #16).
+
+| Extractor | F1, with face / without | Exact sets | Levels exact | Cases with a forbidden word | p50 / p95 latency, with face | $ per 1,000 check-ins |
+|---|---|---|---|---|---|---|
+| face-nearest (no text) | 0.17 | 4% | — | 0 | — | 0 |
+| lexicon | 0.77 / 0.77 | 71% | 91% | 4 | instant | 0 |
+| **Llama 3.3 70B fp8-fast** | **0.94** / 0.92 | **92%** | 81% | **1** / 3 | 2.0 s / 9.4 s | 0.49 |
+| Llama 4 Scout | 0.81 / 0.88 | 71% | 79% | 3 / 4 | 1.5 s / 3.5 s | 0.40 |
+| gpt-oss-120b | 0.77 / 0.83 | 75% | 83% | 1 / 2 | 8.5 s / 14.1 s | 0.74 |
+| gpt-oss-20b | 0.83 / 0.78 | 77% | 82% | 2 / 2 | 3.9 s / 8.4 s | 0.38 |
+| Qwen3 30B-A3B | 0.76 / 0.76 | 77% | 82% | 0 / 2 | 4.5 s / 6.5 s | 0.24 |
+| Gemma 4 26B-A4B, Mistral Small 3.1, Qwen3.8 27B | not comparable | | | | | |
+
+Gemma 4, Mistral Small 3.1 and Qwen3.8 27B mostly failed to return JSON in the shape the adapter expects (33, 48 and 24 of 48 cases). That measures our integration, not the models. Fix their request and response shapes before judging them.
+
+**What it says:**
+1. **The words carry the signal.** The face alone scores 0.17, simple matching 0.77, the best model 0.94. The conversation is pulling its weight.
+2. **Llama 3.3 70B is the most accurate,** with no errors and every quote really in the text. Its misses are worth reading:
+   - one sarcasm case ("Thrilled." read as *excited*);
+   - one word on an events-only check-in ("Made pasta, called mom…" → *content*);
+   - one inference from "Relieved to stay home" (*relaxed*);
+   - one missed second feeling.
+3. **Nothing is fast enough.** The best model takes about 2 s typically and 4–9 s at the 95th percentile, and every model fails the 3 s p95 bar. Speed has to come from the cascade, not from picking a different LLM:
+   - simple matching in the browser while they type;
+   - a System 1 model (Clef-flash, or our own head on embeddings) for the common case;
+   - the LLM only for hard check-ins.
+4. **The face's effect on the parser is inconclusive.** It adds 0.02 for Llama 3.3, with fewer sarcasm errors (1 forbidden case against 3), but takes 0.07 from Scout and 0.06 from gpt-oss-120b. Forty-eight cases can't settle it; keep it in the ablation.
+5. **Their own words are rarely listed by the models** (17% for Llama 3.3). Prompt v2 should ask for them more firmly.
+6. **The lexicon's numbers are flattered.** Its 100% on their own words and 91% on levels come partly from one agent having written both its table and these labels. The blind second labelling (§ 4) will correct that.
+
+**The choice for now:** Llama 3.3 70B fp8-fast as System 2: quality first, and the model Probiome's intake already uses. Revisit when two people have labelled the set blind and System 1 has been measured.
+
+**The decision rule, revisited (§ 7):**
+- "2% of cases" is finer than one case in 48, so make it "at most one forbidden case per 50".
+- Measure p95 from a deployed Worker, not from a laptop through the proxy.

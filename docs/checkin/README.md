@@ -435,15 +435,19 @@ The page also asks products to credit the lexicon in their About page and docume
 
 Recommended, and in progress unless Sav says otherwise:
 
-1. **Where it lives:** in this public monorepo, as `apps/checkin` and `packages/checkin-core`, with the case study in `docs/`. If it should be private, as Probiome now is, don't merge the slice: extract it into its own repo instead (§ 2).
+1. **Where it lives.** *Decided by Sav, 2026-10-05:* this public monorepo, as `apps/checkin` and `packages/checkin-core`, with the case study in `docs/`. The app gets a name of its own, and affect-kit stays the developer brand.
 2. **D1 over Supabase** for this app (§ 3).
 3. **The two package additions** (§ 7), released as a minor version.
 4. **The model never writes to the person:** fixed text only, including follow-ups (§ 6). It's also what keeps the app outside the companion-chatbot laws ([safety.md](safety.md) § 5).
 5. **SvelteKit 2.70, not 3.0.** SvelteKit 3.0 and its new Cloudflare adapter shipped on 2026-10-01, four days before this was built. Version 3 replaces `platform.env` with `import { env } from 'cloudflare:workers'`. Upgrade in its own PR once 3.x has settled.
+6. **The model, for now: Llama 3.3 70B fp8-fast.** It's the most accurate in the first comparison (F1 0.94 on the draft set), but about 2 s typically and 4–9 s at the slowest. So speed comes from the cascade: simple matching in the browser while you type, then System 1, then the LLM for hard check-ins ([evals.md](evals.md) § 12).
 
 Yours to make, no rush:
 
-6. **Directional views.** The week views and wording rules in [visualizations.md](visualizations.md) need Sav's OK before anything directional is built beyond the prototype.
-7. **A name.** Avoid "companion": in California's SB 243 and New York's law, "companion chatbot" is a regulated category built around ongoing, human-like relationships ([safety.md](safety.md) › Laws). This app is a logbook with a parser, and its name should say so.
-8. **The second annotator** for the human ceiling ([evals.md](evals.md) › The human ceiling).
-9. **Training on people's words:** off by default, with its own opt-in, and never before the privacy page says so ([privacy.md](privacy.md)).
+7. **Directional views.** The week views and wording rules in [visualizations.md](visualizations.md) need Sav's OK before anything directional is built beyond the prototype.
+8. **A name.** Avoid "companion": in California's SB 243 and New York's law, "companion chatbot" is a regulated category built around ongoing, human-like relationships ([safety.md](safety.md) › Laws). This app is a logbook with a parser, and its name should say so.
+   - Candidates: *Inkling* (a faint feeling, and ink), *Undertone* (the feeling beneath, and color's hidden hue), *Kenning* (naming a thing through other words, which is what the parser does), *In a Word*, *Weatherglass*.
+   - Trademarks, domains and app stores aren't checked yet.
+   - Yale's *How We Feel* already pairs mood quadrants with emotion words, so the name should lean on what's different: saying it your own way.
+9. **The second annotator** for the human ceiling ([evals.md](evals.md) › The human ceiling).
+10. **Training on people's words:** off by default, with its own opt-in, and never before the privacy page says so ([privacy.md](privacy.md)).
