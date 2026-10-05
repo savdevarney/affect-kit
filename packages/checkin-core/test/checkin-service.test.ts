@@ -1,4 +1,3 @@
-import 'reflect-metadata';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { CheckinService } from '../src/checkin-service.ts';
 import { CheckinError, OutputError } from '../src/errors.ts';

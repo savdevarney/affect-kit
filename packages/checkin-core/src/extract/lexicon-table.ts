@@ -87,15 +87,24 @@ export const LEXICON: readonly LexiconEntry[] = Object.entries(ROWS)
   .sort((x, y) => y.phrase.length - x.phrase.length);
 
 /**
- * Feeling words people use that no vocabulary word fits. Kept as their own
- * words, never forced into the nearest fit; their counts are evidence for
- * future vocabulary versions.
+ * Feeling words people use that no vocabulary word fits, as [phrase, what they
+ * said]. Kept as their own words, never forced into the nearest fit; their
+ * counts are evidence for future vocabulary versions. "fine" and "okay" count
+ * only as self-statements: "the presentation went fine" isn't a feeling.
  */
-export const UNMATCHED_FEELINGS: readonly string[] = [
-  'relieved', 'relief', 'grieving', 'grief', 'focused', 'restless', 'meh', 'blah', 'fine', 'okay',
-  'feel hurt', 'felt hurt', 'feeling hurt', 'betrayed', 'rejected', 'misunderstood', 'resentful',
-  'impatient', 'conflicted', 'torn', 'unsettled', 'confused', 'uncertain', 'playful', 'silly', 'energized',
-].sort((x, y) => y.length - x.length);
+const UNMATCHED_ROWS: [phrase: string, said: string][] = [
+  ['relieved', 'relieved'], ['relief', 'relief'], ['grieving', 'grieving'], ['grief', 'grief'], ['focused', 'focused'],
+  ['restless', 'restless'], ['meh', 'meh'], ['blah', 'blah'], ['betrayed', 'betrayed'], ['rejected', 'rejected'],
+  ['misunderstood', 'misunderstood'], ['resentful', 'resentful'], ['impatient', 'impatient'], ['conflicted', 'conflicted'],
+  ['torn', 'torn'], ['unsettled', 'unsettled'], ['confused', 'confused'], ['uncertain', 'uncertain'], ['playful', 'playful'],
+  ['silly', 'silly'], ['energized', 'energized'], ['feel hurt', 'hurt'], ['felt hurt', 'hurt'], ['feeling hurt', 'hurt'],
+  ["i'm fine", 'fine'], ['im fine', 'fine'], ['i am fine', 'fine'], ['feeling fine', 'fine'], ['fine i guess', 'fine'],
+  ["i'm okay", 'okay'], ['i am okay', 'okay'], ['feeling okay', 'okay'], ['okay i guess', 'okay'],
+];
+
+export const UNMATCHED_FEELINGS: readonly { phrase: string; said: string }[] = UNMATCHED_ROWS.map(([phrase, said]) => ({ phrase, said })).sort(
+  (x, y) => y.phrase.length - x.phrase.length,
+);
 
 /** Words right before a feeling that make it strong ("so tired") or mild ("a bit tired"). */
 export const STRONG_INTENSIFIERS: readonly string[] = [

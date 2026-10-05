@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { FaceNearestExtractor } from '../src/extract/face-nearest.ts';
 import { LexiconExtractor } from '../src/extract/lexicon.ts';
 import { WorkersAiExtractor, type AiRunner } from '../src/extract/workers-ai.ts';
+import { OutputError } from '../src/errors.ts';
 import { finalize } from '../src/policy.ts';
 import { PhraseSafetyScreen } from '../src/safety/phrase-screen.ts';
 import type { FeelingExtractor } from '../src/ports.ts';
@@ -55,6 +56,8 @@ function parseArgs(argv: string[]): { suite: string; args: Args } {
 interface CaseResult {
   id: string;
   ok: boolean;
+  /** Attempts beyond the first: transient errors are retried twice, an unreadable answer once. */
+  retries: number;
   error?: string;
   ms: number;
   inputTokens: number | null;
@@ -72,6 +75,7 @@ interface ExtractorRun {
   face: boolean;
   summary: RunSummary;
   errors: number;
+  retried: number;
   p50: number | null;
   p95: number | null;
   costPer1000: number | null;
@@ -93,17 +97,36 @@ async function pool<T, R>(items: readonly T[], size: number, fn: (item: T) => Pr
   return out;
 }
 
+/**
+ * Workers AI sometimes answers "internal error" under load: retried twice, with
+ * backoff. An unreadable answer gets one retry (the decision rule allows one,
+ * evals.md § 7). Every retry is counted in the report, so flakiness stays visible.
+ */
+async function withRetries<T>(fn: () => Promise<T>, onRetry: (attempts: number) => void): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      if (attempt >= (error instanceof OutputError ? 1 : 2)) throw error;
+      onRetry(attempt + 1);
+      await new Promise((resolve) => setTimeout(resolve, 1500 * 3 ** attempt));
+    }
+  }
+}
+
 async function evaluate(extractor: FeelingExtractor, model: string | null, cases: FeelingCase[], useFace: boolean, concurrency: number): Promise<ExtractorRun> {
+  const retried: Record<string, number> = {};
   const results = await pool(cases, concurrency, async (c): Promise<CaseResult> => {
     const started = Date.now();
     try {
-      const proposal = await extractor.extract({ text: c.text, face: useFace ? c.face : null });
+      const proposal = await withRetries(() => extractor.extract({ text: c.text, face: useFace ? c.face : null }), (n) => (retried[c.id] = n));
       // The face-nearest baseline reads no text, so it has no evidence to check: score what it proposed.
       const final = model === null && extractor.id.startsWith('face-nearest') ? proposal : finalize(c.text, proposal);
       const { grounded, total } = groundedCount(c.text, proposal);
       return {
         id: c.id,
         ok: true,
+        retries: retried[c.id] ?? 0,
         ms: proposal.meter?.ms ?? Date.now() - started,
         inputTokens: proposal.meter?.inputTokens ?? null,
         outputTokens: proposal.meter?.outputTokens ?? null,
@@ -115,7 +138,7 @@ async function evaluate(extractor: FeelingExtractor, model: string | null, cases
       };
     } catch (error) {
       const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-      return { id: c.id, ok: false, error: message.slice(0, 160), ms: Date.now() - started, inputTokens: null, outputTokens: null, grounded: 0, proposed: 0, final: [], unmatched: [], score: scoreCase(c, { words: [], unmatched: [] }) };
+      return { id: c.id, ok: false, retries: retried[c.id] ?? 0, error: message.slice(0, 160), ms: Date.now() - started, inputTokens: null, outputTokens: null, grounded: 0, proposed: 0, final: [], unmatched: [], score: scoreCase(c, { words: [], unmatched: [] }) };
     }
   });
 
@@ -135,6 +158,7 @@ async function evaluate(extractor: FeelingExtractor, model: string | null, cases
     face: useFace,
     summary: summarize(results.map((r) => r.score)),
     errors: results.length - ok.length,
+    retried: results.filter((r) => r.retries > 0).length,
     p50: model ? percentile(ok.map((r) => r.ms), 50) : null,
     p95: model ? percentile(ok.map((r) => r.ms), 95) : null,
     costPer1000,
@@ -149,11 +173,11 @@ const pct = (n: number | null) => (n === null ? '–' : `${Math.round(n * 100)}%
 const dec = (n: number | null, d = 2) => (n === null ? '–' : n.toFixed(d));
 
 function table(runs: ExtractorRun[]): string {
-  const head = '| Extractor | Face | F1 | Precision | Recall | Exact | Level exact | Far misses | Words / case (expected) | Events-only with words | Forbidden | Evidence in text | Their words found | Errors | p50 / p95 ms | $ / 1,000 |';
+  const head = '| Extractor | Face | F1 | Precision | Recall | Exact | Level exact | Far misses | Words / case (expected) | Events-only with words | Forbidden | Evidence in text | Their words found | Errors (retried) | p50 / p95 ms | $ / 1,000 |';
   const rule = `|${'---|'.repeat(16)}`;
   const rows = runs.map((r) => {
     const s = r.summary;
-    return `| ${r.extractor} | ${r.face ? 'yes' : 'no'} | ${dec(s.f1)} | ${pct(s.precision)} | ${pct(s.recall)} | ${pct(s.exactRate)} | ${pct(s.levelExactRate)} | ${s.farMisses} | ${dec(s.meanPredicted, 1)} (${dec(s.meanSlots, 1)}) | ${s.eventsOnlyWithWords.count} of ${s.eventsOnlyWithWords.of} | ${s.forbiddenCases.length} | ${pct(r.groundedRate)} | ${pct(s.unmatchedRecall)} | ${r.errors} | ${r.p50 ?? '–'} / ${r.p95 ?? '–'} | ${r.costPer1000 === null ? '–' : `$${r.costPer1000.toFixed(3)}`} |`;
+    return `| ${r.extractor} | ${r.face ? 'yes' : 'no'} | ${dec(s.f1)} | ${pct(s.precision)} | ${pct(s.recall)} | ${pct(s.exactRate)} | ${pct(s.levelExactRate)} | ${s.farMisses} | ${dec(s.meanPredicted, 1)} (${dec(s.meanSlots, 1)}) | ${s.eventsOnlyWithWords.count} of ${s.eventsOnlyWithWords.of} | ${s.forbiddenCases.length} | ${pct(r.groundedRate)} | ${pct(s.unmatchedRecall)} | ${r.errors} (${r.retried}) | ${r.p50 ?? '–'} / ${r.p95 ?? '–'} | ${r.costPer1000 === null ? '–' : `$${r.costPer1000.toFixed(3)}`} |`;
   });
   return [head, rule, ...rows].join('\n');
 }

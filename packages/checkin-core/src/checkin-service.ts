@@ -1,3 +1,6 @@
+// tsyringe needs the Reflect metadata polyfill before it loads; importing it here
+// makes the service entry safe to import first, wherever it's imported from.
+import 'reflect-metadata';
 import { inject, injectable } from 'tsyringe';
 import { CheckinError, ExtractionTimeout, OutputError } from './errors.ts';
 import { localDate, addDays } from './day.ts';

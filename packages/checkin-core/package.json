@@ -16,13 +16,13 @@
   },
   "dependencies": {
     "affect-kit": "workspace:*",
+    "reflect-metadata": "^0.2.2",
     "tsyringe": "^4.10.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
     "@affect-kit/tsconfig": "workspace:*",
     "@types/node": "^22.0.0",
-    "reflect-metadata": "^0.2.2",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0",
     "wrangler": "^4.90.0"

@@ -37,11 +37,11 @@ export class LexiconExtractor implements FeelingExtractor {
       }
     }
 
-    for (const phrase of UNMATCHED_FEELINGS) {
+    for (const { phrase, said } of UNMATCHED_FEELINGS) {
       for (const span of find(folded, phrase)) {
         if (overlaps(taken, span) || isNegated(clauseBefore(folded, span.start))) continue;
         taken.push(span);
-        unmatched.push({ said: phrase.replace(/^(feel|felt|feeling) /, ''), evidence: text.slice(span.start, span.end), at: span.start });
+        unmatched.push({ said, evidence: text.slice(span.start, span.end), at: span.start });
       }
     }
 
