@@ -107,6 +107,7 @@ const raterState  = {
   colorMode: null as ColorMode | null,
   animated: true,
   showVad: true,
+  faceOnly: false,
   submitLabel: 'Done',
   theme: 'light' as Theme,
 };
@@ -134,6 +135,7 @@ function renderRaterCode() {
   if (raterState.theme !== 'light') attrs.push(`theme="${raterState.theme}"`);
   if (!raterState.animated) attrs.push('animated="false"');
   if (raterState.showVad)   attrs.push('show-vad');
+  if (raterState.faceOnly)  attrs.push('face-only');
   if (raterState.submitLabel !== 'Done') attrs.push(`submit-label="${raterState.submitLabel}"`);
   const tag = attrs.length
     ? `<affect-kit-rater ${attrs.join(' ')}></affect-kit-rater>`
@@ -195,6 +197,10 @@ makeToggle('rater-animated-toggle', (on) => {
 makeToggle('rater-vad-toggle', (on) => {
   if (rater) rater.showVad = on;
   raterState.showVad = on; renderRaterCode();
+});
+makeToggle('rater-face-only-toggle', (on) => {
+  if (rater) rater.faceOnly = on;
+  raterState.faceOnly = on; renderRaterCode();
 });
 const submitInput = document.getElementById('rater-submit-input') as HTMLInputElement | null;
 submitInput?.addEventListener('input', () => {

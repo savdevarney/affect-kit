@@ -494,6 +494,21 @@ export class AffectKitRater extends LitElement {
         min-width: 0;
       }
       .chips-zone.empty { flex: 0 0 0; padding: 0; }
+      /* Face-only stays stacked at any width: there's no chip column
+         to sit beside the face. */
+      :host([face-only]) .surface { flex-direction: column; min-height: 0; }
+      :host([face-only]) .face-zone { margin: 10px auto; }
+    }
+
+    /* ── Face-only footer: just the submit button ─────────── */
+    .face-only-footer {
+      padding: 4px 22px 14px;
+      z-index: 1;
+      transition: opacity 0.25s ease;
+    }
+    .face-only-footer.dragging {
+      opacity: 0;
+      pointer-events: none;
     }
   `;
 
@@ -533,6 +548,15 @@ export class AffectKitRater extends LitElement {
    */
   @property({ converter: themeConverter, reflect: true })
   theme: Theme = 'light';
+
+  /**
+   * Capture the face only: no word chips. The submit button appears after
+   * the first placement, and `change` / `commit` carry `labels: []` and
+   * `composite: null`. For consumers that collect the words another way
+   * (a conversation, a form of their own) and want the gesture as the anchor.
+   */
+  @property({ type: Boolean, attribute: 'face-only', reflect: true })
+  faceOnly = false;
 
   @state() private _padV = 0;
   @state() private _padA = 0;
@@ -629,7 +653,8 @@ export class AffectKitRater extends LitElement {
 
   private _settle() {
     if (!this._revealed) this._revealed = true;
-    this._sortWithFlip().catch(() => {/* ignore async errors */});
+    // Face-only has no chips to re-sort.
+    if (!this.faceOnly) this._sortWithFlip().catch(() => {/* ignore async errors */});
     this._emitChange();
   }
 
@@ -737,12 +762,18 @@ export class AffectKitRater extends LitElement {
 
   // ── Change event ─────────────────────────────────────────────────────────
 
-  private _emitChange() {
+  /** Selected chips as labels. Always empty in face-only mode, even after `setRating`. */
+  private _activeLabels(): Array<{ name: EmotionName; level: number }> {
+    if (this.faceOnly) return [];
     const labels: Array<{ name: EmotionName; level: number }> = [];
     for (const [name, level] of this._levels) {
       if (level > 0) labels.push({ name: name as EmotionName, level: level as 1 | 2 | 3 });
     }
-    const rating = buildRating({ face: { v: this._padV, a: this._padA }, labels });
+    return labels;
+  }
+
+  private _emitChange() {
+    const rating = buildRating({ face: { v: this._padV, a: this._padA }, labels: this._activeLabels() });
     this.dispatchEvent(new CustomEvent<Rating>('change', {
       detail: rating,
       bubbles: true,
@@ -753,11 +784,7 @@ export class AffectKitRater extends LitElement {
   // ── Commit (explicit submit) ──────────────────────────────────────────────
 
   private _onSubmit() {
-    const labels: Array<{ name: EmotionName; level: number }> = [];
-    for (const [name, level] of this._levels) {
-      if (level > 0) labels.push({ name: name as EmotionName, level: level as 1 | 2 | 3 });
-    }
-    const rating = buildRating({ face: { v: this._padV, a: this._padA }, labels });
+    const rating = buildRating({ face: { v: this._padV, a: this._padA }, labels: this._activeLabels() });
     this.dispatchEvent(new CustomEvent<Rating>('commit', {
       detail: rating,
       bubbles: true,
@@ -788,10 +815,7 @@ export class AffectKitRater extends LitElement {
     const glowOn = this.colorMode === 'background';
     const wordsMode = this.colorMode === 'words';
 
-    const activeLabels: Array<{ name: EmotionName; level: number }> = [];
-    for (const [name, level] of this._levels) {
-      if (level > 0) activeLabels.push({ name: name as EmotionName, level: level as 1 | 2 | 3 });
-    }
+    const activeLabels = this._activeLabels();
     const hasLabels = activeLabels.length > 0;
     const vad = hasLabels
       ? this._computeDisplayVAD(activeLabels)
@@ -824,6 +848,7 @@ export class AffectKitRater extends LitElement {
           ></div>
         </div>
 
+        ${this.faceOnly ? this._renderFaceOnlyFooter() : html`
         <div class="chips-zone${this._revealed ? '' : ' empty'}">
           <div class="chip-header${this._dragging ? ' dragging' : ''}">
             <p class="chips-hint${hasLabels ? ' gone' : ''}">name what you feel</p>
@@ -871,6 +896,24 @@ export class AffectKitRater extends LitElement {
             </p>
           ` : nothing}
         </div>
+        `}
+      </div>
+    `;
+  }
+
+  /** Face-only: the submit button, once the face has been placed. */
+  private _renderFaceOnlyFooter() {
+    return html`
+      <div class="face-only-footer${this._dragging ? ' dragging' : ''}">
+        <button
+          class="submit-btn${this._revealed ? ' visible' : ''}"
+          @click=${this._onSubmit}
+        >${this.submitLabel}</button>
+        ${this.showVad ? html`
+          <p class="vad-readout">
+            V ${this._padV.toFixed(2)} &middot; A ${this._padA.toFixed(2)}
+          </p>
+        ` : nothing}
       </div>
     `;
   }
