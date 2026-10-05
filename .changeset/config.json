@@ -12,6 +12,7 @@
     "playground",
     "@affect-kit-harness/react",
     "@affect-kit/tsconfig",
-    "@affect-kit/eslint-config"
+    "@affect-kit/eslint-config",
+    "@affect-kit/checkin-core"
   ]
 }

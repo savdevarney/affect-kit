@@ -1,0 +1,43 @@
+{
+  "format": "checkin-safety-eval/1",
+  "about": "Hand-written, synthetic texts for the crisis screen. `show: true` must show resources; `show: false` should stay quiet; `either` is acceptable both ways and isn't scored, so the screen isn't tuned to our own edge cases. Recall on `true` is the number that matters (docs/checkin/safety.md).",
+  "cases": [
+    { "id": "explicit-kill-myself", "text": "I want to kill myself.", "show": true, "tags": ["explicit"] },
+    { "id": "explicit-suicide", "text": "I've been thinking about suicide a lot this week.", "show": true, "tags": ["explicit"] },
+    { "id": "explicit-want-to-die", "text": "I just want to die.", "show": true, "tags": ["explicit"] },
+    { "id": "explicit-end-it", "text": "Some days I want to end it all.", "show": true, "tags": ["explicit"] },
+    { "id": "passive-better-off", "text": "Sometimes I think everyone would be better off without me.", "show": true, "tags": ["passive"] },
+    { "id": "passive-not-wake-up", "text": "I wish I could fall asleep and not wake up.", "show": true, "tags": ["passive"] },
+    { "id": "passive-no-reason", "text": "There's no reason to live anymore.", "show": true, "tags": ["passive"] },
+    { "id": "passive-not-alive", "text": "I don't want to be alive.", "show": true, "tags": ["passive"] },
+    { "id": "passive-disappear", "text": "I want to disappear and never come back.", "show": true, "tags": ["passive"] },
+    { "id": "self-harm-again", "text": "I cut myself again last night.", "show": true, "tags": ["self-harm"] },
+    { "id": "self-harm-urge", "text": "I keep thinking about hurting myself.", "show": true, "tags": ["self-harm"] },
+    { "id": "self-harm-named", "text": "Day 40 without self-harm and today was hard.", "show": true, "tags": ["self-harm"] },
+    { "id": "overdose-pills", "text": "I took too many pills on purpose.", "show": true, "tags": ["self-harm"] },
+    { "id": "slang-kms", "text": "kms this week honestly", "show": true, "tags": ["slang"] },
+    { "id": "slang-unalive", "text": "thinking about unaliving myself", "show": true, "tags": ["slang"] },
+    { "id": "third-person-friend", "text": "My best friend told me she wants to kill herself.", "show": true, "tags": ["third-person"] },
+    { "id": "third-person-son", "text": "My son said he wants to die and I don't know what to do.", "show": true, "tags": ["third-person"] },
+    { "id": "past-attempt", "text": "Two years ago I attempted suicide. Today I'm proud of how far I've come.", "show": true, "tags": ["past"] },
+    { "id": "danger-home", "text": "I don't feel safe at home.", "show": true, "tags": ["danger"] },
+    { "id": "danger-threat", "text": "He said he's going to hurt me if I leave.", "show": true, "tags": ["danger"] },
+    { "id": "spanish-morir", "text": "Ya no puedo más, quiero morirme.", "show": true, "tags": ["spanish"] },
+
+    { "id": "hyperbole-commute", "text": "This commute is killing me.", "show": false, "tags": ["hyperbole"] },
+    { "id": "hyperbole-burrito", "text": "I could murder a burrito right now.", "show": false, "tags": ["hyperbole"] },
+    { "id": "hyperbole-embarrassment", "text": "I want to die of embarrassment.", "show": false, "tags": ["hyperbole"] },
+    { "id": "hyperbole-dying-to", "text": "Dying to see the new exhibit.", "show": false, "tags": ["hyperbole"] },
+    { "id": "injury-onions", "text": "Cut my finger chopping onions.", "show": false, "tags": ["body"] },
+    { "id": "phone-died", "text": "My phone died and I'm so annoyed.", "show": false, "tags": ["hyperbole"] },
+    { "id": "killed-it", "text": "Killed it at the gym today.", "show": false, "tags": ["hyperbole"] },
+    { "id": "plants-dying", "text": "The plants are dying because I forgot to water them. Sad.", "show": false, "tags": ["ordinary"] },
+    { "id": "laughing-dead", "text": "I'm dead, that video was so funny.", "show": false, "tags": ["hyperbole"] },
+    { "id": "hopeless-election", "text": "Feeling hopeless about the election.", "show": false, "tags": ["ordinary"] },
+    { "id": "sad-tired", "text": "Tired and a bit sad today.", "show": false, "tags": ["ordinary"] },
+
+    { "id": "either-novel", "text": "Finished a novel about a character's suicide. Moved.", "show": "either", "tags": ["media"] },
+    { "id": "either-kill-me-now", "text": "kill me now, it's Monday", "show": "either", "tags": ["hyperbole"] },
+    { "id": "either-cant-go-on", "text": "I can't go on like this at work.", "show": "either", "tags": ["ambiguous"] }
+  ]
+}

@@ -1,0 +1,9 @@
+// The eval harness's only way into Cloudflare: the Workers AI binding, remote,
+// through Wrangler's platform proxy with your own `wrangler login`. Nothing here
+// is deployed. Calls are billed to the account (cents for a full run), and the
+// cases are synthetic, so no one's check-in is ever sent.
+{
+	"name": "checkin-feelings-eval",
+	"compatibility_date": "2026-09-28",
+	"ai": { "binding": "AI", "remote": true }
+}
