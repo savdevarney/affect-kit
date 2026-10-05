@@ -40,7 +40,8 @@ Monorepo-level conventions and the design rules behind the published package. Th
 │   ├── playground/                # local dev host (Vite) with full settings explorer
 │   └── harness/                   # framework integration test harnesses (react/ is wired; more planned)
 └── docs/
-    └── longitudinal-future.md     # design rationale for retired widgets
+    ├── longitudinal-future.md     # design rationale for retired widgets
+    └── checkin/                   # the check-in app: design, evals, wording, safety, privacy
 ```
 
 ## Public API surface — what's exported

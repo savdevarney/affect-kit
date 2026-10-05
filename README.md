@@ -39,7 +39,8 @@ The face glyph is intentionally minimal: no skin tone, no hair, no body. It carr
 │   ├── playground/                # local dev host (Vite) — full settings explorer
 │   └── harness/                   # framework integration test harnesses
 └── docs/
-    └── longitudinal-future.md     # design rationale for retired widgets
+    ├── longitudinal-future.md     # design rationale for retired widgets
+    └── checkin/                   # the check-in app: design, evals, wording, safety, privacy
 ```
 
 ## Local development
