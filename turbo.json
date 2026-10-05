@@ -5,7 +5,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["src/**", "tsconfig*.json", "vite.config.*", "package.json"],
-      "outputs": ["dist/**", ".astro/**", "build/**"]
+      "outputs": ["dist/**", ".astro/**", "build/**", ".svelte-kit/output/**", ".svelte-kit/cloudflare/**"]
     },
     "dev": {
       "cache": false,

@@ -32,11 +32,13 @@ The face glyph is intentionally minimal: no skin tone, no hair, no body. It carr
 ├── packages/
 │   ├── affect-kit/                # the published npm package
 │   ├── react/                     # @affect-kit/react — typed React wrappers
+│   ├── checkin-core/              # private: the check-in app's agentic step, safety screen and evals
 │   ├── tsconfig/                  # shared TS configs
 │   └── eslint-config/             # shared lint config
 ├── apps/
 │   ├── site/                      # affectkit.com (Astro on Cloudflare Pages)
 │   ├── playground/                # local dev host (Vite) — full settings explorer
+│   ├── checkin/                   # a reference app: face → words → feeling words (docs/checkin)
 │   └── harness/                   # framework integration test harnesses
 └── docs/
     └── longitudinal-future.md     # design rationale for retired widgets

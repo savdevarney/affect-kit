@@ -33,11 +33,13 @@ Monorepo-level conventions and the design rules behind the published package. Th
 │   │     styles/                  # shared Lit CSS
 │   │   test/{unit,integration,visual}/
 │   ├── react/                     # @affect-kit/react — typed React wrappers
+│   ├── checkin-core/              # private: the check-in app's core (ports, extractors, policy, evals)
 │   ├── tsconfig/                  # shared @affect-kit/tsconfig
 │   └── eslint-config/             # shared @affect-kit/eslint-config
 ├── apps/
 │   ├── site/                      # affectkit.com (Astro, deploys to Cloudflare Pages)
 │   ├── playground/                # local dev host (Vite) with full settings explorer
+│   ├── checkin/                   # reference app on a Cloudflare Worker (SvelteKit, Hono, D1)
 │   └── harness/                   # framework integration test harnesses (react/ is wired; more planned)
 └── docs/
     └── longitudinal-future.md     # design rationale for retired widgets
