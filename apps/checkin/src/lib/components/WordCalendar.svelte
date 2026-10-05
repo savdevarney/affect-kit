@@ -7,7 +7,7 @@
 -->
 <script lang="ts">
   import { EMOTION_LABELS } from 'affect-kit/data';
-  import { checkinCount, LEVEL_WORDS, readingOrder, type EmotionName, type Level } from '@affect-kit/checkin-core';
+  import { checkinCount, COPY, LEVEL_WORDS, readingOrder, type EmotionName, type Level } from '@affect-kit/checkin-core';
   import type { DayWords } from '$lib/prototype-data';
 
   interface Props {
@@ -41,7 +41,7 @@
 
 <div class="scroll">
   <table>
-    <caption class="visually-hidden">Words logged each day. Dot size is how strong the word was that day; the last column of each week counts the days with that word.</caption>
+    <caption class="visually-hidden">{COPY.weeks.caption}</caption>
     <thead>
       <tr>
         <th scope="col"><span class="visually-hidden">Word</span></th>
@@ -51,7 +51,7 @@
               <span aria-hidden="true">{day(date, 'narrow')}</span><span class="visually-hidden">{day(date, 'long')}</span>
             </th>
           {/each}
-          <th scope="col" class="count">days</th>
+          <th scope="col" class="count">{COPY.weeks.days}</th>
         {/each}
       </tr>
     </thead>
@@ -89,7 +89,7 @@
     </tbody>
     <tfoot>
       <tr>
-        <th scope="row">check-ins</th>
+        <th scope="row">{COPY.weeks.checkins}</th>
         {#each weeks as week, w (week[0])}
           {#each week as date (date)}
             <td class:week-start={w > 0 && date === week[0]}>{checkinsOn(date) || '·'}</td>
@@ -100,7 +100,7 @@
     </tfoot>
   </table>
 </div>
-<p class="note">{checkinCount(checkins.length)} over {dates.length} days. * Your own word: not one of the 55.</p>
+<p class="note">{checkinCount(checkins.length)} over {dates.length} days. * {COPY.weeks.ownWordMark}</p>
 
 <style>
   .scroll {

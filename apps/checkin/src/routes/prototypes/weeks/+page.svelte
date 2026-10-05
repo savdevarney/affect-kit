@@ -4,7 +4,7 @@
   show change over time wait for Sav's review of the wording rules (§ 4).
 -->
 <script lang="ts">
-  import { addDays, localDate } from '@affect-kit/checkin-core';
+  import { addDays, COPY, localDate } from '@affect-kit/checkin-core';
   import { syntheticWeeks } from '$lib/prototype-data';
   import WordCalendar from '$lib/components/WordCalendar.svelte';
 
@@ -17,15 +17,12 @@
   const checkins = syntheticWeeks(today, dates.length);
 </script>
 
-<svelte:head><title>Weeks (prototype) · Check-in</title></svelte:head>
+<svelte:head><title>{COPY.weeks.title} · Check-in</title></svelte:head>
 
 <header class="intro">
-  <p class="tag">Prototype · synthetic data</p>
-  <h1>Two weeks of words</h1>
-  <p class="note">
-    The words logged each day. A dot means the word was logged that day, and its size is how strong it was. Each week ends with the number of days the
-    word was logged; the last week is this week so far. Gaps are days without that word, or without check-ins.
-  </p>
+  <p class="tag">{COPY.weeks.tag}</p>
+  <h1>{COPY.weeks.title}</h1>
+  <p class="note">{COPY.weeks.about}</p>
 </header>
 
 <WordCalendar {dates} {checkins} />

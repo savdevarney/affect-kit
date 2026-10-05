@@ -36,7 +36,7 @@
     {#if !reviewed && checkin.words.length}<p class="note">{COPY.day.notReviewed}</p>{/if}
     {#if checkin.body}
       <details>
-        <summary>Your words</summary>
+        <summary>{COPY.day.yourWords}</summary>
         <p>{checkin.body}</p>
       </details>
     {/if}
@@ -48,7 +48,7 @@
       <p id={`confirm-${checkin.id}`}>{COPY.day.confirmDelete}</p>
       <div class="actions">
         <button class="button" value="delete" onclick={() => ondelete(checkin.id)}>{COPY.day.delete}</button>
-        <button class="button quiet" value="cancel">Cancel</button>
+        <button class="button quiet" value="cancel">{COPY.day.cancel}</button>
       </div>
     </form>
   </dialog>

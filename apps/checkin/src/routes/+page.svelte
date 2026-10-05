@@ -56,7 +56,7 @@
       chosen = created.words.map((w) => ({ name: w.name, level: w.level, said: w.evidence }));
       step = 'review';
     } catch {
-      failed = 'Couldn’t save that. Check your connection and try again: nothing is saved twice.';
+      failed = COPY.wordsStep.failed;
     } finally {
       busy = false;
     }
@@ -83,7 +83,7 @@
       await reviewWords(created.id, { words: chosen.map(({ name, level }) => ({ name, level })) });
       await goto(`/day/${created.localDate}`);
     } catch {
-      failed = 'Couldn’t save your words. Try again.';
+      failed = COPY.reviewStep.failed;
       busy = false;
     }
   }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BANNED_IN_OUR_VOICE, chipLabel, COPY, daysLine } from '../src/words.ts';
+import { CRISIS_COPY, CRISIS_LINES } from '../src/safety/resources.ts';
 import { EMOTION_NAMES, nearestWords, readingOrder, VOCABULARY_ID } from '../src/vocabulary.ts';
 
 /** Every string in the copy, however deep. */
@@ -8,7 +9,7 @@ const strings = (value: unknown): string[] =>
 
 describe('the wording rules (docs/checkin/visualizations.md § 2)', () => {
   it.each(BANNED_IN_OUR_VOICE)('our copy never says "%s"', (banned) => {
-    const offending = strings(COPY).filter((s) => new RegExp(`\\b${banned}`, 'i').test(s));
+    const offending = strings([COPY, CRISIS_COPY, CRISIS_LINES]).filter((s) => new RegExp(`\\b${banned}`, 'i').test(s));
     expect(offending).toEqual([]);
   });
 

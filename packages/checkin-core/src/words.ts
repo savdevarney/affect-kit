@@ -21,6 +21,7 @@ export const COPY = {
     submit: 'Find my words',
     working: 'Reading your words',
     skip: 'Save the face only',
+    failed: 'Couldn’t save that. Check your connection and press the button again: nothing is saved twice.',
   },
   reviewStep: {
     title: 'Your feeling words',
@@ -32,13 +33,30 @@ export const COPY = {
     simpleMatching: 'Found with simple word matching.',
     yourWord: 'your word',
     yourWordNote: 'Kept as you wrote it: it isn’t one of the 55 words.',
+    failed: 'Couldn’t save your words. Press Done again.',
   },
   day: {
+    today: 'Today',
+    yesterday: 'Yesterday',
+    before: 'The day before',
+    after: 'The day after',
+    yourWords: 'Your words',
+    cancel: 'Cancel',
     empty: 'No check-ins',
     checkIn: 'Check in',
     notReviewed: 'not reviewed',
     delete: 'Delete',
     confirmDelete: 'Delete this check-in? Its words go with it.',
+  },
+  weeks: {
+    tag: 'Prototype · synthetic data',
+    title: 'Two weeks of words',
+    about:
+      'The words logged each day. A dot means the word was logged that day, and its size is how strong it was. Each week ends with the number of days the word was logged; the last week is this week so far. Gaps are days without that word, or without check-ins.',
+    caption: 'Words logged each day. Dot size is how strong the word was that day; the last column of each week counts the days with that word.',
+    days: 'days',
+    checkins: 'check-ins',
+    ownWordMark: 'Your own word: not one of the 55.',
   },
   notAdvice: 'A personal log of the words you choose: not a test, and not medical advice.',
 } as const;

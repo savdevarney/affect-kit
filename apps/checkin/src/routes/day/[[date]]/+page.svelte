@@ -13,8 +13,8 @@
   let { data }: PageProps = $props();
 
   const label = $derived.by(() => {
-    if (data.date === data.today) return 'Today';
-    if (data.date === addDays(data.today, -1)) return 'Yesterday';
+    if (data.date === data.today) return COPY.day.today;
+    if (data.date === addDays(data.today, -1)) return COPY.day.yesterday;
     const [y, m, d] = data.date.split('-').map(Number) as [number, number, number];
     return new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(y, m - 1, d)));
   });
@@ -28,13 +28,13 @@
 <svelte:head><title>{label} · Check-in</title></svelte:head>
 
 <header class="day">
-  <a class="step" href={`/day/${addDays(data.date, -1)}`} aria-label="The day before">←</a>
+  <a class="step" href={`/day/${addDays(data.date, -1)}`} aria-label={COPY.day.before}>←</a>
   <div>
     <h1>{label}</h1>
     <p class="note">{checkinCount(data.checkins.length)}</p>
   </div>
   {#if data.date < data.today}
-    <a class="step" href={`/day/${addDays(data.date, 1)}`} aria-label="The day after">→</a>
+    <a class="step" href={`/day/${addDays(data.date, 1)}`} aria-label={COPY.day.after}>→</a>
   {:else}
     <span class="step" aria-hidden="true"></span>
   {/if}
