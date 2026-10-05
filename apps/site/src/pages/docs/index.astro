@@ -88,6 +88,8 @@ import 'affect-kit/compare'; // registers &lt;affect-kit-compare&gt;
 
 // Or register all four at once:
 import 'affect-kit';</pre>
+        <p>On a server or in a web worker, where there's no DOM, import the helpers and vocabulary from <code>affect-kit/data</code>. It registers nothing:</p>
+        <pre class="docs-code" set:text={`import { createRating, rehydrate, EMOTION_LABELS, type Rating } from 'affect-kit/data';`}></pre>
 
         <h3>TypeScript types</h3>
         <pre class="docs-code" set:text={`import type { Rating, EmotionLabel, EmotionName } from 'affect-kit';
@@ -722,7 +724,8 @@ const { v, a, d } = EMOTION_LABELS['joy'];
         <p>
           Helpers for the DB-persistence flow. <code>stripVad()</code> drops
           the redundant coordinates before insert; <code>rehydrate()</code>
-          fills them back on read.
+          fills them back on read. On a server, import them from
+          <code>affect-kit/data</code>.
         </p>
         <pre class="docs-code" set:text={`import { stripVad, rehydrate } from 'affect-kit';
 

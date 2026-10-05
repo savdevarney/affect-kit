@@ -32,5 +32,6 @@ module.exports = {
     entry('result'),
     entry('face'),
     entry('compare'),
+    entry('data'),
   ],
 };

@@ -45,7 +45,7 @@ Monorepo-level conventions and the design rules behind the published package. Th
 
 ## Public API surface — what's exported
 
-The published package exposes **four custom elements**, a few TypeScript types, two helper functions, and a set of documented CSS custom properties. Everything else is internal.
+The published package exposes **four custom elements**, a few TypeScript types, four helper functions, the vocabulary's coordinates, and a set of documented CSS custom properties. Everything else is internal.
 
 ### Per-entry exports map
 
@@ -57,7 +57,8 @@ The `package.json#exports` field is the resolver-level wall:
   "./rater":   "./dist/rater.js",     // import 'affect-kit/rater'
   "./result":  "./dist/result.js",    // import 'affect-kit/result'
   "./compare": "./dist/compare.js",   // import 'affect-kit/compare'
-  "./face":    "./dist/face.js"       // import 'affect-kit/face'
+  "./face":    "./dist/face.js",      // import 'affect-kit/face'
+  "./data":    "./dist/data.js"       // import 'affect-kit/data'          (no elements, no DOM)
 }
 ```
 
@@ -72,7 +73,9 @@ The `package.json#exports` field is the resolver-level wall:
 | `<affect-kit-compare>` | custom element | Two ratings or rating arrays side-by-side. |
 | `<affect-kit-face>`    | custom element | Standalone face glyph driven by `v` + `a`. |
 | `Rating`, `EmotionLabel`, `EmotionName`, `ColorMode` | TS types | Re-exported from each entry |
-| `createRating`, `averageRatings` | functions | Re-exported helpers |
+| `createRating`, `averageRatings`, `stripVad`, `rehydrate` | functions | Re-exported helpers |
+| `EMOTION_LABELS` | object | V/A/D per vocabulary word, for rehydrating stored ratings |
+| `affect-kit/data` | entry | The helpers, `EMOTION_LABELS` and the types with no custom elements: for servers and web workers, where Lit's browser build has no `HTMLElement` |
 | CSS custom properties  | runtime | `--affect-kit-{ink,paper,rule}`, `--affect-kit-color-{pink,gold,green,blue}`, `--affect-kit-font-size` |
 
 ### Encapsulation enforcement (multi-layered)
@@ -109,7 +112,7 @@ All three display components default `animated=true`. The boolean attribute uses
 
 ## Vocabulary
 
-The 51-emotion English vocabulary in `src/vocabulary/en.ts` is sourced from the **NRC VAD Lexicon v2.1** (Mohammad 2025). Every entry's V/A/D coordinates are direct from the lexicon, scaled to `[-1, 1]`. The vocabulary is **not** a consumer-configurable surface — sort order and intensity ramps depend on the specific coordinate distribution.
+The 55-emotion English vocabulary in `src/vocabulary/en.ts` is sourced from the **NRC VAD Lexicon v2.1** (Mohammad 2025). Every entry's V/A/D coordinates are direct from the lexicon, scaled to `[-1, 1]`. The vocabulary is **not** a consumer-configurable surface — sort order and intensity ramps depend on the specific coordinate distribution.
 
 ## Versioning + releases
 
