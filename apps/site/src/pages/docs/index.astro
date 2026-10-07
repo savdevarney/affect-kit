@@ -1,6 +1,8 @@
 ---
 import Base from '../../layouts/Base.astro';
 import '../../styles/global.css';
+// The demo below runs this exact file, and the page shows it as the code, so the two can't drift.
+import checkinSource from '../../examples/one-step-checkin.ts?raw';
 ---
 <Base
   title="Component reference — affect-kit"
@@ -64,6 +66,7 @@ import '../../styles/global.css';
             <li><a href="#face">face</a></li>
             <li><a href="#pad">pad</a></li>
             <li><a href="#chip">chip</a></li>
+            <li><a href="#compose">example: your own check-in</a></li>
             <li><a href="#compare">compare</a></li>
             <li><a href="#react">React wrapper</a></li>
             <li><a href="#types">TypeScript types</a></li>
@@ -674,6 +677,54 @@ chipStyle(3, surfacePalette(v, a, 'light'));
         </p>
       </section>
 
+      <!-- ── Example: a check-in built from the pieces ───── -->
+      <section id="compose" class="rp-section">
+        <h2>Example: build your own check-in</h2>
+        <p>
+          <code>&lt;affect-kit-rater&gt;</code> is the whole flow in one element. When your app
+          needs a different screen, such as a native text field, its own word list or its own
+          surface, build it from the pieces instead. This is a reference implementation: the face
+          is <code>&lt;affect-kit-pad&gt;</code>, the words are <code>&lt;affect-kit-chip&gt;</code>,
+          and everything else is the helper functions. Drag the face, then type a word.
+        </p>
+        <ul>
+          <li>The list is the whole vocabulary sorted by the face (<code>nearestLabels</code>). Once you type, it becomes an autocomplete: labels and everyday words that start with what you typed, still in face order (<code>completeLabels</code>). Type “stre” to find <em>overwhelmed</em>.</li>
+          <li>Tap a word up to three times for strength.</li>
+          <li><code>suggestLabels</code> reads your text and offers words. You accept them by tapping; nothing is selected for you.</li>
+          <li>Light: the whole screen takes the face's color, with text and chips chosen by contrast (<code>surfacePalette</code>). Dark: white face and chips, no color (<code>neutralPalette</code>).</li>
+        </ul>
+
+        <div class="docs-controls">
+          <span class="docs-ctrl">
+            <span class="docs-ctrl-label">theme</span>
+            <span class="docs-seg-group" data-seg="docs-checkin-theme" data-value="light">
+              <button class="docs-seg-btn" type="button" data-val="light" aria-pressed="true">light</button>
+              <button class="docs-seg-btn" type="button" data-val="dark"  aria-pressed="false">dark</button>
+            </span>
+          </span>
+          <button class="docs-seg-btn docs-reset" id="docs-checkin-reset" type="button">reset</button>
+        </div>
+        <div class="docs-demo docs-checkin-demo">
+          <div id="docs-checkin"></div>
+        </div>
+        <p class="docs-demo-hint">What the app receives, the same <code>Rating</code> the rater emits (a face with no words is valid):</p>
+        <pre class="docs-code" id="docs-checkin-rating">Drag the face.</pre>
+
+        <p>
+          In an app with native views (the case this was built for: a tap that starts in a web view
+          drops the native keyboard), keep only the pad in a web view and draw the text field and
+          words natively. <a href="#chip-style"><code>chipStyle(level, colors)</code></a> returns the
+          chip as plain data, and the other helpers are pure functions from
+          <code>affect-kit/data</code>, which needs no DOM. To drive the pad from native touch, set
+          its <code>v</code> and <code>a</code> from outside.
+        </p>
+
+        <details class="docs-source" open>
+          <summary>Source: <code>apps/site/src/examples/one-step-checkin.ts</code></summary>
+          <pre class="docs-code" set:text={checkinSource}></pre>
+        </details>
+      </section>
+
       <!-- ── 6: affect-kit-compare ──────────────────────── -->
       <section id="compare" class="rp-section">
         <h2>7. <code>&lt;affect-kit-compare&gt;</code></h2>
@@ -1086,6 +1137,7 @@ const ref = useRef<AffectKitRater>(null);
     import 'affect-kit/compare';
     import { createRating, averageRatings } from 'affect-kit';
     import type { ColorMode } from 'affect-kit';
+    import { mountCheckin } from '../../examples/one-step-checkin';
     import type { AffectKitRater }   from 'affect-kit/rater';
     import type { AffectKitResult }  from 'affect-kit/result';
     import type { AffectKitFace }    from 'affect-kit/face';
@@ -1121,6 +1173,30 @@ const ref = useRef<AffectKitRater>(null);
     });
     seg('docs-rater-color',          (m) => { if (rater) rater.colorMode = m; });
     toggle('docs-rater-animated',    (v) => { if (rater) rater.animated  = v; });
+
+    // ── Example: a check-in built from the pad, chips and helpers ────
+    const checkinRoot = document.getElementById('docs-checkin');
+    const ratingOut   = document.getElementById('docs-checkin-rating');
+    const checkin = checkinRoot && mountCheckin(checkinRoot, (rating) => {
+      if (ratingOut) ratingOut.textContent = JSON.stringify({
+        face: { v: +rating.face.v.toFixed(2), a: +rating.face.a.toFixed(2) },
+        labels: rating.labels.map(({ name, level }) => ({ name, level })),
+        composite: rating.composite && { v: +rating.composite.v.toFixed(2), a: +rating.composite.a.toFixed(2), d: +rating.composite.d.toFixed(2) },
+      }, null, 2);
+    });
+    document.querySelectorAll<HTMLElement>('[data-seg="docs-checkin-theme"] .docs-seg-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        const group = b.parentElement!;
+        group.dataset.value = b.dataset.val ?? 'light';
+        group.querySelectorAll('.docs-seg-btn').forEach(o => o.setAttribute('aria-pressed', String(o === b)));
+        checkin?.setTheme(b.dataset.val === 'dark' ? 'dark' : 'light');
+        document.getElementById('docs-checkin')?.closest<HTMLElement>('.docs-demo')?.classList.toggle('is-dark', b.dataset.val === 'dark');
+      });
+    });
+    document.getElementById('docs-checkin-reset')?.addEventListener('click', () => {
+      checkin?.reset();
+      if (ratingOut) ratingOut.textContent = 'Drag the face.';
+    });
 
     // ── Result pre-seed + controls ────────────────────────────────────
     const seed = createRating({ face: { v: 0.55, a: 0.2 }, labels: [
@@ -1187,6 +1263,12 @@ const ref = useRef<AffectKitRater>(null);
     padding: 1.5rem;
     margin: 1.5rem 0 2rem;
   }
+
+  /* The check-in paints its own screen; the demo frame just gets out of its way. */
+  .docs-checkin-demo { padding: 0.75rem; }
+  .docs-checkin-demo.is-dark { background: #1a1a1a; }
+  .docs-reset { border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .docs-source summary { cursor: pointer; font-size: 0.85rem; margin-top: 1.5rem; }
 
   .docs-demo-hint {
     font-size: 0.75rem;
