@@ -35,6 +35,11 @@ export interface SurfacePalette {
   l3: string;
   /** Text on `l3`: black or white, whichever contrasts more. */
   l3Ink: string;
+  /**
+   * Outline for selected chips: `l3` pulled toward the dark ink, so the rings
+   * read as a darker stroke of the chip's own hue. Opaque.
+   */
+  ring: string;
   /** `true` when `surface` is light enough that `ink` is black. */
   isLight: boolean;
 }
@@ -48,6 +53,7 @@ export interface SurfacePaletteRgb {
   chipInk: Rgb;
   l3: Rgb;
   l3Ink: Rgb;
+  ring: Rgb;
   isLight: boolean;
 }
 
@@ -79,6 +85,14 @@ function dimInk(ink: Rgb, bg: Rgb): Rgb {
   return ink;
 }
 
+// The rings are the chip's own color pulled toward the dark paper: half-way on
+// light surfaces, a little less on dark ones where the lifted fill needs to stay lit.
+const RING_SHARE: Record<'light' | 'dark', number> = { light: 0.5, dark: 0.45 };
+
+function ringFor(l3: Rgb, theme: 'light' | 'dark'): Rgb {
+  return mixOver(l3, PAPER.dark, RING_SHARE[theme]);
+}
+
 /** @internal */
 export function surfacePaletteRgb(v: number, a: number, theme: 'light' | 'dark'): SurfacePaletteRgb {
   const color = colorForVA(v, a);
@@ -99,6 +113,7 @@ export function surfacePaletteRgb(v: number, a: number, theme: 'light' | 'dark')
     chipInk: dimInk(bestInk(chipSurface), chipSurface),
     l3,
     l3Ink: bestInk(l3),
+    ring: ringFor(l3, theme),
     isLight,
   };
 }
@@ -133,6 +148,73 @@ export function surfacePalette(v: number, a: number, theme: 'light' | 'dark'): S
     chipInk: hex(p.chipInk),
     l3:      hex(p.l3),
     l3Ink:   hex(p.l3Ink),
+    ring:    hex(p.ring),
     isLight: p.isLight,
+  };
+}
+
+/**
+ * Colors with no hue: the paper, ink-tinted chips, and an ink-filled selected
+ * chip. For chips or screens that shouldn't take the face's color, such as an
+ * unselected word list in a dark, colorless check-in. Same shape as
+ * {@link surfacePalette}, so one renderer handles both.
+ *
+ * ```ts
+ * chipStyle(0, neutralPalette('dark')); // a colorless unselected chip
+ * ```
+ */
+export function neutralPalette(theme: 'light' | 'dark'): SurfacePalette {
+  const paper = PAPER[theme];
+  const ink: Rgb = theme === 'light' ? [26, 26, 26] : WHITE;
+  const chipBg = { rgb: ink, alpha: 0.05 };
+  const chipSurface = mixOver(chipBg.rgb, paper, chipBg.alpha);
+  const [r, g, b] = chipBg.rgb;
+  return {
+    surface: hex(paper),
+    ink: hex(ink),
+    inkDim: hex(dimInk(ink, paper)),
+    chipBg: `rgba(${r}, ${g}, ${b}, ${chipBg.alpha})`,
+    chipInk: hex(dimInk(ink, chipSurface)),
+    l3: hex(ink),
+    l3Ink: hex(paper),
+    ring: hex(mixOver(ink, paper, 0.75)),
+    isLight: theme === 'light',
+  };
+}
+
+/** Colors for one chip in a sheet where each word carries its own V/A color. */
+export type WordChipColors = Pick<SurfacePalette, 'surface' | 'ink' | 'chipBg' | 'chipInk' | 'l3' | 'l3Ink' | 'ring'>;
+
+// Words tint their own chip faintly at rest; dark paper needs a stronger tint
+// or the hues muddy toward gray.
+const WORD_TINT: Record<'light' | 'dark', number> = { light: 0.14, dark: 0.36 };
+
+/**
+ * Colors for the chip of a word at (v, a), on a neutral paper: a faint tint
+ * of its own color at rest, the full color when selected. This is what
+ * `<affect-kit-rater color-mode="words">` draws for each word, so an app can
+ * match it:
+ *
+ * ```ts
+ * const { v, a } = EMOTION_LABELS.joy;
+ * chipStyle(2, wordChipColors(v, a, 'light'));
+ * ```
+ */
+export function wordChipColors(v: number, a: number, theme: 'light' | 'dark'): WordChipColors {
+  const paper = PAPER[theme];
+  const raw = colorForVA(v, a);
+  // On dark paper, lift the color so dim hues (cobalt, deep magenta) still read.
+  const fill = theme === 'dark' ? lighterForChips(raw) : raw;
+  const chipBg = { rgb: fill, alpha: WORD_TINT[theme] };
+  const chipSurface = mixOver(chipBg.rgb, paper, chipBg.alpha);
+  const [r, g, b] = chipBg.rgb;
+  return {
+    surface: hex(paper),
+    ink: hex(bestInk(paper)),
+    chipBg: `rgba(${r}, ${g}, ${b}, ${chipBg.alpha})`,
+    chipInk: hex(dimInk(bestInk(chipSurface), chipSurface)),
+    l3: hex(fill),
+    l3Ink: hex(bestInk(fill)),
+    ring: hex(ringFor(fill, theme)),
   };
 }

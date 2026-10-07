@@ -41,8 +41,9 @@ Requires Lit 3 as a peer dependency.
 | `<affect-kit-compare>` | Two snapshots side-by-side, or two arrays of ratings averaged. |
 | `<affect-kit-face>`    | Standalone face glyph driven by `v` and `a` props. |
 | `<affect-kit-pad>`     | The rater's face pad alone, for apps that build their own word list. Fires `input` and `change` with `{ v, a }`. |
+| `<affect-kit-chip>`    | One emotion word as a pill with 1-3 intensity rings. Colorless by default; `readonly` for result screens. |
 
-Each ships as its own entry point (`affect-kit/rater`, `/result`, `/compare`, `/face`, `/pad`) and as a bundled side-effect import (`affect-kit`).
+Each ships as its own entry point (`affect-kit/rater`, `/result`, `/compare`, `/face`, `/pad`, `/chip`) and as a bundled side-effect import (`affect-kit`).
 
 ## Helpers
 
@@ -55,7 +56,9 @@ Each ships as its own entry point (`affect-kit/rater`, `/result`, `/compare`, `/
 | `nearestLabels(v, a, n?)` | Labels ordered by distance from a face position: the rater's chip order. |
 | `SYNONYMS_EN` | Everyday words mapped to labels (`stressed` → `overwhelmed`). |
 | `completeLabels(prefix, v, a)` | Labels or synonyms starting with `prefix`, in face order. |
-| `labelsInText(text)` | Labels a piece of text names, each with the word that named it. |
+| `suggestLabels(text)` | Labels a text points at, each with a level (1-3) and a confidence. Skips negated words. Rules only: no model, no network. |
+| `chipStyle(level, colors)` | A word chip's look as plain data (colors, rings, sizes), so native views can draw the same chip. |
+| `neutralPalette(theme)`, `wordChipColors(v, a, theme)` | Colors for chips with no hue, or tinted by the word's own color. |
 | `surfacePalette(v, a, theme)` | Surface, text and chip colors for a face position, matching the rater's `color-mode="background"`. Text meets `MIN_TEXT_CONTRAST` (4.5:1). |
 
 ```ts

@@ -18,6 +18,7 @@ export default defineConfig({
         face:    resolve(__dirname, 'src/face.ts'),
         compare: resolve(__dirname, 'src/compare.ts'),
         pad:     resolve(__dirname, 'src/pad.ts'),
+        chip:    resolve(__dirname, 'src/chip.ts'),
         data:    resolve(__dirname, 'src/data.ts'),
       },
       formats: ['es'],

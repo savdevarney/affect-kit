@@ -1,10 +1,10 @@
 // Pure module: find vocabulary labels by V/A distance, by prefix, and in text.
 // No DOM, no Lit.
 
-import { EMOTIONS, EMOTIONS_BY_NAME, type EmotionName } from './en';
+import { EMOTIONS, type EmotionName } from './en';
 import { SYNONYMS_EN } from './synonyms-en';
 
-/** A label found by {@link completeLabels} or {@link labelsInText}. */
+/** A label found by {@link completeLabels}. */
 export interface LabelMatch {
   name: EmotionName;
   /**
@@ -29,10 +29,6 @@ export function nearestLabels(v: number, a: number, n: number = EMOTIONS.length)
     .sort((x, y) => x.dist - y.dist)
     .slice(0, n)
     .map(e => e.name);
-}
-
-function isLabel(word: string): word is EmotionName {
-  return EMOTIONS_BY_NAME.has(word);
 }
 
 /**
@@ -64,30 +60,4 @@ export function completeLabels(prefix: string, v: number, a: number): LabelMatch
     }
   }
   return matches;
-}
-
-/**
- * Labels named in a piece of text, in the order they first appear, each
- * once. A word names a label when it is the label or a key of
- * {@link SYNONYMS_EN}; matching ignores case. Whole words only, with no
- * stemming and no reading of negation: "not stressed" still names
- * overwhelmed.
- *
- * ```ts
- * labelsInText('Stressed but grateful');
- * // [{ name: 'overwhelmed', synonym: 'stressed' }, { name: 'grateful' }]
- * ```
- */
-export function labelsInText(text: string): LabelMatch[] {
-  const found = new Map<EmotionName, LabelMatch>();
-  // Runs of letters, so "worn-out" yields "worn" and "out".
-  for (const [word] of text.toLowerCase().matchAll(/\p{L}+/gu)) {
-    if (isLabel(word)) {
-      if (!found.has(word)) found.set(word, { name: word });
-    } else if (Object.hasOwn(SYNONYMS_EN, word)) {
-      const name = SYNONYMS_EN[word]!;
-      if (!found.has(name)) found.set(name, { name, synonym: word });
-    }
-  }
-  return [...found.values()];
 }

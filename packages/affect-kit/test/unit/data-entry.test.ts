@@ -30,13 +30,16 @@ describe('affect-kit/data', () => {
       'SURFACE_MIX',
       'SYNONYMS_EN',
       'averageRatings',
+      'chipStyle',
       'completeLabels',
       'createRating',
-      'labelsInText',
       'nearestLabels',
+      'neutralPalette',
       'rehydrate',
       'stripVad',
+      'suggestLabels',
       'surfacePalette',
+      'wordChipColors',
     ]);
   });
 

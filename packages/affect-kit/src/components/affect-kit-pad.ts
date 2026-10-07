@@ -2,7 +2,7 @@ import { LitElement, html, css, type PropertyValues } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import { colorForVA } from '../core/color';
 import { surfacePaletteRgb } from '../core/palette';
-import { themeConverter } from '../core/theme';
+import { resolveTheme, themeConverter } from '../core/theme';
 import type { PadGlow, Theme } from '../core/types';
 
 const DWELL_MS = 500;
@@ -217,13 +217,6 @@ export class AffectKitPad extends LitElement {
     }
   }
 
-  private _isDark(): boolean {
-    return this.theme === 'dark' ||
-      (this.theme === 'auto' &&
-        typeof matchMedia !== 'undefined' &&
-        matchMedia('(prefers-color-scheme: dark)').matches);
-  }
-
   // ── Render ────────────────────────────────────────────────────────────────
 
   override render() {
@@ -233,7 +226,7 @@ export class AffectKitPad extends LitElement {
       const [r, g, b] = colorForVA(this.v, this.a);
       // The selected-chip color: it stands out against the V/A surface an app
       // paints behind the pad, where the raw color would vanish.
-      const [dr, dg, db] = surfacePaletteRgb(this.v, this.a, this._isDark() ? 'dark' : 'light').l3;
+      const [dr, dg, db] = surfacePaletteRgb(this.v, this.a, resolveTheme(this.theme)).l3;
       glowColor = `rgb(${r}, ${g}, ${b})`;
       dotColor = `rgb(${dr}, ${dg}, ${db})`;
     }

@@ -9,7 +9,7 @@ import type { AffectKitResult }  from 'affect-kit/result';
 import type { AffectKitRater }   from 'affect-kit/rater';
 import type { AffectKitCompare } from 'affect-kit/compare';
 import { createRating, averageRatings } from 'affect-kit';
-import { surfacePalette, completeLabels, labelsInText } from 'affect-kit/data';
+import { surfacePalette, completeLabels, suggestLabels } from 'affect-kit/data';
 import type { ColorMode, Layout, Rating, Theme } from 'affect-kit';
 
 // ── Element refs ───────────────────────────────────────────────────────────
@@ -370,7 +370,7 @@ function renderCompareCode() {
   codeCompare.textContent =
     `import 'affect-kit/compare';\n` +
     `import { createRating, averageRatings } from 'affect-kit';
-import { surfacePalette, completeLabels, labelsInText } from 'affect-kit/data';\n` +
+import { surfacePalette, completeLabels, suggestLabels } from 'affect-kit/data';\n` +
     `\n` +
     fmtRatings('yesterday', yesterday) + `\n\n` +
     fmtRatings('today', today) + `\n\n` +
@@ -469,8 +469,8 @@ afterInput?.addEventListener('input', () => {
       li.append(btn);
       return li;
     }));
-    const named = labelsInText(typed).map(m => m.name).join(', ');
-    if (caption) caption.textContent = `v ${pos.v.toFixed(2)} · a ${pos.a.toFixed(2)}` + (named ? ` · text names: ${named}` : '');
+    const named = suggestLabels(typed).map(m => `${m.name} ${m.level}`).join(', ');
+    if (caption) caption.textContent = `v ${pos.v.toFixed(2)} · a ${pos.a.toFixed(2)}` + (named ? ` · text suggests: ${named}` : '');
   };
 
   pad?.addEventListener('input', (e) => {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { EMOTIONS, EMOTION_LABELS, EMOTIONS_BY_NAME } from '../../src/vocabulary/en';
 import { SYNONYMS_EN } from '../../src/vocabulary/synonyms-en';
-import { nearestLabels, completeLabels, labelsInText } from '../../src/vocabulary/search';
+import { nearestLabels, completeLabels } from '../../src/vocabulary/search';
 
 describe('nearestLabels', () => {
   it('returns every label, closest first', () => {
@@ -85,31 +85,5 @@ describe('completeLabels', () => {
 
   it('returns nothing when nothing matches', () => {
     expect(completeLabels('xyz', 0, 0)).toEqual([]);
-  });
-});
-
-describe('labelsInText', () => {
-  it('finds labels and synonyms in order, each once', () => {
-    expect(labelsInText('Stressed but grateful. So stressed, honestly happy too')).toEqual([
-      { name: 'overwhelmed', synonym: 'stressed' },
-      { name: 'grateful' },
-      { name: 'joy', synonym: 'happy' },
-    ]);
-  });
-
-  it('matches whole words only', () => {
-    expect(labelsInText('sadly safety madness')).toEqual([]);
-  });
-
-  it('splits hyphenated words', () => {
-    expect(labelsInText('totally worn-out')).toEqual([{ name: 'tired', synonym: 'worn' }]);
-  });
-
-  it('ignores Object.prototype keys', () => {
-    expect(labelsInText('constructor toString hasOwnProperty')).toEqual([]);
-  });
-
-  it('returns nothing for empty text', () => {
-    expect(labelsInText('')).toEqual([]);
   });
 });
