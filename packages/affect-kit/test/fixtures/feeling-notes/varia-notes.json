@@ -1,0 +1,756 @@
+[
+ {
+  "id": 1,
+  "text": "I'm really anxious about tomorrow's presentation.",
+  "primary": [
+   {
+    "name": "anxious",
+    "level": 3
+   }
+  ],
+  "also": [
+   "fear",
+   "overwhelmed"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 2,
+  "text": "Feeling a bit tired but okay.",
+  "primary": [
+   {
+    "name": "tired",
+    "level": 1
+   }
+  ],
+  "also": [
+   "content"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 3,
+  "text": "So grateful for my sister today.",
+  "primary": [
+   {
+    "name": "grateful",
+    "level": 3
+   }
+  ],
+  "also": [
+   "loved",
+   "affectionate"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 4,
+  "text": "Not stressed at all, honestly pretty relaxed.",
+  "primary": [
+   {
+    "name": "relaxed",
+    "level": 2
+   }
+  ],
+  "also": [
+   "calm",
+   "content",
+   "peaceful"
+  ],
+  "avoid": [
+   "overwhelmed",
+   "anxious"
+  ]
+ },
+ {
+  "id": 5,
+  "text": "I can't switch my brain off tonight.",
+  "primary": [
+   {
+    "name": "anxious",
+    "level": null
+   }
+  ],
+  "also": [
+   "overwhelmed",
+   "frustrated",
+   "panicked"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 6,
+  "text": "Kind of down since the call this morning.",
+  "primary": [
+   {
+    "name": "sad",
+    "level": 1
+   }
+  ],
+  "also": [
+   "disappointed",
+   "empty"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 7,
+  "text": "Furious. He did it again.",
+  "primary": [
+   {
+    "name": "enraged",
+    "level": 3
+   }
+  ],
+  "also": [
+   "anger",
+   "frustrated"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 8,
+  "text": "Weirdly peaceful after the walk.",
+  "primary": [
+   {
+    "name": "peaceful",
+    "level": 2
+   }
+  ],
+  "also": [
+   "calm",
+   "relaxed",
+   "serene",
+   "content"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 9,
+  "text": "Honestly I just feel empty.",
+  "primary": [
+   {
+    "name": "empty",
+    "level": 2
+   }
+  ],
+  "also": [
+   "numb",
+   "sad",
+   "hopeless"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 10,
+  "text": "Excited and nervous at the same time.",
+  "primary": [
+   {
+    "name": "excited",
+    "level": 2
+   },
+   {
+    "name": "anxious",
+    "level": 1
+   }
+  ],
+  "also": [
+   "fear"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 11,
+  "text": "I miss how things used to be.",
+  "primary": [
+   {
+    "name": "nostalgic",
+    "level": null
+   }
+  ],
+  "also": [
+   "sad",
+   "bittersweet",
+   "lonely",
+   "regretful"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 12,
+  "text": "Proud of how I handled that meeting.",
+  "primary": [
+   {
+    "name": "proud",
+    "level": 2
+   }
+  ],
+  "also": [
+   "confident",
+   "satisfied"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 13,
+  "text": "A little bored, waiting for the train.",
+  "primary": [
+   {
+    "name": "bored",
+    "level": 1
+   }
+  ],
+  "also": [],
+  "avoid": []
+ },
+ {
+  "id": 14,
+  "text": "My chest is tight and I keep checking my phone.",
+  "primary": [
+   {
+    "name": "anxious",
+    "level": null
+   }
+  ],
+  "also": [
+   "panicked",
+   "overwhelmed",
+   "fear"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 15,
+  "text": "Wow, I did not see that coming!",
+  "primary": [
+   {
+    "name": "surprise",
+    "level": null
+   }
+  ],
+  "also": [
+   "shocked"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 16,
+  "text": "Pretty content with a quiet evening at home.",
+  "primary": [
+   {
+    "name": "content",
+    "level": 2
+   }
+  ],
+  "also": [
+   "relaxed",
+   "peaceful",
+   "safe",
+   "calm"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 17,
+  "text": "I feel like I let everyone down.",
+  "primary": [
+   {
+    "name": "guilty",
+    "level": null
+   }
+  ],
+  "also": [
+   "ashamed",
+   "disappointed",
+   "regretful"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 18,
+  "text": "Mildly annoyed that the meeting ran over.",
+  "primary": [
+   {
+    "name": "annoyed",
+    "level": 1
+   }
+  ],
+  "also": [
+   "frustrated"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 19,
+  "text": "Hopeful that things will turn around.",
+  "primary": [
+   {
+    "name": "hopeful",
+    "level": 2
+   }
+  ],
+  "also": [
+   "optimistic"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 20,
+  "text": "Super overwhelmed with the move and work.",
+  "primary": [
+   {
+    "name": "overwhelmed",
+    "level": 3
+   }
+  ],
+  "also": [
+   "anxious"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 21,
+  "text": "I feel safe here.",
+  "primary": [
+   {
+    "name": "safe",
+    "level": 2
+   }
+  ],
+  "also": [
+   "content",
+   "calm",
+   "peaceful"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 22,
+  "text": "Lonely, even with people around.",
+  "primary": [
+   {
+    "name": "lonely",
+    "level": 2
+   }
+  ],
+  "also": [
+   "sad",
+   "empty"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 23,
+  "text": "Not great, not terrible.",
+  "primary": [],
+  "also": [],
+  "avoid": []
+ },
+ {
+  "id": 24,
+  "text": "I'm not angry, just disappointed.",
+  "primary": [
+   {
+    "name": "disappointed",
+    "level": 2
+   }
+  ],
+  "also": [
+   "sad"
+  ],
+  "avoid": [
+   "anger",
+   "enraged",
+   "annoyed",
+   "frustrated"
+  ]
+ },
+ {
+  "id": 25,
+  "text": "Embarrassed about what I said at dinner.",
+  "primary": [
+   {
+    "name": "embarrassed",
+    "level": 2
+   }
+  ],
+  "also": [
+   "ashamed",
+   "humiliated"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 26,
+  "text": "Heart's racing, I think I'm going to lose it.",
+  "primary": [
+   {
+    "name": "panicked",
+    "level": 3
+   }
+  ],
+  "also": [
+   "anxious",
+   "overwhelmed",
+   "fear"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 27,
+  "text": "Feeling tender toward my kids tonight.",
+  "primary": [
+   {
+    "name": "tender",
+    "level": 2
+   }
+  ],
+  "also": [
+   "loved",
+   "affectionate",
+   "compassionate"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 28,
+  "text": "Curious how this is going to turn out.",
+  "primary": [
+   {
+    "name": "curious",
+    "level": 2
+   }
+  ],
+  "also": [],
+  "avoid": []
+ },
+ {
+  "id": 29,
+  "text": "Extremely tired. Like bone tired.",
+  "primary": [
+   {
+    "name": "tired",
+    "level": 3
+   }
+  ],
+  "also": [],
+  "avoid": []
+ },
+ {
+  "id": 30,
+  "text": "A bit nostalgic looking at old photos.",
+  "primary": [
+   {
+    "name": "nostalgic",
+    "level": 1
+   }
+  ],
+  "also": [
+   "bittersweet"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 31,
+  "text": "Everything feels pointless.",
+  "primary": [
+   {
+    "name": "hopeless",
+    "level": 2
+   }
+  ],
+  "also": [
+   "empty",
+   "sad",
+   "numb"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 32,
+  "text": "I'm grateful but also kind of sad.",
+  "primary": [
+   {
+    "name": "grateful",
+    "level": 2
+   },
+   {
+    "name": "sad",
+    "level": 1
+   }
+  ],
+  "also": [
+   "bittersweet"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 33,
+  "text": "Relieved.",
+  "primary": [
+   {
+    "name": "relaxed",
+    "level": null
+   }
+  ],
+  "also": [
+   "calm",
+   "content",
+   "peaceful",
+   "satisfied"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 34,
+  "text": "Slightly jealous of her promotion.",
+  "primary": [
+   {
+    "name": "jealous",
+    "level": 1
+   }
+  ],
+  "also": [],
+  "avoid": []
+ },
+ {
+  "id": 35,
+  "text": "Totally awed by the stars last night.",
+  "primary": [
+   {
+    "name": "awe",
+    "level": 3
+   }
+  ],
+  "also": [
+   "moved",
+   "inspired"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 36,
+  "text": "Ugh, so frustrated with this bug.",
+  "primary": [
+   {
+    "name": "frustrated",
+    "level": 3
+   }
+  ],
+  "also": [
+   "annoyed"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 37,
+  "text": "Can't stop smiling.",
+  "primary": [
+   {
+    "name": "joy",
+    "level": null
+   }
+  ],
+  "also": [
+   "content",
+   "amused",
+   "excited"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 38,
+  "text": "I feel kind of numb about the news.",
+  "primary": [
+   {
+    "name": "numb",
+    "level": 1
+   }
+  ],
+  "also": [
+   "empty",
+   "shocked"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 39,
+  "text": "Determined to finish this week strong.",
+  "primary": [
+   {
+    "name": "determined",
+    "level": 2
+   }
+  ],
+  "also": [
+   "confident",
+   "hopeful",
+   "optimistic"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 40,
+  "text": "Feeling really vulnerable after sharing that.",
+  "primary": [
+   {
+    "name": "vulnerable",
+    "level": 2
+   }
+  ],
+  "also": [
+   "embarrassed",
+   "anxious"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 41,
+  "text": "Dreading Monday.",
+  "primary": [
+   {
+    "name": "anxious",
+    "level": 2
+   }
+  ],
+  "also": [
+   "fear",
+   "overwhelmed"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 42,
+  "text": "Moved by the music tonight.",
+  "primary": [
+   {
+    "name": "moved",
+    "level": 2
+   }
+  ],
+  "also": [
+   "inspired",
+   "awe",
+   "enchanted"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 43,
+  "text": "Disgusted by what I read.",
+  "primary": [
+   {
+    "name": "disgust",
+    "level": 2
+   }
+  ],
+  "also": [
+   "horrified",
+   "anger"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 44,
+  "text": "Pretty sure I'm coming down with something and I'm wiped.",
+  "primary": [
+   {
+    "name": "tired",
+    "level": 2
+   }
+  ],
+  "also": [],
+  "avoid": []
+ },
+ {
+  "id": 45,
+  "text": "Very calm and a bit sleepy.",
+  "primary": [
+   {
+    "name": "calm",
+    "level": 3
+   },
+   {
+    "name": "tired",
+    "level": 1
+   }
+  ],
+  "also": [
+   "relaxed",
+   "peaceful"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 46,
+  "text": "Feeling inspired after talking with her.",
+  "primary": [
+   {
+    "name": "inspired",
+    "level": 2
+   }
+  ],
+  "also": [
+   "hopeful",
+   "excited",
+   "moved"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 47,
+  "text": "Regret not calling him back before he died.",
+  "primary": [
+   {
+    "name": "regretful",
+    "level": 3
+   }
+  ],
+  "also": [
+   "sad",
+   "guilty"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 48,
+  "text": "I'm not nervous anymore.",
+  "primary": [],
+  "also": [
+   "calm",
+   "relaxed",
+   "confident"
+  ],
+  "avoid": [
+   "anxious",
+   "fear"
+  ]
+ },
+ {
+  "id": 49,
+  "text": "So happy and loved today.",
+  "primary": [
+   {
+    "name": "joy",
+    "level": 3
+   },
+   {
+    "name": "loved",
+    "level": 2
+   }
+  ],
+  "also": [
+   "content",
+   "grateful",
+   "affectionate"
+  ],
+  "avoid": []
+ },
+ {
+  "id": 50,
+  "text": "Hmm. Hard to say. Maybe a bit of everything.",
+  "primary": [],
+  "also": [],
+  "avoid": []
+ }
+]

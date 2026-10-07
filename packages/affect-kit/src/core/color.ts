@@ -142,13 +142,44 @@ export function relativeLuminance(r: number, g: number, b: number): number {
 
 /**
  * @internal
- * 0..1 light-surface indicator from a byte-triple.
- * Used as `--affect-kit-surface-is-light` to drive unselected chip contrast strategy:
- * light surfaces (yellow, green) → white-tint chips; dark surfaces (pink, blue) → dark-tint.
+ * WCAG contrast ratio between two byte-triples, 1 (none) to 21 (black on white).
+ */
+export function contrastRatio(fg: Rgb, bg: Rgb): number {
+  const l1 = relativeLuminance(fg[0], fg[1], fg[2]);
+  const l2 = relativeLuminance(bg[0], bg[1], bg[2]);
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+
+/**
+ * @internal
+ * `top` laid over `bottom` at `alpha`, blended in sRGB the way CSS
+ * `opacity` and `rgba()` composite.
+ */
+export function mixOver(top: Rgb, bottom: Rgb, alpha: number): Rgb {
+  return [
+    Math.round(top[0] * alpha + bottom[0] * (1 - alpha)),
+    Math.round(top[1] * alpha + bottom[1] * (1 - alpha)),
+    Math.round(top[2] * alpha + bottom[2] * (1 - alpha)),
+  ];
+}
+
+/**
+ * How strongly the V/A color covers the paper when a surface takes the
+ * face's color: `<affect-kit-rater color-mode="background">` paints its glow
+ * at this opacity, and {@link surfacePalette} blends at the same ratio, so a
+ * screen an app paints with `surface` matches the rater.
+ */
+export const SURFACE_MIX = 0.85;
+
+/**
+ * @internal
+ * 0..1 light-surface indicator from a byte-triple, assuming the surface is
+ * the color at {@link SURFACE_MIX} over white. Set as `--_surface-is-light`.
+ * Text color decisions use {@link contrastRatio} instead; see surfacePalette.
  */
 export function surfaceIsLight(rgb: Rgb): number {
   const lum = relativeLuminance(rgb[0], rgb[1], rgb[2]);
-  // Surface at 85% opacity over white: effective luminance = lum * 0.85 + 0.15
-  const surfaceLum = lum * 0.85 + 0.15;
+  // Approximates the blend's luminance as the weighted sum.
+  const surfaceLum = lum * SURFACE_MIX + (1 - SURFACE_MIX);
   return Math.max(0, Math.min(1, (surfaceLum - 0.45) / 0.20));
 }

@@ -32,5 +32,8 @@ module.exports = {
     entry('result'),
     entry('face'),
     entry('compare'),
+    entry('pad'),
+    entry('chip'),
+    entry('data'),
   ],
 };

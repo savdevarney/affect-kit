@@ -8,8 +8,10 @@
 
 import { AffectKitRater } from './components/affect-kit-rater';
 import { AffectKitFace }  from './components/affect-kit-face';
+import { AffectKitChip }  from './components/affect-kit-chip';
 
 if (!customElements.get('affect-kit-face'))  customElements.define('affect-kit-face',  AffectKitFace);
+if (!customElements.get('affect-kit-chip'))  customElements.define('affect-kit-chip',  AffectKitChip);
 if (!customElements.get('affect-kit-rater')) customElements.define('affect-kit-rater', AffectKitRater);
 
 export { AffectKitRater };

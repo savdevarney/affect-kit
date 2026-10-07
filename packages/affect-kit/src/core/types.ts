@@ -34,6 +34,18 @@ export type ColorMode = 'background' | 'words';
 export type Theme = 'light' | 'dark' | 'auto';
 
 /**
+ * What `<affect-kit-pad>` paints behind the face and under the finger.
+ *
+ * - `'color'` (default) — a halo and dot in the V/A color.
+ * - `'neutral'` — both in the ink color: dark on `theme="light"`, white on
+ *   `theme="dark"`. For surfaces that shouldn't take on color.
+ * - `'none'` — no halo; the dot stays, in the ink color.
+ *
+ * Set via the `glow` HTML attribute.
+ */
+export type PadGlow = 'color' | 'neutral' | 'none';
+
+/**
  * Layout preference for components that have a "stacked vs side-by-side"
  * choice — `<affect-kit-result>` (face vs words) and `<affect-kit-compare>`
  * (left vs right halves).

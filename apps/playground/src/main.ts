@@ -2,12 +2,14 @@ import 'affect-kit/rater';
 import 'affect-kit/result';
 import 'affect-kit/face';
 import 'affect-kit/compare';
+import 'affect-kit/pad';
 import './example-tabs';
 import type { AffectKitFace }    from 'affect-kit/face';
 import type { AffectKitResult }  from 'affect-kit/result';
 import type { AffectKitRater }   from 'affect-kit/rater';
 import type { AffectKitCompare } from 'affect-kit/compare';
 import { createRating, averageRatings } from 'affect-kit';
+import { surfacePalette, completeLabels, suggestLabels } from 'affect-kit/data';
 import type { ColorMode, Layout, Rating, Theme } from 'affect-kit';
 
 // ── Element refs ───────────────────────────────────────────────────────────
@@ -367,7 +369,8 @@ function renderCompareCode() {
 
   codeCompare.textContent =
     `import 'affect-kit/compare';\n` +
-    `import { createRating, averageRatings } from 'affect-kit';\n` +
+    `import { createRating, averageRatings } from 'affect-kit';
+import { surfacePalette, completeLabels, suggestLabels } from 'affect-kit/data';\n` +
     `\n` +
     fmtRatings('yesterday', yesterday) + `\n\n` +
     fmtRatings('today', today) + `\n\n` +
@@ -414,3 +417,84 @@ afterInput?.addEventListener('input', () => {
   if (compareEl) compareEl.afterLabel = v;
   compareState.afterLabel = v; renderCompareCode();
 });
+
+// ── Pad + palette + autocomplete: an app composing its own check-in ────────
+// The pad is the only affect-kit element; the surface, text field and word
+// list are the app's own, colored from surfacePalette().
+{
+  const pad     = document.getElementById('pad') as import('affect-kit/pad').AffectKitPad | null;
+  const demo    = document.getElementById('pad-demo');
+  const input   = document.getElementById('pad-input') as HTMLInputElement | null;
+  const list    = document.getElementById('pad-words');
+  const caption = document.getElementById('pad-caption');
+  const levels  = new Map<string, number>();
+  let theme: 'light' | 'dark' = 'light';
+  let pos = { v: 0, a: 0 };
+  let placed = false;
+
+  const paint = () => {
+    if (!demo) return;
+    const p = surfacePalette(pos.v, pos.a, theme);
+    // Light: the whole surface takes the face's color. Dark: stays dark.
+    demo.style.background = theme === 'light' && placed ? p.surface : (theme === 'dark' ? '#1a1a1a' : '');
+    const vars: Record<string, string> = theme === 'light' && placed
+      ? { ink: p.ink, 'ink-dim': p.inkDim, 'chip-bg': p.chipBg, 'chip-ink': p.chipInk, l3: p.l3, 'l3-ink': p.l3Ink }
+      : theme === 'dark'
+        ? { ink: '#fff', 'ink-dim': 'rgba(255,255,255,0.7)', 'chip-bg': 'rgba(255,255,255,0.12)', 'chip-ink': '#fff', l3: '#fff', 'l3-ink': '#000' }
+        : { ink: '#000', 'ink-dim': '#555', 'chip-bg': 'rgba(0,0,0,0.06)', 'chip-ink': '#333', l3: '#1a1a1a', 'l3-ink': '#fff' };
+    for (const [k, v] of Object.entries(vars)) demo.style.setProperty(`--pad-${k}`, v);
+  };
+
+  const renderWords = () => {
+    if (!list) return;
+    const typed = input?.value ?? '';
+    // The text field filters by its last word.
+    const word = typed.split(/\s+/).pop() ?? '';
+    list.replaceChildren(...completeLabels(word, pos.v, pos.a).map(m => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      const lv = levels.get(m.name) ?? 0;
+      btn.setAttribute('aria-pressed', String(lv > 0));
+      btn.textContent = m.name + (lv > 1 ? ' ' + '•'.repeat(lv) : '');
+      if (m.synonym) {
+        const small = document.createElement('small');
+        small.textContent = ` (${m.synonym})`;
+        btn.append(small);
+      }
+      btn.addEventListener('click', () => {
+        levels.set(m.name, ((levels.get(m.name) ?? 0) + 1) % 4);
+        renderWords();
+      });
+      li.append(btn);
+      return li;
+    }));
+    const named = suggestLabels(typed).map(m => `${m.name} ${m.level}`).join(', ');
+    if (caption) caption.textContent = `v ${pos.v.toFixed(2)} · a ${pos.a.toFixed(2)}` + (named ? ` · text suggests: ${named}` : '');
+  };
+
+  pad?.addEventListener('input', (e) => {
+    pos = (e as CustomEvent<{ v: number; a: number }>).detail;
+    placed = true;
+    paint();
+  });
+  pad?.addEventListener('change', () => renderWords());
+  input?.addEventListener('input', renderWords);
+
+  document.querySelectorAll<HTMLElement>('[data-seg="pad-theme"], [data-seg="pad-glow"]').forEach(group => {
+    group.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(b => b.addEventListener('click', () => {
+      group.querySelectorAll('.seg-btn').forEach(o => o.setAttribute('aria-pressed', String(o === b)));
+      const val = b.dataset.val!;
+      if (group.dataset.seg === 'pad-theme') {
+        theme = val as 'light' | 'dark';
+        pad?.setAttribute('theme', theme);
+      } else {
+        pad?.setAttribute('glow', val);
+      }
+      paint();
+    }));
+  });
+
+  paint();
+  renderWords();
+}

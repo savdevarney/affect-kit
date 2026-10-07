@@ -1,0 +1,354 @@
+[
+ {
+  "id": 101,
+  "text": "Dreading the dentist tomorrow.",
+  "primary": [
+   {
+    "name": "anxious",
+    "level": 2
+   }
+  ],
+  "also": [
+   "fear",
+   "overwhelmed"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 102,
+  "text": "Pretty thrilled about the news!",
+  "primary": [
+   {
+    "name": "excited",
+    "level": 3
+   }
+  ],
+  "also": [
+   "joy"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 103,
+  "text": "Not nervous at all, just ready.",
+  "primary": [
+   {
+    "name": "confident",
+    "level": null
+   }
+  ],
+  "also": [
+   "determined",
+   "calm",
+   "content"
+  ],
+  "avoid": [
+   "anxious",
+   "fear"
+  ],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 104,
+  "text": "A little lonely tonight.",
+  "primary": [
+   {
+    "name": "lonely",
+    "level": 1
+   }
+  ],
+  "also": [
+   "sad"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 105,
+  "text": "Exhausted after the long drive.",
+  "primary": [
+   {
+    "name": "tired",
+    "level": 3
+   }
+  ],
+  "also": [],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 106,
+  "text": "Honestly pretty happy with how the day went.",
+  "primary": [
+   {
+    "name": "joy",
+    "level": 2
+   }
+  ],
+  "also": [
+   "content",
+   "satisfied",
+   "proud"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 107,
+  "text": "I'm worried about my mom.",
+  "primary": [
+   {
+    "name": "anxious",
+    "level": 2
+   }
+  ],
+  "also": [
+   "fear",
+   "overwhelmed",
+   "compassionate"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 108,
+  "text": "Mad at myself for forgetting.",
+  "primary": [
+   {
+    "name": "anger",
+    "level": 2
+   }
+  ],
+  "also": [
+   "frustrated",
+   "annoyed",
+   "ashamed",
+   "regretful",
+   "guilty"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 109,
+  "text": "Feeling fine, nothing special.",
+  "primary": [
+   {
+    "name": "content",
+    "level": 1
+   }
+  ],
+  "also": [
+   "calm",
+   "numb"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 110,
+  "text": "The sunset left me in awe.",
+  "primary": [
+   {
+    "name": "awe",
+    "level": 2
+   }
+  ],
+  "also": [
+   "moved",
+   "inspired"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 111,
+  "text": "I don't feel sad anymore, just tired.",
+  "primary": [
+   {
+    "name": "tired",
+    "level": 2
+   }
+  ],
+  "also": [],
+  "avoid": [
+   "sad"
+  ],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 112,
+  "text": "Slightly embarrassed about the typo in my email.",
+  "primary": [
+   {
+    "name": "embarrassed",
+    "level": 1
+   }
+  ],
+  "also": [
+   "ashamed"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 113,
+  "text": "So many emotions today, hard to say.",
+  "primary": [],
+  "also": [],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 114,
+  "text": "Super proud of my daughter.",
+  "primary": [
+   {
+    "name": "proud",
+    "level": 3
+   }
+  ],
+  "also": [
+   "grateful",
+   "loved",
+   "joy"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 115,
+  "text": "Kind of bored and restless.",
+  "primary": [
+   {
+    "name": "bored",
+    "level": 1
+   }
+  ],
+  "also": [
+   "frustrated"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 116,
+  "text": "Peaceful morning with coffee and the dog.",
+  "primary": [
+   {
+    "name": "peaceful",
+    "level": 2
+   }
+  ],
+  "also": [
+   "calm",
+   "content",
+   "relaxed",
+   "serene"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 117,
+  "text": "Never been so frustrated with a project.",
+  "primary": [
+   {
+    "name": "frustrated",
+    "level": 3
+   }
+  ],
+  "also": [
+   "annoyed",
+   "anger"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 118,
+  "text": "Missing my old friends, a bit homesick.",
+  "primary": [
+   {
+    "name": "nostalgic",
+    "level": 1
+   }
+  ],
+  "also": [
+   "sad",
+   "lonely"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 119,
+  "text": "Ugh, irritated and out of patience.",
+  "primary": [
+   {
+    "name": "annoyed",
+    "level": 2
+   }
+  ],
+  "also": [
+   "frustrated",
+   "anger"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 120,
+  "text": "Scared but trying to stay calm.",
+  "primary": [
+   {
+    "name": "fear",
+    "level": 2
+   },
+   {
+    "name": "calm",
+    "level": 1
+   }
+  ],
+  "also": [
+   "anxious"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 121,
+  "text": "It was fine, I guess.",
+  "primary": [
+   {
+    "name": "content",
+    "level": 1
+   }
+  ],
+  "also": [
+   "numb",
+   "bored"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ },
+ {
+  "id": 122,
+  "text": "Thankful for the quiet weekend.",
+  "primary": [
+   {
+    "name": "grateful",
+    "level": 2
+   }
+  ],
+  "also": [
+   "content",
+   "relaxed",
+   "peaceful"
+  ],
+  "avoid": [],
+  "note": "held-out: written before the suggestLabels port was run on it"
+ }
+]
