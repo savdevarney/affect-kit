@@ -96,6 +96,14 @@ describe('createRating', () => {
     expect(r.composite).not.toBeNull();
   });
 
+  it('builds a face-only Rating when labels are omitted', () => {
+    const r = createRating({ face: { v: -0.2, a: 0.6 } });
+    expect(r.face).toEqual({ v: -0.2, a: 0.6 });
+    expect(r.labels).toEqual([]);
+    expect(r.composite).toBeNull();
+    expect(rehydrate(stripVad(r))).toEqual(r);
+  });
+
   it('throws on unknown emotion names', () => {
     expect(() =>
       createRating({

@@ -40,8 +40,33 @@ Requires Lit 3 as a peer dependency.
 | `<affect-kit-result>`  | Renders a committed `Rating` as face + dominant label + optional color chip. |
 | `<affect-kit-compare>` | Two snapshots side-by-side, or two arrays of ratings averaged. |
 | `<affect-kit-face>`    | Standalone face glyph driven by `v` and `a` props. |
+| `<affect-kit-pad>`     | The rater's face pad alone, for apps that build their own word list. Fires `input` and `change` with `{ v, a }`. |
 
-Each ships as its own entry point (`affect-kit/rater`, `/result`, `/compare`, `/face`) and as a bundled side-effect import (`affect-kit`).
+Each ships as its own entry point (`affect-kit/rater`, `/result`, `/compare`, `/face`, `/pad`) and as a bundled side-effect import (`affect-kit`).
+
+## Helpers
+
+`affect-kit/data` registers no elements and needs no DOM, so it works on servers, in web workers and in React Native. The same names are also exported from `affect-kit`.
+
+| Export | Role |
+|---|---|
+| `createRating`, `averageRatings`, `stripVad`, `rehydrate` | Build, average, store and restore `Rating`s. A rating with a face and no labels is valid. |
+| `EMOTION_LABELS` | V/A/D coordinates for each of the 55 labels. |
+| `nearestLabels(v, a, n?)` | Labels ordered by distance from a face position: the rater's chip order. |
+| `SYNONYMS_EN` | Everyday words mapped to labels (`stressed` → `overwhelmed`). |
+| `completeLabels(prefix, v, a)` | Labels or synonyms starting with `prefix`, in face order. |
+| `labelsInText(text)` | Labels a piece of text names, each with the word that named it. |
+| `surfacePalette(v, a, theme)` | Surface, text and chip colors for a face position, matching the rater's `color-mode="background"`. Text meets `MIN_TEXT_CONTRAST` (4.5:1). |
+
+```ts
+import { surfacePalette, completeLabels } from 'affect-kit/data';
+
+const p = surfacePalette(-0.4, 0.5, 'light');
+screen.style.background = p.surface;
+caption.style.color = p.inkDim;
+
+completeLabels('stre', -0.4, 0.5); // [{ name: 'overwhelmed', synonym: 'stress' }]
+```
 
 ## How it works
 

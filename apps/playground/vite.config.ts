@@ -11,6 +11,8 @@ export default defineConfig({
       'affect-kit/result':  resolve(__dirname, '../../packages/affect-kit/src/result.ts'),
       'affect-kit/face':    resolve(__dirname, '../../packages/affect-kit/src/face.ts'),
       'affect-kit/compare': resolve(__dirname, '../../packages/affect-kit/src/compare.ts'),
+      'affect-kit/pad':     resolve(__dirname, '../../packages/affect-kit/src/pad.ts'),
+      'affect-kit/data':    resolve(__dirname, '../../packages/affect-kit/src/data.ts'),
       'affect-kit':         resolve(__dirname, '../../packages/affect-kit/src/index.ts'),
     },
   },

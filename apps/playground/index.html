@@ -41,6 +41,51 @@
       flex-wrap: wrap;
       margin: 0 0 1rem;
     }
+    .pad-demo {
+      display: grid;
+      gap: 12px;
+      justify-items: center;
+      padding: 16px;
+      border-radius: 16px;
+      transition: background 0.2s ease;
+    }
+    .pad-demo affect-kit-pad { width: min(240px, 100%); }
+    .pad-demo input {
+      width: min(320px, 100%);
+      font: inherit;
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1.5px solid var(--pad-ink-dim, #555);
+      background: transparent;
+      color: var(--pad-ink, #000);
+    }
+    .pad-demo input::placeholder { color: var(--pad-ink-dim, #555); }
+    .pad-words {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      max-height: 120px;
+      overflow: auto;
+    }
+    .pad-words button {
+      font: inherit;
+      padding: 4px 12px;
+      border: 0;
+      border-radius: 999px;
+      cursor: pointer;
+      background: var(--pad-chip-bg);
+      color: var(--pad-chip-ink);
+    }
+    .pad-words button[aria-pressed="true"] {
+      background: var(--pad-l3);
+      color: var(--pad-l3-ink);
+    }
+    .pad-words small { opacity: 0.8; }
+    .pad-caption { margin: 0; font-size: 0.8rem; color: var(--pad-ink-dim); }
     .card-label {
       font-size: 0.72rem;
       font-weight: 600;
@@ -284,6 +329,36 @@
         </div>
         <pre slot="code"><code id="code-rater"></code></pre>
       </example-tabs>
+    </div>
+
+    <!-- affect-kit-pad: the face pad alone, composed with an app's own word list -->
+    <div class="card">
+      <div class="card-header">
+        <p class="card-label">&lt;affect-kit-pad&gt; + surfacePalette + completeLabels</p>
+        <div class="toggles">
+          <span class="seg">
+            theme
+            <span class="seg-group" data-seg="pad-theme" data-value="light">
+              <button class="seg-btn" type="button" data-val="light" aria-pressed="true">light</button>
+              <button class="seg-btn" type="button" data-val="dark"  aria-pressed="false">dark</button>
+            </span>
+          </span>
+          <span class="seg">
+            glow
+            <span class="seg-group" data-seg="pad-glow" data-value="color">
+              <button class="seg-btn" type="button" data-val="color"   aria-pressed="true">color</button>
+              <button class="seg-btn" type="button" data-val="neutral" aria-pressed="false">neutral</button>
+              <button class="seg-btn" type="button" data-val="none"    aria-pressed="false">none</button>
+            </span>
+          </span>
+        </div>
+      </div>
+      <div class="demo-surface pad-demo" id="pad-demo">
+        <affect-kit-pad id="pad"></affect-kit-pad>
+        <input id="pad-input" type="text" placeholder="Type a word" autocomplete="off">
+        <ul id="pad-words" class="pad-words"></ul>
+        <p id="pad-caption" class="pad-caption"></p>
+      </div>
     </div>
 
     <!-- affect-kit-result -->

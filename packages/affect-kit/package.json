@@ -32,7 +32,8 @@
     "./dist/rater.js",
     "./dist/result.js",
     "./dist/face.js",
-    "./dist/compare.js"
+    "./dist/compare.js",
+    "./dist/pad.js"
   ],
   "exports": {
     ".": {
@@ -54,6 +55,10 @@
     "./compare": {
       "types": "./dist/compare.d.ts",
       "import": "./dist/compare.js"
+    },
+    "./pad": {
+      "types": "./dist/pad.d.ts",
+      "import": "./dist/pad.js"
     },
     "./data": {
       "types": "./dist/data.d.ts",

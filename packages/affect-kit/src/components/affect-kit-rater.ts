@@ -1,10 +1,12 @@
-import { LitElement, html, css, nothing, type PropertyValues } from 'lit';
+import { LitElement, html, css, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import { property, state, query } from 'lit/decorators.js';
-import { colorForVA, darkerForChips, lighterForChips, surfaceIsLight, type Rgb } from '../core/color';
+import { colorForVA, lighterForChips, surfaceIsLight, SURFACE_MIX, type Rgb } from '../core/color';
+import { surfacePaletteRgb } from '../core/palette';
 import { colorModeConverter } from '../core/color-mode';
 import { themeConverter } from '../core/theme';
 import { buildRating } from '../core/vad';
 import { EMOTIONS } from '../vocabulary/en';
+import { nearestLabels } from '../vocabulary/search';
 import type { ColorMode, Rating, EmotionName, Theme } from '../core/types';
 import type { AffectKitFace } from './affect-kit-face';
 
@@ -46,8 +48,8 @@ export class AffectKitRater extends LitElement {
       --_paper: white;
 
       /* V/A-driven (set by _updateColorVars at runtime; defaults are neutral). */
-      --_r: 128; --_g: 128; --_b: 128;
       --_l3-r: 80; --_l3-g: 80; --_l3-b: 80;
+      --_surface-color: rgb(128, 128, 128);
       --_surface-is-light: 0;
     }
     :host([theme="dark"]) {
@@ -87,7 +89,8 @@ export class AffectKitRater extends LitElement {
       z-index: 0;
       transition: opacity 0.5s ease, background 50ms linear;
     }
-    .glow.on { opacity: 0.85; }
+    /* Same ratio surfacePalette() blends at, so apps can match this surface. */
+    .glow.on { opacity: ${unsafeCSS(SURFACE_MIX)}; }
 
     /* ── Face pad ─────────────────────────────────────────── */
     .face-zone {
@@ -293,7 +296,7 @@ export class AffectKitRater extends LitElement {
        color, so the outward ring 'gap' shadows need to match that
        color (not --_paper) to blend invisibly with the surrounding. */
     :host([color-mode="background"]) .chip {
-      --_surface: rgb(var(--_r), var(--_g), var(--_b));
+      --_surface: var(--_surface-color);
     }
     /* Color mode: selected chips absorb the V/A color. Ring + fill
        vars retarget to the V/A palette so the inset rings appear in
@@ -661,13 +664,7 @@ export class AffectKitRater extends LitElement {
   // ── Sort + FLIP ───────────────────────────────────────────────────────────
 
   private _computeSortOrder(): string[] {
-    return [...EMOTIONS]
-      .map(e => ({
-        name: e.name,
-        dist: Math.hypot(e.v - this._padV, e.a - this._padA),
-      }))
-      .sort((a, b) => a.dist - b.dist)
-      .map(e => e.name);
+    return nearestLabels(this._padV, this._padA);
   }
 
   private async _sortWithFlip() {
@@ -712,27 +709,27 @@ export class AffectKitRater extends LitElement {
 
   // ── Color vars ────────────────────────────────────────────────────────────
 
+  private _isDark(): boolean {
+    return this.theme === 'dark' ||
+      (this.theme === 'auto' &&
+        typeof matchMedia !== 'undefined' &&
+        matchMedia('(prefers-color-scheme: dark)').matches);
+  }
+
   private _updateColorVars() {
-    const rgb = colorForVA(this._padV, this._padA);
-    const darker = darkerForChips(rgb);
-    const isLight = surfaceIsLight(rgb);
-    const darkerLum =
-      0.2126 * (darker[0] / 255) + 0.7152 * (darker[1] / 255) + 0.0722 * (darker[2] / 255);
-    this.style.setProperty('--_r',   String(rgb[0]));
-    this.style.setProperty('--_g',   String(rgb[1]));
-    this.style.setProperty('--_b',   String(rgb[2]));
-    this.style.setProperty('--_l3-r', String(darker[0]));
-    this.style.setProperty('--_l3-g', String(darker[1]));
-    this.style.setProperty('--_l3-b', String(darker[2]));
-    this.style.setProperty('--_surface-is-light', isLight.toFixed(4));
-    this.style.setProperty('--_text-l3',
-      darkerLum > 0.45 ? 'rgba(0,0,0,0.95)' : 'rgba(255,255,255,0.96)');
-    this.style.setProperty('--_chip-ink',
-      isLight ? 'rgba(0,0,0,0.60)' : 'rgba(255,255,255,0.82)');
-    this.style.setProperty('--_chip-bg',
-      isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.16)');
-    this.style.setProperty('--_chip-hover-bg',
-      isLight ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.26)');
+    // surfacePalette's math, so an app painting a screen with surfacePalette()
+    // gets the same surface, chips and text as this rater.
+    const p = surfacePaletteRgb(this._padV, this._padA, this._isDark() ? 'dark' : 'light');
+    const css = (c: Rgb) => `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+    const [bgR, bgG, bgB] = p.chipBg.rgb;
+    this.style.setProperty('--_l3-r', String(p.l3[0]));
+    this.style.setProperty('--_l3-g', String(p.l3[1]));
+    this.style.setProperty('--_l3-b', String(p.l3[2]));
+    this.style.setProperty('--_surface-color', css(p.surface));
+    this.style.setProperty('--_surface-is-light', surfaceIsLight(colorForVA(this._padV, this._padA)).toFixed(4));
+    this.style.setProperty('--_text-l3', css(p.l3Ink));
+    this.style.setProperty('--_chip-ink', css(p.chipInk));
+    this.style.setProperty('--_chip-bg', `rgba(${bgR}, ${bgG}, ${bgB}, ${p.chipBg.alpha})`);
   }
 
   // ── Change event ─────────────────────────────────────────────────────────
@@ -773,9 +770,27 @@ export class AffectKitRater extends LitElement {
     //  - 'words' uses them for the submit button (the only thing that still
     //    pulls a host-level color in that mode); each chip overrides via
     //    inline `--_l3-{r,g,b}` from its own emotion's V/A.
-    if (changed.has('colorMode') && this.colorMode) {
+    if ((changed.has('colorMode') || changed.has('theme')) && this.colorMode) {
       this._updateColorVars();
     }
+  }
+
+  // theme="auto" follows the OS setting, which can change while mounted.
+  private _schemeQuery?: MediaQueryList;
+  private _onSchemeChange = () => {
+    if (this.theme === 'auto' && this.colorMode) this._updateColorVars();
+  };
+
+  override connectedCallback() {
+    super.connectedCallback();
+    if (typeof matchMedia === 'undefined') return;
+    this._schemeQuery = matchMedia('(prefers-color-scheme: dark)');
+    this._schemeQuery.addEventListener('change', this._onSchemeChange);
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this._schemeQuery?.removeEventListener('change', this._onSchemeChange);
   }
 
   // ── Render ────────────────────────────────────────────────────────────────
@@ -847,12 +862,7 @@ export class AffectKitRater extends LitElement {
               let chipStyle = `order:${order}`;
               if (wordsMode) {
                 const raw = colorForVA(emotion.v, emotion.a);
-                const useDark =
-                  this.theme === 'dark' ||
-                  (this.theme === 'auto' &&
-                    typeof matchMedia !== 'undefined' &&
-                    matchMedia('(prefers-color-scheme: dark)').matches);
-                const [cr, cg, cb] = useDark ? lighterForChips(raw) : raw;
+                const [cr, cg, cb] = this._isDark() ? lighterForChips(raw) : raw;
                 chipStyle += `;--_l3-r:${cr};--_l3-g:${cg};--_l3-b:${cb}`;
               }
               return html`

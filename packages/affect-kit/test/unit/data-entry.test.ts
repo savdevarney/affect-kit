@@ -23,13 +23,20 @@ function reachable(file: string, seen = new Set<string>()): Set<string> {
 }
 
 describe('affect-kit/data', () => {
-  it('exports the rating helpers and the vocabulary, and nothing else', () => {
+  it('exports the rating, vocabulary and palette helpers, and nothing else', () => {
     expect(Object.keys(data).sort()).toEqual([
       'EMOTION_LABELS',
+      'MIN_TEXT_CONTRAST',
+      'SURFACE_MIX',
+      'SYNONYMS_EN',
       'averageRatings',
+      'completeLabels',
       'createRating',
+      'labelsInText',
+      'nearestLabels',
       'rehydrate',
       'stripVad',
+      'surfacePalette',
     ]);
   });
 
