@@ -47,7 +47,7 @@ export class AffectKitFace extends LitElement {
          redeclare --_ink for light theme so the property can inherit
          from a themed parent (rater/result/compare). The var() fallback
          catches the standalone "no parent" case. */
-      color: var(--_ink, #1a1a1a);
+      color: var(--affect-kit-ink, var(--_ink, #1a1a1a));
     }
     :host([theme="dark"])  { --_ink: white; }
     @media (prefers-color-scheme: dark) {

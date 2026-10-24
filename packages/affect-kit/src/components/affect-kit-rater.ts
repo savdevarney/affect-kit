@@ -50,22 +50,25 @@ export class AffectKitRater extends LitElement {
 
       /* Theme: --_ink and --_paper are the polarity of the surface. Default
          light; flipped by [theme="dark"] below. Everything else in this
-         stylesheet derives text/bg from these via color-mix. */
-      --_ink:   #1a1a1a;
-      --_paper: white;
+         stylesheet derives text/bg from these via color-mix.
+         An app sets --affect-kit-paper and --affect-kit-ink to put the rater
+         on its own page; they win in both themes, so give them the page's
+         light and dark values (light-dark() does both in one). */
+      --_ink:   var(--affect-kit-ink, #1a1a1a);
+      --_paper: var(--affect-kit-paper, white);
 
       /* V/A-driven (set by _updateColorVars at runtime; defaults are neutral). */
       --_l3-r: 80; --_l3-g: 80; --_l3-b: 80;
       --_surface-is-light: 0;
     }
     :host([theme="dark"]) {
-      --_ink:   white;
-      --_paper: #1a1a1a;
+      --_ink:   var(--affect-kit-ink, white);
+      --_paper: var(--affect-kit-paper, #1a1a1a);
     }
     @media (prefers-color-scheme: dark) {
       :host([theme="auto"]) {
-        --_ink:   white;
-        --_paper: #1a1a1a;
+        --_ink:   var(--affect-kit-ink, white);
+        --_paper: var(--affect-kit-paper, #1a1a1a);
       }
     }
 
@@ -420,6 +423,8 @@ export class AffectKitRater extends LitElement {
     const next = raterReducer(prev, event);
     if (next === prev) return prev;
     if (tapShocks(prev, next)) this._faceEl?.triggerShock();
+    // The words show for the first time: by the face settling, or "Choose words without the face".
+    if (!prev.revealed && next.revealed) this.dispatchEvent(new CustomEvent('reveal', { bubbles: true, composed: true }));
     // The first sort is silent: the words are still fading in.
     if (prev.revealed && next.order !== prev.order) void this._reorder(next);
     else this._state = next;
@@ -756,5 +761,7 @@ declare global {
     change: CustomEvent<Rating>;
     /** Emitted when the user clicks the submit button — the explicit "done" signal. `event.detail` is the final {@link Rating}. */
     commit: CustomEvent<Rating>;
+    /** Emitted once, when the words first show: the face settled, or "Choose words without the face". */
+    reveal: CustomEvent<void>;
   }
 }
