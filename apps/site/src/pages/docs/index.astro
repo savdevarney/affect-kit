@@ -201,6 +201,18 @@ function App() {
                 <td><code>'Done'</code></td>
                 <td>Label for the commit button shown once at least one chip is selected.</td>
               </tr>
+              <tr>
+                <td><code>hide-submit</code></td>
+                <td>boolean</td>
+                <td><code>false</code></td>
+                <td>Hides the commit button, for an app whose own screen has the button that moves on (Next, Save). <code>change</code> still fires on every edit: enable your button when <code>rating.labels.length &gt; 0</code>, as <code>canFinish</code> does.</td>
+              </tr>
+              <tr>
+                <td><code>chips-hint</code></td>
+                <td>string</td>
+                <td><code>'name what you feel'</code></td>
+                <td>The line above the chips until a word is chosen. An empty string hides it; with <code>hide-submit</code> too, the header row goes.</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -221,6 +233,11 @@ function App() {
                 <td><code>commit</code></td>
                 <td><code>Rating</code></td>
                 <td>Fired once when the user taps the <em>Done</em> button. Use this as the explicit "I'm finished" signal rather than wiring to every intermediate <code>change</code>. Requires at least one chip to be selected (the button is hidden otherwise).</td>
+              </tr>
+              <tr>
+                <td><code>reveal</code></td>
+                <td>none</td>
+                <td>Fired once, when the words first show: the face settled, or the person chose words without the face. Use it to change a hint around the rater.</td>
               </tr>
             </tbody>
           </table>
@@ -258,6 +275,16 @@ function App() {
                 <td><code>--affect-kit-rater-max-width</code></td>
                 <td><code>640px</code></td>
                 <td>Maximum width of the widget. Override to fit narrow or wide containers.</td>
+              </tr>
+              <tr>
+                <td><code>--affect-kit-paper</code></td>
+                <td>white, or <code>#1a1a1a</code> dark</td>
+                <td>The rater's paper, and the gaps between a chip's rings, so the rater sits on your page. It wins in both themes, so give it your page's light and dark values (<code>light-dark()</code> does both).</td>
+              </tr>
+              <tr>
+                <td><code>--affect-kit-ink</code></td>
+                <td><code>#1a1a1a</code>, or white dark</td>
+                <td>The rater's ink and the face's strokes. Set it with <code>--affect-kit-paper</code>.</td>
               </tr>
             </tbody>
           </table>

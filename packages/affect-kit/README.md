@@ -1,6 +1,6 @@
 # affect-kit
 
-Web components for dimensional emotion rating. Built with Lit, grounded in affective science.
+Dimensional emotion rating, headless first. A pure TypeScript core (`affect-kit/core`) gives you the face, the words, the colors and the rater's behavior as data, for React Native, native apps, servers or workers. Web components built on that core give you a working rater in any web framework. Grounded in affective science.
 
 - **Site + docs:** [affectkit.com](https://affectkit.com)
 - **Source:** [github.com/savdevarney/affect-kit](https://github.com/savdevarney/affect-kit)
@@ -44,6 +44,8 @@ Requires Lit 3 as a peer dependency.
 | `<affect-kit-chip>`    | One emotion word as a pill with 1-3 intensity rings. Colorless by default; `readonly` for result screens. |
 
 Each ships as its own entry point (`affect-kit/rater`, `/result`, `/compare`, `/face`, `/pad`, `/chip`) and as a bundled side-effect import (`affect-kit`).
+
+To run the rater inside your own screen: `hide-submit` hides its Done for your own button, `chips-hint` replaces the line above the chips, the `reveal` event says when the words first show, and `--affect-kit-paper` and `--affect-kit-ink` set it on your page.
 
 ## The headless core
 
