@@ -73,8 +73,13 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # npm can report success for a publish that didn't land (an expired token).
+      # A version takes a minute or two to show up, so wait for it.
       - name: Check it's on the registry
         run: |
           VERSION='${{ steps.version.outputs.version }}'
-          npm view "affect-kit@$VERSION" version
+          for i in $(seq 1 30); do
+            npm view "affect-kit@$VERSION" version 2>/dev/null && break
+            [ "$i" = 30 ] && { echo "::error::affect-kit@$VERSION isn't on the registry after 5 minutes."; exit 1; }
+            sleep 10
+          done
           echo "Published affect-kit@$VERSION under the next tag: npm install affect-kit@$VERSION" >> "$GITHUB_STEP_SUMMARY"
