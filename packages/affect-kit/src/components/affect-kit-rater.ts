@@ -235,8 +235,15 @@ export class AffectKitRater extends LitElement {
       grid-template-areas: "stack";
       min-height: 2.6em;
       margin-bottom: 0.75em;
-      transition: opacity ${curve(T.header)};
+      transition: opacity ${curve(T.header)}, min-height ${curve(T.header)}, margin ${curve(T.header)};
     }
+    /* With the app's own button (hide-submit), nothing is left in the row once the hint fades, so the
+       row folds away and the words sit up under the face. */
+    .chip-header.folded {
+      min-height: 0;
+      margin-bottom: 0;
+    }
+    .chip-header.folded .chips-hint { display: none; }
     .chip-header > * { grid-area: stack; }
     .chip-header.dragging {
       opacity: 0;
@@ -700,7 +707,7 @@ export class AffectKitRater extends LitElement {
 
         <div class="chips-zone${s.revealed ? '' : ' empty'}">
           ${this.hideSubmit && !this.chipsHint ? nothing : html`
-            <div class="chip-header${s.dragging ? ' dragging' : ''}">
+            <div class="chip-header${s.dragging ? ' dragging' : ''}${this.hideSubmit && hasWords ? ' folded' : ''}">
               ${this.chipsHint ? html`<p class="chips-hint${hasWords ? ' gone' : ''}" part="hint">${this.chipsHint}</p>` : nothing}
               ${this.hideSubmit ? nothing : html`
                 <button

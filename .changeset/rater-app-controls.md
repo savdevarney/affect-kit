@@ -9,3 +9,5 @@ The rater emits `reveal` when the words first show, and takes its paper and ink 
 A chip's ring gaps take `--affect-kit-paper` too, so the rings sit on the page.
 
 The chips hint is `::part(hint)`, so an app can set its case, size and color.
+
+With `hide-submit`, the hint's row folds away once a word is chosen, so the words sit up under the face.
