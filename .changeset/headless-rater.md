@@ -14,7 +14,7 @@ The rater's behavior and motion in `affect-kit/core`, so a native rater moves an
 **Motion, by time** (`affect-kit/core`):
 - `smoothFaceParams(current, target, dtMs, { reducedMotion })`, `kickShock`, `decayShock`, `faceMotion(t, v, a, opts)`, `faceSettled` and `FACE_MOTION`.
 - Every rate is per elapsed time, so the face moves the same at 60 and 120 Hz. At 60 Hz it matches 0.4's per-frame motion.
-- **The idle breath is now 12 a minute.** It was about 5.3, inside the range breathing pacers use.
+- **The idle breath is now 12 a minute.** It was about 5.3, inside the range breathing pacers use. Nothing on the face sways slower than 12 a minute either: the joyful tremor's slowest sway was about 8.5.
 - **With Reduce Motion the face eases faster instead of snapping.** Breath, tremor, jitter and shock stop.
 
 **The rater's behavior, as a reducer** (`affect-kit/core`):

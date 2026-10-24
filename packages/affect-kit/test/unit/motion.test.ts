@@ -89,6 +89,14 @@ describe('faceMotion', () => {
     expect(calm.y).toBeCloseTo(flat.y, 10);
   });
 
+  it('never sways slower than 12 a minute, even at strong pleasant energy', () => {
+    // Joy at full energy: the slowest sway. Sample x over time and find its period.
+    const xs = Array.from({ length: 6001 }, (_, i) => faceMotion(i / 100, 1, 1, still).x);
+    const crossings = xs.flatMap((x, i) => (i > 0 && xs[i - 1]! < 0 && x >= 0 ? [i / 100] : []));
+    const gaps = crossings.slice(1).map((t, i) => t - crossings[i]!);
+    expect(Math.max(...gaps)).toBeLessThanOrEqual(60 / FACE_MOTION.slowestSwayPerMinute + 0.05);
+  });
+
   it('holds still under Reduce Motion', () => {
     const m = faceMotion(2, -0.9, 0.9, { motionScale: 1, shock: 1, reducedMotion: true });
     expect([m.x, m.y]).toEqual([0, 0]);

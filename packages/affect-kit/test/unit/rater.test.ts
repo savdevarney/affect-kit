@@ -127,6 +127,7 @@ describe('RATER_TIMING', () => {
     expect(RATER_TIMING.dwellMs).toBe(500);
     expect(RATER_TIMING.reorder).toEqual({ ms: 320, bezier: [0.44, 0, 0.36, 1] });
     expect(RATER_TIMING.reduced.reorder.ms).toBe(200);
+    expect(RATER_TIMING.reduced.reveal.ms).toBe(200);
     expect(RATER_TIMING.reduced.chipRings.ms).toBe(0);
     expect(RATER_TIMING.inkIn.ms).toBe(150);
   });

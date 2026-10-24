@@ -30,10 +30,17 @@ export const FACE_MOTION = {
   breathsPerMinute: 12,
   /** The breath's height, in face units. */
   breathAmplitude: 0.45,
+  /**
+   * Nothing on the face sways slower than this, in cycles a minute: the
+   * tremor's slowest, at strong pleasant energy, was about 8.5, close enough
+   * to slow paced breathing to count. Same rule as the breath.
+   */
+  slowestSwayPerMinute: 12,
 } as const;
 
 const FRAME_MS = 1000 / 60;
 const BREATH_RAD_PER_S = (2 * Math.PI * FACE_MOTION.breathsPerMinute) / 60;
+const SLOWEST_SWAY_RAD_PER_S = (2 * Math.PI * FACE_MOTION.slowestSwayPerMinute) / 60;
 
 // A per-frame share, scaled to the time that actually passed.
 function perElapsed(perFrame: number, dtMs: number): number {
@@ -157,7 +164,8 @@ export function faceMotion(
   } else {
     const chaos     = Math.max(0, -v) * intensity;
     const cohesion  = Math.max(0,  v) * intensity;
-    const groupFreq = 1.6 + chaos * 2.5 - cohesion * 0.6;
+    // Floored, so the slowest sway (the joyful bounce) stays out of pacing rates.
+    const groupFreq = Math.max(SLOWEST_SWAY_RAD_PER_S, 1.6 + chaos * 2.5 - cohesion * 0.6);
     const groupAmp  = intensity * 2.8 * motionScale;
     const blend     = Math.max(0, Math.min(1, 0.5 + v * 0.5)); // 0 = chaos, 1 = cohesion
 

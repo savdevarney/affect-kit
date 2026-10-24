@@ -54,8 +54,8 @@ export const RATER_TIMING = {
   dot: { ms: 300, bezier: EASE },
   /** With Reduce Motion: fades stay, travel and growth go. */
   reduced: {
-    /** The words fade in, without rising or unblurring. */
-    reveal: { ms: 650, bezier: EASE },
+    /** The words fade in, without rising or unblurring: the same as the reorder crossfade. */
+    reveal: { ms: 200, bezier: EASE },
     /** The re-sort is an opacity crossfade, with no travel. */
     reorder: { ms: 200, bezier: EASE },
     /** The rings appear without growing. */
