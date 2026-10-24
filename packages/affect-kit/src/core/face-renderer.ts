@@ -240,29 +240,3 @@ export function facePaths(p: FaceParams): Record<FacePart, string> {
     mouth: toSvgPath(g.mouth),
   };
 }
-
-// ─── Smoothing ─────────────────────────────────────────────────────────────
-
-/**
- * @internal
- * Single exponential-smoothing step: current → target by factor k.
- * k=0.11 matches the prototype — settles to target in ~100ms at 60fps.
- * Returns a new FaceParams; caller owns the mutable state.
- */
-export function smoothFaceParams(current: FaceParams, target: FaceParams, k: number): FaceParams {
-  'worklet';
-  const s = (c: number, t: number) => c + (t - c) * k;
-  return {
-    browInnerY:     s(current.browInnerY,     target.browInnerY),
-    browOuterY:     s(current.browOuterY,     target.browOuterY),
-    eyeWidth:       s(current.eyeWidth,       target.eyeWidth),
-    thicknessTop:   s(current.thicknessTop,   target.thicknessTop),
-    thicknessBottom:s(current.thicknessBottom,target.thicknessBottom),
-    topAsymmetry:   s(current.topAsymmetry,   target.topAsymmetry),
-    crowsFeetOp:    s(current.crowsFeetOp,     target.crowsFeetOp),
-    mouthCornerY:   s(current.mouthCornerY,   target.mouthCornerY),
-    mouthMidY:      s(current.mouthMidY,      target.mouthMidY),
-    mouthWidth:     s(current.mouthWidth,     target.mouthWidth),
-    mouthOpen:      s(current.mouthOpen,      target.mouthOpen),
-  };
-}

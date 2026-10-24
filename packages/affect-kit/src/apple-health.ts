@@ -6,6 +6,7 @@
 // own list. It has no field for arousal, so arousal stays with the app.
 
 import type { EmotionName, Rating } from './core/types';
+import { ratingPosition } from './core/vad';
 
 /** The State of Mind labels the vocabulary maps to: `HKStateOfMind.Label` names. */
 export type AppleMoodLabel =
@@ -68,25 +69,35 @@ export type StateOfMindKind = 'momentaryEmotion' | 'dailyMood';
 /** What to write to State of Mind. */
 export interface StateOfMindSample {
   kind: StateOfMindKind;
-  /** From -1 (very unpleasant) to 1 (very pleasant): the face's valence. */
+  /** From -1 (very unpleasant) to 1 (very pleasant). */
   valence: number;
+  /**
+   * Where the valence came from: the face, or (when the face wasn't set) the
+   * chosen words' composite. Health has one valence field; this keeps the
+   * difference on your side.
+   */
+  valenceFrom: 'face' | 'words';
   labels: AppleMoodLabel[];
 }
 
 /**
- * The State of Mind sample for a rating: its kind, the face's valence (clamped
- * to [-1, 1]) and the labels for its words. A rating with only a face writes a
- * valence and no labels.
+ * The State of Mind sample for a rating: its kind, its valence (clamped to
+ * [-1, 1]) and the labels for its words. The valence is the face's; when the
+ * face wasn't set it's the chosen words', as `valenceFrom` says. `null` for a
+ * rating with neither a face nor words, which has nothing to write.
  *
  * ```ts
  * const sample = stateOfMind(rating);
  * // save with HealthKit: sample.kind, sample.valence, sample.labels
  * ```
  */
-export function stateOfMind(rating: Rating, kind: StateOfMindKind = 'momentaryEmotion'): StateOfMindSample {
+export function stateOfMind(rating: Rating, kind: StateOfMindKind = 'momentaryEmotion'): StateOfMindSample | null {
+  const position = ratingPosition(rating);
+  if (!position) return null;
   return {
     kind,
-    valence: Math.max(-1, Math.min(1, rating.face.v)),
+    valence: Math.max(-1, Math.min(1, position.v)),
+    valenceFrom: position.source,
     labels: appleLabelsFor(rating.labels.map(l => l.name)),
   };
 }

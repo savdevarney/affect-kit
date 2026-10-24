@@ -1,7 +1,10 @@
-import { LitElement, html, css, nothing } from 'lit';
+import { LitElement, html, css, nothing, unsafeCSS } from 'lit';
 import { property } from 'lit/decorators.js';
 import { chipStyle, BASE_FONT_PX, type ChipColors, type ChipStyle } from '../core/chip';
-import { A11Y_STRINGS_EN, type A11yStrings } from '../core/a11y';
+import { A11Y_STRINGS_EN, chipA11y, type A11yStrings } from '../core/a11y';
+import { RATER_TIMING, type Curve } from '../core/rater';
+
+const curve = (c: Curve) => unsafeCSS(`${c.ms}ms cubic-bezier(${c.bezier.join(', ')})`);
 import { neutralPalette } from '../core/palette';
 import { resolveTheme, themeConverter } from '../core/theme';
 import type { Theme } from '../core/types';
@@ -39,10 +42,18 @@ export class AffectKitChip extends LitElement {
       --_lift: 0 0 transparent;
       box-shadow: var(--_rings, 0 0 transparent), var(--_lift);
       transition:
-        background 0.22s ease,
-        color      0.22s ease,
-        box-shadow 0.18s ease;
+        background ${curve(RATER_TIMING.chipColor)},
+        color      ${curve(RATER_TIMING.chipColor)},
+        box-shadow ${curve(RATER_TIMING.chipRings)};
       user-select: none;
+    }
+    /* Reduce Motion: the rings appear without growing. */
+    @media (prefers-reduced-motion: reduce) {
+      .chip {
+        transition:
+          background ${curve(RATER_TIMING.chipColor)},
+          color      ${curve(RATER_TIMING.chipColor)};
+      }
     }
     button.chip { cursor: pointer; }
     button.chip:hover { --_lift: 0 4px 12px rgba(0,0,0,0.16), 0 2px 4px rgba(0,0,0,0.10); }
@@ -109,7 +120,7 @@ export class AffectKitChip extends LitElement {
 
     return this.readonly
       ? html`<span class="chip" style=${style}>${this.label}${intensity}</span>`
-      : html`<button class="chip" type="button" style=${style}>${this.label}${intensity}</button>`;
+      : html`<button class="chip" type="button" aria-pressed=${chipA11y(this.label, s.level, this.strings).selected ? 'true' : 'false'} style=${style}>${this.label}${intensity}</button>`;
   }
 }
 

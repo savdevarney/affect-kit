@@ -883,8 +883,11 @@ import { createRating, averageRatings }           from 'affect-kit';`}></pre>
   /** Unix timestamp (ms) at commit time. */
   timestamp: number;
 
-  /** Pad position that drives the face glyph and color. The pre-verbal gut gesture. */
-  face: { v: number; a: number };
+  /**
+   * Pad position that drives the face glyph and color. The pre-verbal gut gesture.
+   * null when the person never set it (words only): the centre is never saved as a choice.
+   */
+  face: { v: number; a: number } | null;
 
   /** Selected emotion words; each optionally carries its lexicon VAD coordinates. */
   labels: EmotionLabel[];
@@ -897,8 +900,8 @@ import { createRating, averageRatings }           from 'affect-kit';`}></pre>
   composite: { v: number; a: number; d: number } | null;
 }
 
-// To get a single resolved VAD vector:
-//   rating.composite ?? { v: rating.face.v, a: rating.face.a, d: 0 }`}></pre>
+// One position for a rating: the face when set, otherwise the words' composite.
+//   ratingPosition(rating) // { v, a, source: 'face' | 'words' } | null`}></pre>
 
         <h3>EmotionLabel</h3>
         <pre class="docs-code" set:text={`interface EmotionLabel {
@@ -1032,6 +1035,37 @@ for (const part of FACE_PARTS) {
           own size.
         </p>
 
+        <h3 id="core-motion">The face in motion</h3>
+        <p>
+          Motion runs by elapsed time, so the face moves the same at 60 and 120 Hz. Each frame,
+          ease the numbers with <code>smoothFaceParams(current, faceParams(v, a), dtMs)</code> and
+          add <code>faceMotion(t, v, a, opts)</code>'s offsets: an idle breath at 12 a minute,
+          tremor that grows with arousal, and a shock that <code>kickShock</code> starts when a
+          high-energy word goes up a level and <code>decayShock</code> fades. Under Reduce Motion
+          the face still eases, faster, and holds still otherwise.
+        </p>
+
+        <h3 id="core-rater">The rater's behavior</h3>
+        <p>
+          <code>raterReducer(state, event)</code> is the whole behavior of
+          <code>&lt;affect-kit-rater&gt;</code>, which runs on it. Your renderer owns the finger
+          and the dwell timer and sends events: <code>move</code> while the finger moves,
+          <code>settle</code> on release or after <code>RATER_TIMING.dwellMs</code> still,
+          <code>tap</code> on a word, <code>adjust</code> from a screen reader, and
+          <code>showWords</code> to go straight to the words. Five words at most, Done waits for one
+          (<code>canFinish</code>), and a face never touched is saved as <code>null</code>, never
+          the centre (<code>raterRating</code>). <code>RATER_TIMING</code> and
+          <code>RATER_LAYOUT</code> hold every transition and proportion, as numbers CSS and
+          Reanimated both take.
+        </p>
+        <pre class="docs-code" set:text={`import { createRater, raterReducer, raterRating, canFinish } from 'affect-kit/core';
+
+let state = createRater();
+state = raterReducer(state, { type: 'move', v: 0.6, a: 0.4 });
+state = raterReducer(state, { type: 'settle' });          // the words re-sort
+state = raterReducer(state, { type: 'tap', name: 'proud' });
+if (canFinish(state)) save(raterRating(state));`}></pre>
+
         <h3 id="core-pad">The pad</h3>
         <p>
           <code>padToFace(x, y)</code> turns a touch (0 to 1 from the pad's top-left) into a face
@@ -1046,7 +1080,8 @@ for (const part of FACE_PARTS) {
           stops each (<code>FACE_STEPS</code>). <code>nudgeFace(face, axis, ±1)</code> moves one
           stop, <code>axisValueText(axis, face)</code> is what's spoken, and
           <code>describeFace(v, a)</code> reads a position: "pleasant, very calm".
-          <code>chipLabel(word, level)</code> reads a chip: "anxious, strongly". Every string comes
+          <code>chipLabel(word, level)</code> reads a chip: "anxious, strongly", and
+          <code>chipA11y</code> adds whether it's chosen, since a chip is a toggle. Every string comes
           from <code>A11Y_STRINGS_EN</code>; pass your own table for other words or languages.
         </p>
 
@@ -1220,7 +1255,7 @@ const ref = useRef<AffectKitRater>(null);
     const ratingOut   = document.getElementById('docs-checkin-rating');
     const checkin = checkinRoot && mountCheckin(checkinRoot, (rating) => {
       if (ratingOut) ratingOut.textContent = JSON.stringify({
-        face: { v: +rating.face.v.toFixed(2), a: +rating.face.a.toFixed(2) },
+        face: rating.face && { v: +rating.face.v.toFixed(2), a: +rating.face.a.toFixed(2) },
         labels: rating.labels.map(({ name, level }) => ({ name, level })),
         composite: rating.composite && { v: +rating.composite.v.toFixed(2), a: +rating.composite.a.toFixed(2), d: +rating.composite.d.toFixed(2) },
       }, null, 2);

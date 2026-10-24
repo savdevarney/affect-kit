@@ -10,7 +10,7 @@
 
 // Ratings
 export type { Rating, EmotionLabel, EmotionName, ResolvedTheme, PadGlow } from './core/types';
-export { createRating, averageRatings, stripVad, rehydrate } from './core/vad';
+export { createRating, averageRatings, stripVad, rehydrate, ratingPosition } from './core/vad';
 export { EMOTION_LABELS } from './vocabulary/en';
 
 // The face: numbers, then paths, then how to draw them
@@ -22,6 +22,19 @@ export {
   FACE_STYLE, faceInk, FACE_TIERS, faceTier, faceStroke,
   type FacePartStyle, type FaceTier,
 } from './core/face-style';
+
+// The face in motion, by time
+export {
+  smoothFaceParams, faceSettled, kickShock, decayShock, faceMotion, FACE_MOTION,
+  type FaceOffsets,
+} from './core/motion';
+
+// The rater's behavior, timing and layout
+export {
+  createRater, raterReducer, canFinish, raterRating, tapShocks,
+  RATER_RULES, RATER_TIMING, RATER_LAYOUT, UNSET_FACE,
+  type RaterState, type RaterEvent, type Curve,
+} from './core/rater';
 
 // The pad and color
 export { padToFace, faceToPad, vaColor, padColors } from './core/pad';
@@ -40,6 +53,6 @@ export {
 
 // Accessibility
 export {
-  A11Y_STRINGS_EN, describeFace, axisValueText, nudgeFace, chipLabel, FACE_STEPS,
+  A11Y_STRINGS_EN, describeFace, axisValueText, nudgeFace, chipLabel, chipA11y, FACE_STEPS,
   type A11yStrings, type FaceAxis,
 } from './core/a11y';

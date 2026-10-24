@@ -342,7 +342,7 @@ function fmtRatings(name: string, ratings: Rating[]): string {
     const labelLines = r.labels
       .map(l => `    { name: '${l.name}', level: ${l.level} },`)
       .join('\n');
-    lines.push(`  createRating({ face: { v: ${r.face.v.toFixed(2).padStart(5)}, a: ${r.face.a.toFixed(2).padStart(5)} }, labels: [`);
+    lines.push(`  createRating({ face: ${r.face ? `{ v: ${r.face.v.toFixed(2).padStart(5)}, a: ${r.face.a.toFixed(2).padStart(5)} }` : 'null'}, labels: [`);
     lines.push(labelLines);
     lines.push(`  ]}),`);
   }

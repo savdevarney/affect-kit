@@ -29,7 +29,12 @@ describe('affect-kit/core', () => {
   it('exports the headless core, and nothing else', () => {
     expect(Object.keys(core).sort()).toEqual([
       // ratings
-      'createRating', 'averageRatings', 'stripVad', 'rehydrate', 'EMOTION_LABELS',
+      'createRating', 'averageRatings', 'stripVad', 'rehydrate', 'ratingPosition', 'EMOTION_LABELS',
+      // motion
+      'smoothFaceParams', 'faceSettled', 'kickShock', 'decayShock', 'faceMotion', 'FACE_MOTION',
+      // the rater
+      'createRater', 'raterReducer', 'canFinish', 'raterRating', 'tapShocks',
+      'RATER_RULES', 'RATER_TIMING', 'RATER_LAYOUT', 'UNSET_FACE',
       // the face
       'faceParams', 'faceGeometry', 'facePaths', 'toSvgPath', 'FACE_PARTS', 'FACE_BOX',
       'FACE_STYLE', 'faceInk', 'FACE_TIERS', 'faceTier', 'faceStroke',
@@ -39,7 +44,7 @@ describe('affect-kit/core', () => {
       // the words and chips
       'wordOrder', 'chipStyle', 'BASE_FONT_PX', 'WORD_LIST_GAP',
       // accessibility
-      'A11Y_STRINGS_EN', 'describeFace', 'axisValueText', 'nudgeFace', 'chipLabel', 'FACE_STEPS',
+      'A11Y_STRINGS_EN', 'describeFace', 'axisValueText', 'nudgeFace', 'chipLabel', 'chipA11y', 'FACE_STEPS',
     ].sort());
   });
 
@@ -74,8 +79,10 @@ describe('worklet directives', () => {
   };
   // Not on the per-frame path: ratings are built once, words sorted on release.
   const notPerFrame = new Set([
-    'createRating', 'averageRatings', 'stripVad', 'rehydrate', 'wordOrder',
-    'describeFace', 'axisValueText', 'nudgeFace', 'chipLabel',
+    'createRating', 'averageRatings', 'stripVad', 'rehydrate', 'ratingPosition', 'wordOrder',
+    'describeFace', 'axisValueText', 'nudgeFace', 'chipLabel', 'chipA11y',
+    // The rater's events happen on a touch or a tap, not every frame.
+    'createRater', 'raterReducer', 'canFinish', 'raterRating', 'tapShocks',
   ]);
 
   for (const [name, value] of Object.entries(perFrame)) {

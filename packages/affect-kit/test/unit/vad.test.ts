@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { computeComposite, buildRating, createRating, stripVad, rehydrate } from '../../src/core/vad';
+import { computeComposite, buildRating, createRating, stripVad, rehydrate, averageRatings, ratingPosition } from '../../src/core/vad';
+import { EMOTION_LABELS } from '../../src/vocabulary/en';
 import type { Rating } from '../../src/core/types';
 
 describe('computeComposite', () => {
@@ -154,5 +155,30 @@ describe('stripVad / rehydrate', () => {
     const lean = stripVad(full).labels;
     const composite = computeComposite(lean);
     expect(composite).toEqual(full.composite);
+  });
+});
+
+describe('a face that was never set', () => {
+  it('is saved as null, never as the centre', () => {
+    expect(createRating({ labels: [{ name: 'calm', level: 2 }] }).face).toBeNull();
+    expect(createRating({ face: null }).face).toBeNull();
+  });
+
+  it("averages only the faces that were set, and none when none were", () => {
+    const set = createRating({ face: { v: 0.6, a: 0.2 } });
+    const unset = createRating({ labels: [{ name: 'sad', level: 1 }] });
+    expect(averageRatings([set, unset])!.face).toEqual({ v: 0.6, a: 0.2 });
+    expect(averageRatings([unset, unset])!.face).toBeNull();
+  });
+});
+
+describe('ratingPosition', () => {
+  it("is the face when it was set, otherwise the words' composite, and says which", () => {
+    expect(ratingPosition(createRating({ face: { v: 0.1, a: 0.2 }, labels: [{ name: 'sad', level: 3 }] })))
+      .toEqual({ v: 0.1, a: 0.2, source: 'face' });
+    const words = ratingPosition(createRating({ labels: [{ name: 'calm', level: 2 }] }));
+    expect(words?.source).toBe('words');
+    expect(words?.v).toBeCloseTo(EMOTION_LABELS.calm.v);
+    expect(ratingPosition(createRating({}))).toBeNull();
   });
 });

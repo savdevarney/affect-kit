@@ -310,7 +310,7 @@ rater.addEventListener('change', (e) =&gt; result.rating = e.detail);</code></pr
       if (jsonEl) {
         const round = (x: number) => +x.toFixed(3);
         jsonEl.textContent = JSON.stringify({
-          face: { v: round(rating.face.v), a: round(rating.face.a) },
+          face: rating.face && { v: round(rating.face.v), a: round(rating.face.a) },
           composite: rating.composite
             ? { v: round(rating.composite.v), a: round(rating.composite.a), d: round(rating.composite.d) }
             : null,

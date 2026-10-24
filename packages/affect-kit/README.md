@@ -51,16 +51,18 @@ Each ships as its own entry point (`affect-kit/rater`, `/result`, `/compare`, `/
 
 | Export | Role |
 |---|---|
-| `createRating`, `averageRatings`, `stripVad`, `rehydrate` | Build, average, store and restore `Rating`s. A rating with a face and no labels is valid. |
+| `createRating`, `averageRatings`, `stripVad`, `rehydrate`, `ratingPosition` | Build, average, store and restore `Rating`s. A face with no words is valid, and so are words with no face (`face: null`). `ratingPosition` gives the face, or the words' position when there's no face. |
 | `EMOTION_LABELS` | V/A/D coordinates for each of the 55 words. |
 | `faceParams(v, a)`, `facePaths(params)`, `faceGeometry(params)` | The face as eleven numbers, then as SVG path data or path commands. Animate the numbers; rebuild the paths each frame. |
 | `FACE_PARTS`, `FACE_STYLE`, `FACE_BOX`, `faceInk(theme)` | How to draw it: part order, strokes and fills in face units, the coordinate space, the default ink. |
 | `faceTier(sizePx)`, `faceStroke(sizePx)` | Small faces: fewer parts below 48, 28 and 20 px, a dot below that, and strokes that never render under 1 px. |
 | `padToFace(x, y)`, `faceToPad(v, a)`, `vaColor(v, a)`, `padColors(v, a, theme, glow)` | The pad: touch to position, the dot's place, the face's color, the halo and dot colors. |
+| `smoothFaceParams`, `faceMotion`, `kickShock`, `decayShock`, `FACE_MOTION` | The face in motion, by elapsed time: easing, breath (12 a minute), tremor and shock. The same at any frame rate. |
+| `createRater`, `raterReducer`, `canFinish`, `raterRating`, `RATER_TIMING`, `RATER_LAYOUT` | The rater's behavior as a reducer, with its timings and proportions. `<affect-kit-rater>` runs on it, so a native rater built on it behaves the same. |
 | `wordOrder(v, a)` | The 55 words, nearest the face first: the rater's word order. |
 | `chipStyle(level, colors, basePx?)`, `WORD_LIST_GAP` | A word chip's look as plain data in px, and the space between chips. |
 | `surfacePalette(v, a, theme)`, `neutralPalette(theme)`, `wordChipColors(v, a, theme)` | Colors for a screen in the face's color, for chips with no hue, or for a word in its own color. Text meets `MIN_TEXT_CONTRAST` (4.5:1). |
-| `describeFace(v, a)`, `chipLabel(word, level)`, `nudgeFace(...)`, `axisValueText(...)`, `FACE_STEPS`, `A11Y_STRINGS_EN` | What screen readers hear, and the face as two adjustable values. Every string comes from a table you can replace. |
+| `describeFace(v, a)`, `chipLabel(word, level)`, `chipA11y(word, level)`, `nudgeFace(...)`, `axisValueText(...)`, `FACE_STEPS`, `A11Y_STRINGS_EN` | What screen readers hear, and the face as two adjustable values. Every string comes from a table you can replace. |
 
 Everything a frame calls starts with a `'worklet'` directive, so React Native Reanimated can run it on the UI thread.
 

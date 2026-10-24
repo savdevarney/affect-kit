@@ -19,6 +19,8 @@ export interface A11yStrings {
   notSet: string;
   /** The face before it's set, read as a whole. */
   faceNotSet: string;
+  /** A control that goes straight to the words, leaving the face unset. Falls back to English. */
+  showWords?: string;
 }
 
 /** English. With five bands, the nine steps read: very, very, plain, plain, neither, plain, plain, very, very. */
@@ -31,6 +33,7 @@ export const A11Y_STRINGS_EN: A11yStrings = {
   joiner: ', ',
   notSet: 'not set',
   faceNotSet: 'Face, not set',
+  showWords: 'Choose words without the face',
 };
 
 /** The axes a screen reader adjusts. */
@@ -85,4 +88,18 @@ export function nudgeFace(
 export function chipLabel(name: string, level: number, strings: A11yStrings = A11Y_STRINGS_EN): string {
   const lv = Math.max(0, Math.min(3, Math.round(level)));
   return lv === 0 ? name : name + strings.joiner + strings.levels[lv - 1]!;
+}
+
+/**
+ * A word chip for a screen reader: its name, and whether it's chosen. A chip
+ * is a toggle, so an unchosen one reads as off, not as a plain label.
+ *
+ * ```ts
+ * chipA11y('anxious', 2); // { label: 'anxious, clearly', selected: true }
+ * ```
+ */
+export function chipA11y(
+  name: string, level: number, strings: A11yStrings = A11Y_STRINGS_EN,
+): { label: string; selected: boolean } {
+  return { label: chipLabel(name, level, strings), selected: Math.round(level) > 0 };
 }

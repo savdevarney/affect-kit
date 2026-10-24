@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  A11Y_STRINGS_EN, FACE_STEPS, axisValueText, chipLabel, describeFace, nudgeFace, type A11yStrings,
+  A11Y_STRINGS_EN, FACE_STEPS, axisValueText, chipA11y, chipLabel, describeFace, nudgeFace, type A11yStrings,
 } from '../../src/core/a11y';
 
 describe('the bands', () => {
@@ -65,5 +65,12 @@ describe('chipLabel', () => {
     expect(chipLabel('anxious', 1)).toBe('anxious, a little');
     expect(chipLabel('anxious', 2)).toBe('anxious, clearly');
     expect(chipLabel('anxious', 3)).toBe('anxious, strongly');
+  });
+});
+
+describe('chipA11y', () => {
+  it('reads a chip as a toggle: off when unchosen, on with its level when chosen', () => {
+    expect(chipA11y('anxious', 0)).toEqual({ label: 'anxious', selected: false });
+    expect(chipA11y('anxious', 2)).toEqual({ label: 'anxious, clearly', selected: true });
   });
 });

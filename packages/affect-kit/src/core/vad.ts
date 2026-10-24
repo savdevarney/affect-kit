@@ -54,7 +54,7 @@ export function computeComposite(
  * lexicon VAD coordinates. `now` is injectable for testing; defaults to `Date.now`.
  */
 export function buildRating(args: {
-  face: { v: number; a: number };
+  face?: { v: number; a: number } | null;
   labels: Array<{ name: EmotionName; level: number }>;
   now?: () => number;
 }): Rating {
@@ -72,7 +72,7 @@ export function buildRating(args: {
 
   return {
     timestamp: now(),
-    face:      { v: face.v, a: face.a },
+    face:      face ? { v: face.v, a: face.a } : null,
     labels:    enrichedLabels,
     composite: computeComposite(enrichedLabels),
   };
@@ -95,12 +95,13 @@ export function buildRating(args: {
  * ```
  */
 export function createRating(args: {
-  face: { v: number; a: number };
+  /** Leave it out, or pass `null`, when the person never set the face. */
+  face?: { v: number; a: number } | null;
   labels?: Array<{ name: EmotionName; level: number }>;
   timestamp?: number;
 }): Rating {
   const { face, labels = [], timestamp } = args;
-  const opts: Parameters<typeof buildRating>[0] = { face, labels };
+  const opts: Parameters<typeof buildRating>[0] = { face: face ?? null, labels };
   if (timestamp != null) opts.now = () => timestamp;
   return buildRating(opts);
 }
@@ -121,12 +122,14 @@ export function createRating(args: {
  */
 export function averageRatings(ratings: Rating[]): Rating | null {
   if (ratings.length === 0) return null;
-  const n = ratings.length;
 
-  let faceVSum = 0, faceASum = 0;
+  // Only the faces that were set count: an unset face isn't a center.
+  let faceVSum = 0, faceASum = 0, faces = 0;
   for (const r of ratings) {
+    if (!r.face) continue;
     faceVSum += r.face.v;
     faceASum += r.face.a;
+    faces++;
   }
 
   const withComposite = ratings.filter(r => r.composite !== null);
@@ -166,7 +169,7 @@ export function averageRatings(ratings: Rating[]): Rating | null {
 
   return {
     timestamp: ratings[ratings.length - 1]!.timestamp,
-    face:      { v: faceVSum / n, a: faceASum / n },
+    face:      faces > 0 ? { v: faceVSum / faces, a: faceASum / faces } : null,
     labels,
     composite,
   };
@@ -221,4 +224,20 @@ export function rehydrate(rating: Rating): Rating {
       return { name: l.name, level: l.level, vad: { v: e.v, a: e.a, d: e.d } };
     }),
   };
+}
+
+/**
+ * Where a rating sits: its face when it was set, otherwise the words'
+ * composite. `source` says which, so a reader such as Apple Health's valence
+ * knows. `null` for a rating with neither.
+ *
+ * ```ts
+ * ratingPosition(createRating({ labels: [{ name: 'calm', level: 2 }] }));
+ * // { v: 0.62, a: -0.6, source: 'words' }
+ * ```
+ */
+export function ratingPosition(rating: Rating): { v: number; a: number; source: 'face' | 'words' } | null {
+  if (rating.face) return { v: rating.face.v, a: rating.face.a, source: 'face' };
+  if (rating.composite) return { v: rating.composite.v, a: rating.composite.a, source: 'words' };
+  return null;
 }

@@ -38,12 +38,23 @@ describe('appleLabelsFor', () => {
 describe('stateOfMind', () => {
   it("writes the face's valence and the words' labels", () => {
     const rating = createRating({ face: { v: 0.4, a: -0.2 }, labels: [{ name: 'calm', level: 2 }, { name: 'serene', level: 1 }] });
-    expect(stateOfMind(rating)).toEqual({ kind: 'momentaryEmotion', valence: 0.4, labels: ['calm'] });
+    expect(stateOfMind(rating)).toEqual({ kind: 'momentaryEmotion', valence: 0.4, valenceFrom: 'face', labels: ['calm'] });
   });
 
   it('writes a face alone as a valence with no labels', () => {
     expect(stateOfMind(createRating({ face: { v: -0.3, a: 0.1 } }), 'dailyMood')).toEqual({
-      kind: 'dailyMood', valence: -0.3, labels: [],
+      kind: 'dailyMood', valence: -0.3, valenceFrom: 'face', labels: [],
     });
+  });
+
+  it("takes the words' valence when the face wasn't set, and says so", () => {
+    const sample = stateOfMind(createRating({ labels: [{ name: 'calm', level: 2 }] }));
+    expect(sample?.valenceFrom).toBe('words');
+    expect(sample?.valence).toBeCloseTo(EMOTION_LABELS.calm.v);
+    expect(sample?.labels).toEqual(['calm']);
+  });
+
+  it('writes nothing for a rating with neither a face nor words', () => {
+    expect(stateOfMind(createRating({}))).toBeNull();
   });
 });

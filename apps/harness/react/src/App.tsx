@@ -31,7 +31,7 @@ export function App() {
           onChange={(e) => {
             const r = (e as CustomEvent<Rating>).detail;
             setRating(r);
-            logLine(`change → face V=${r.face.v.toFixed(2)} A=${r.face.a.toFixed(2)} labels=${r.labels.length}`);
+            logLine(`change → face ${r.face ? `V=${r.face.v.toFixed(2)} A=${r.face.a.toFixed(2)}` : 'not set'} labels=${r.labels.length}`);
           }}
           ref={raterRef}
         />

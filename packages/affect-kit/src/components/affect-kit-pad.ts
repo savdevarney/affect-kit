@@ -2,9 +2,11 @@ import { LitElement, html, css, type PropertyValues } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import { padColors, PAD_HALO_INK_ALPHA, PAD_DOT_INK_ALPHA } from '../core/pad';
 import { resolveTheme, themeConverter } from '../core/theme';
+import { RATER_TIMING } from '../core/rater';
 import type { PadGlow, Theme } from '../core/types';
 
-const DWELL_MS = 500;
+// A pause mid-drag counts as a choice, as in the rater.
+const DWELL_MS = RATER_TIMING.dwellMs;
 const PAD_HALO_PERCENT = `${PAD_HALO_INK_ALPHA * 100}%`;
 const PAD_DOT_PERCENT = `${PAD_DOT_INK_ALPHA * 100}%`;
 

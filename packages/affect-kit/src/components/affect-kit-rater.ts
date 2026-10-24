@@ -2,19 +2,24 @@ import { LitElement, html, css, nothing, unsafeCSS, type PropertyValues } from '
 import { property, state, query } from 'lit/decorators.js';
 import { colorForVA, surfaceIsLight, SURFACE_MIX, type Rgb } from '../core/color';
 import { surfacePaletteRgb, surfacePalette, neutralPalette, wordChipColors } from '../core/palette';
-import type { ChipColors } from '../core/chip';
+import { WORD_LIST_GAP, type ChipColors } from '../core/chip';
 import { colorModeConverter } from '../core/color-mode';
 import { resolveTheme, themeConverter } from '../core/theme';
-import { buildRating } from '../core/vad';
 import { EMOTIONS } from '../vocabulary/en';
-import { wordOrder } from '../vocabulary/order';
-import { WORD_LIST_GAP } from '../core/chip';
+import { FACE_MOTION } from '../core/motion';
+import { faceToPad, padColors, padToFace, vaColor } from '../core/pad';
+import { A11Y_STRINGS_EN, FACE_STEPS, axisValueText, type A11yStrings, type FaceAxis } from '../core/a11y';
+import {
+  canFinish, createRater, raterRating, raterReducer, tapShocks,
+  RATER_LAYOUT, RATER_TIMING, UNSET_FACE,
+  type Curve, type RaterEvent, type RaterState,
+} from '../core/rater';
 import type { ColorMode, Rating, EmotionName, Theme } from '../core/types';
 import type { AffectKitFace } from './affect-kit-face';
 
-const DWELL_MS = 500;
-const HIGH_AROUSAL_THRESH = 0.3;
-const MAX_LABELS = 5;
+// A transition from RATER_TIMING, as CSS.
+const curve = (c: Curve) => unsafeCSS(`${c.ms}ms cubic-bezier(${c.bezier.join(', ')})`);
+const T = RATER_TIMING;
 
 const animateConverter = {
   fromAttribute: (value: string | null): boolean => value !== 'false',
@@ -88,7 +93,7 @@ export class AffectKitRater extends LitElement {
       pointer-events: none;
       opacity: 0;
       z-index: 0;
-      transition: opacity 0.5s ease, background 50ms linear;
+      transition: opacity ${curve(T.halo)}, background 50ms linear;
     }
     /* Same ratio surfacePalette() blends at, so apps can match this surface. */
     .glow.on { opacity: ${unsafeCSS(SURFACE_MIX)}; }
@@ -98,7 +103,7 @@ export class AffectKitRater extends LitElement {
       position: relative;
       flex: 0 0 auto;
       width: 100%;
-      max-width: 200px;
+      max-width: ${unsafeCSS(RATER_LAYOUT.faceMax)}px;
       aspect-ratio: 1;
       margin: 4px auto 0;
       cursor: grab;
@@ -112,22 +117,65 @@ export class AffectKitRater extends LitElement {
       position: absolute;
       inset: 0;
       margin: auto;
-      width: 94%;
-      height: 94%;
+      width: ${unsafeCSS(RATER_LAYOUT.faceInset * 100)}%;
+      height: ${unsafeCSS(RATER_LAYOUT.faceInset * 100)}%;
       pointer-events: none;
-      filter: drop-shadow(0 10px 28px rgba(0,0,0,0.14));
+      filter: drop-shadow(0 ${unsafeCSS(RATER_LAYOUT.faceShadow.y)}px ${unsafeCSS(RATER_LAYOUT.faceShadow.blur)}px rgba(0,0,0,${unsafeCSS(RATER_LAYOUT.faceShadow.opacity)}));
+      transition: opacity ${curve(T.inkIn)};
     }
+    /* Before the first touch: the face at the centre in faded ink, with no
+       breath, glow or color. The first move inks it in. */
+    .face-zone.unset affect-kit-face { opacity: ${unsafeCSS(UNSET_FACE.inkOpacity)}; }
 
     .ghost-dot {
       position: absolute;
-      width: 9px;
-      height: 9px;
-      background: color-mix(in srgb, var(--_ink) 28%, transparent);
+      width: ${unsafeCSS(RATER_LAYOUT.dotSize)}px;
+      height: ${unsafeCSS(RATER_LAYOUT.dotSize)}px;
       border-radius: 50%;
       transform: translate(-50%, -50%);
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: opacity ${curve(T.dot)};
+    }
+
+    /* The face as two adjustable values, for screen readers and the keyboard
+       (affect-kit/core's FACE_STEPS). Hidden, but focus shows on the pad. */
+    .adjust {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .face-zone:has(.adjust:focus-visible) {
+      outline: 2px solid var(--_ink);
+      outline-offset: 4px;
+      border-radius: 50%;
+    }
+
+    /* Straight to the words, leaving the face unset: hidden until focused. */
+    .to-words {
+      align-self: center;
+      margin: 6px auto 0;
+      font: inherit;
+      font-size: 0.75em;
+      color: var(--_ink);
+      background: var(--_paper);
+      border: 1.5px solid var(--_ink);
+      border-radius: 0.88em;
+      padding: 0.4em 0.9em;
+      z-index: 1;
+    }
+    .to-words:not(:focus-visible) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+      padding: 0;
+      border: 0;
     }
     .ghost-dot.visible { opacity: 1; }
 
@@ -139,18 +187,18 @@ export class AffectKitRater extends LitElement {
       min-height: 380px;
       overflow: hidden;
       transition:
-        opacity 0.65s ease,
-        filter  0.65s ease,
-        transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity ${curve(T.revealFade)},
+        filter  ${curve(T.revealFade)},
+        transform ${curve(T.reveal)},
         max-height 0.7s cubic-bezier(0.4, 0, 0.2, 1),
         min-height 0.7s cubic-bezier(0.4, 0, 0.2, 1),
         padding   0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .chips-zone.empty {
       opacity: 0;
-      filter: blur(4px);
+      filter: blur(${unsafeCSS(RATER_LAYOUT.revealBlur)}px);
       pointer-events: none;
-      transform: translateY(8px);
+      transform: translateY(${unsafeCSS(RATER_LAYOUT.revealRise)}px);
       max-height: 0;
       min-height: 0;
       padding-top: 0;
@@ -186,7 +234,7 @@ export class AffectKitRater extends LitElement {
       grid-template-areas: "stack";
       min-height: 2.6em;
       margin-bottom: 0.75em;
-      transition: opacity 0.25s ease;
+      transition: opacity ${curve(T.header)};
     }
     .chip-header > * { grid-area: stack; }
     .chip-header.dragging {
@@ -259,8 +307,14 @@ export class AffectKitRater extends LitElement {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.82);
     }
 
+    /* Reduce Motion: fades stay; travel and blur go. */
+    @media (prefers-reduced-motion: reduce) {
+      .chips-zone { transition: opacity ${curve(T.reduced.reveal)}; }
+      .chips-zone.empty { filter: none; transform: none; }
+    }
+
     /* Wide layout: face left, chips right */
-    @container (min-width: 860px) {
+    @container (min-width: ${unsafeCSS(RATER_LAYOUT.wideAt)}px) {
       .surface {
         flex-direction: row;
         align-items: stretch;
@@ -269,8 +323,8 @@ export class AffectKitRater extends LitElement {
       .surface:has(.chips-zone.empty) { min-height: 0; }
       .face-zone {
         flex: 0 0 auto;
-        width: 280px;
-        max-width: 280px;
+        width: ${unsafeCSS(RATER_LAYOUT.faceMaxWide)}px;
+        max-width: ${unsafeCSS(RATER_LAYOUT.faceMaxWide)}px;
         margin: 10px 0 10px 24px;
         align-self: center;
       }
@@ -322,221 +376,195 @@ export class AffectKitRater extends LitElement {
   @property({ converter: themeConverter, reflect: true })
   theme: Theme = 'light';
 
-  @state() private _padV = 0;
-  @state() private _padA = 0;
-  @state() private _levels = new Map<string, 0 | 1 | 2 | 3>();
-  @state() private _revealed = false;
-  @state() private _sortOrder: string[] = EMOTIONS.map(e => e.name);
-  @state() private _dragging = false;
+  /** What a screen reader hears. English by default; pass your own words. */
+  @property({ attribute: false }) strings: A11yStrings = A11Y_STRINGS_EN;
+
+  /** The rater's state. affect-kit/core's raterReducer runs it, as it would a native rater. */
+  @state() private _state: RaterState = createRater();
 
   @query('#face-el') private _faceEl?: AffectKitFace;
+  @query('.chip-list') private _chipList?: HTMLElement;
 
   private _dwellTimer: ReturnType<typeof setTimeout> | null = null;
-  private _hasFlippedOnce = false;
-  private _ghostX = 0.5;
-  private _ghostY = 0.5;
+  private _motionQuery?: MediaQueryList;
 
-  /**
-   * Programmatic prefill — rare, but useful for editing a captured rating.
-   * Reveals chips immediately and sets the pad + label state from the rating.
-   */
+  /** Open a saved rating to change it: the face where it was, its words chosen. */
   setRating(rating: Rating): void {
-    this._padV = rating.face.v;
-    this._padA = rating.face.a;
-    const levels = new Map<string, 0 | 1 | 2 | 3>();
-    // Rating.level is `number` to support averaged longitudinal data, but the
-    // rater itself only renders integer chip levels — round and clamp on prefill.
-    for (const l of rating.labels) {
-      const lv = Math.round(l.level);
-      const chipLv = (lv < 1 ? 1 : lv > 3 ? 3 : lv) as 1 | 2 | 3;
-      levels.set(l.name, chipLv);
-    }
-    this._levels = levels;
-    this._revealed = true;
-    this._ghostX = (rating.face.v + 1) / 2;
-    this._ghostY = (1 - rating.face.a) / 2;
-    this._sortOrder = this._computeSortOrder();
-    this._hasFlippedOnce = true;
-    this._updateColorVars();
+    this._dispatch({ type: 'load', rating });
   }
 
-  /**
-   * Clear all state back to the initial empty position.
-   */
+  /** Back to the start: no face, no words. */
   reset(): void {
-    this._padV = 0;
-    this._padA = 0;
-    this._levels = new Map();
-    this._revealed = false;
-    this._hasFlippedOnce = false;
-    this._ghostX = 0.5;
-    this._ghostY = 0.5;
-    this._sortOrder = EMOTIONS.map(e => e.name);
-    this._updateColorVars();
+    this._clearDwell();
+    this._dispatch({ type: 'reset' });
   }
 
-  // ── Pointer handling ──────────────────────────────────────────────────────
+  private get _reducedMotion(): boolean {
+    return this._motionQuery?.matches ?? false;
+  }
+
+  // ── Every change goes through the reducer ────────────────────────────────
+
+  private _dispatch(event: RaterEvent): RaterState {
+    const prev = this._state;
+    const next = raterReducer(prev, event);
+    if (next === prev) return prev;
+    if (tapShocks(prev, next)) this._faceEl?.triggerShock();
+    // The first sort is silent: the words are still fading in.
+    if (prev.revealed && next.order !== prev.order) void this._reorder(next);
+    else this._state = next;
+    this._updateColorVars();
+    return next;
+  }
+
+  // ── Pointer: the renderer owns the finger and the dwell timer ────────────
 
   private _onPointerDown(e: PointerEvent) {
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    this._dragging = true;
-    this._updatePad(e);
+    this._moveTo(e);
   }
 
   private _onPointerMove(e: PointerEvent) {
-    if (!this._dragging) return;
-    this._updatePad(e);
-    // Reset dwell timer: settle fires if user pauses for DWELL_MS
-    if (this._dwellTimer != null) clearTimeout(this._dwellTimer);
-    this._dwellTimer = setTimeout(() => this._settle(), DWELL_MS);
+    if (!this._state.dragging) return;
+    this._moveTo(e);
+    // A pause mid-drag counts as a choice.
+    this._clearDwell();
+    this._dwellTimer = setTimeout(() => this._settle(), RATER_TIMING.dwellMs);
   }
 
   private _onPointerUp() {
-    if (!this._dragging) return;
-    this._dragging = false;
-    if (this._dwellTimer != null) { clearTimeout(this._dwellTimer); this._dwellTimer = null; }
+    if (!this._state.dragging) return;
+    this._clearDwell();
     this._settle();
   }
 
+  // A cancelled drag (the browser took the gesture) leaves the face where it was.
   private _onPointerCancel() {
-    this._dragging = false;
+    this._clearDwell();
+    if (this._state.dragging) this._settle();
+  }
+
+  private _clearDwell() {
     if (this._dwellTimer != null) { clearTimeout(this._dwellTimer); this._dwellTimer = null; }
   }
 
-  private _updatePad(e: PointerEvent) {
+  private _moveTo(e: PointerEvent) {
     const zone = this.shadowRoot!.querySelector<HTMLElement>('.face-zone')!;
     const rect = zone.getBoundingClientRect();
-    this._ghostX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    this._ghostY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-    this._padV = this._ghostX * 2 - 1;
-    this._padA = 1 - this._ghostY * 2;
-    this._updateColorVars();
+    const { v, a } = padToFace((e.clientX - rect.left) / rect.width, (e.clientY - rect.top) / rect.height);
+    this._dispatch({ type: 'move', v, a });
   }
-
-  // ── Settle: reveal + sort + emit ─────────────────────────────────────────
 
   private _settle() {
-    if (!this._revealed) this._revealed = true;
-    this._sortWithFlip().catch(() => {/* ignore async errors */});
+    this._dispatch({ type: 'settle' });
     this._emitChange();
   }
 
-  // ── Chip interaction ──────────────────────────────────────────────────────
+  // ── Screen readers and the keyboard ──────────────────────────────────────
 
-  private _cycleChip(name: string) {
-    const cur = this._levels.get(name) ?? 0;
-    // Cap total selected labels at MAX_LABELS — only block adding a new one.
-    if (cur === 0) {
-      const active = [...this._levels.values()].filter(l => l > 0).length;
-      if (active >= MAX_LABELS) return;
+  // The adjustable value moved to a stop: step the face there, one stop at a time.
+  private _adjustTo(axis: FaceAxis, target: number) {
+    for (let i = 0; i < FACE_STEPS.length; i++) {
+      const face = this._state.face;
+      const current = face ? (axis === 'pleasant' ? face.v : face.a) : null;
+      if (current !== null && Math.abs(current - target) < 1e-6) break;
+      const up = current === null ? target >= 0 : target > current;
+      this._dispatch({ type: 'adjust', axis, direction: up ? 1 : -1 });
     }
-    const next = ((cur + 1) % 4) as 0 | 1 | 2 | 3;
-    const levels = new Map(this._levels);
-    levels.set(name, next);
-    this._levels = levels;
-
-    // Shock face on high-arousal chip toggle up
-    if (next > cur && next > 0) {
-      const emotion = EMOTIONS.find(e => e.name === name);
-      if (emotion && emotion.a > HIGH_AROUSAL_THRESH) {
-        this._faceEl?.triggerShock();
-      }
-    }
-
     this._emitChange();
   }
 
-  // ── Sort + FLIP ───────────────────────────────────────────────────────────
-
-  private _computeSortOrder(): string[] {
-    return wordOrder(this._padV, this._padA);
+  private _onAdjust(axis: FaceAxis, e: Event) {
+    const step = FACE_STEPS[Number((e.currentTarget as HTMLInputElement).value)];
+    if (step !== undefined) this._adjustTo(axis, step);
   }
 
-  private async _sortWithFlip() {
-    const newOrder = this._computeSortOrder();
+  private _showWords() {
+    this._dispatch({ type: 'showWords' });
+  }
 
-    if (!this._hasFlippedOnce) {
-      this._hasFlippedOnce = true;
-      this._sortOrder = newOrder;
-      return; // silent first sort — chips are still fading in
-    }
+  // ── Words ────────────────────────────────────────────────────────────────
 
-    // FIRST: capture positions before order change
-    const chips = this.shadowRoot!.querySelectorAll<HTMLElement>('affect-kit-chip');
-    const first = new Map<string, DOMRect>();
-    chips.forEach(el => first.set(el.dataset.name!, el.getBoundingClientRect()));
+  private _tap(name: EmotionName) {
+    const prev = this._state;
+    if (this._dispatch({ type: 'tap', name }) !== prev) this._emitChange();
+  }
 
-    // Apply new order (triggers Lit re-render)
-    this._sortOrder = newOrder;
-    await this.updateComplete;
-
-    // LAST + INVERT: read new positions, apply inverse transforms
-    this.shadowRoot!.querySelectorAll<HTMLElement>('affect-kit-chip').forEach(el => {
-      const name = el.dataset.name!;
-      const oldRect = first.get(name);
-      if (!oldRect) return;
-      const newRect = el.getBoundingClientRect();
-      const dx = oldRect.left - newRect.left;
-      const dy = oldRect.top  - newRect.top;
-      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
-      el.style.transition = 'none';
-      el.style.transform = `translate(${dx}px,${dy}px)`;
-    });
-
-    // PLAY: next frame — restore transitions, clear transforms
-    requestAnimationFrame(() => {
-      this.shadowRoot?.querySelectorAll<HTMLElement>('affect-kit-chip').forEach(el => {
-        el.style.transition = '';
-        el.style.transform = '';
+  // The words slide to their new order together (RATER_TIMING.reorder). Under
+  // Reduce Motion the list crossfades instead, with no travel.
+  private async _reorder(next: RaterState) {
+    const chips = [...(this.shadowRoot?.querySelectorAll<HTMLElement>('affect-kit-chip') ?? [])];
+    if (this._reducedMotion) {
+      const list = this._chipList;
+      if (list) { list.style.transition = 'none'; list.style.opacity = '0'; }
+      this._state = next;
+      await this.updateComplete;
+      if (!list) return;
+      requestAnimationFrame(() => {
+        list.style.transition = `opacity ${curve(RATER_TIMING.reduced.reorder)}`;
+        list.style.opacity = '';
       });
+      return;
+    }
+    const before = new Map(chips.map(el => [el.dataset['name']!, el.getBoundingClientRect()]));
+    this._state = next;
+    await this.updateComplete;
+    for (const el of chips) {
+      const from = before.get(el.dataset['name']!);
+      if (!from) continue;
+      const to = el.getBoundingClientRect();
+      const dx = from.left - to.left;
+      const dy = from.top - to.top;
+      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
+      el.style.transition = 'none';
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+    }
+    requestAnimationFrame(() => {
+      for (const el of chips) {
+        if (!el.style.transform) continue;
+        el.style.transition = `transform ${curve(RATER_TIMING.reorder)}`;
+        el.style.transform = '';
+      }
     });
   }
 
-  // ── Color vars ────────────────────────────────────────────────────────────
+  // ── Color vars ───────────────────────────────────────────────────────────
 
   private _updateColorVars() {
     // surfacePalette's math, so an app painting a screen with surfacePalette()
     // gets the same surface, chips and text as this rater.
-    const p = surfacePaletteRgb(this._padV, this._padA, resolveTheme(this.theme));
+    const face = this._state.face ?? UNSET_FACE;
+    const p = surfacePaletteRgb(face.v, face.a, resolveTheme(this.theme));
     const css = (c: Rgb) => `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
     this.style.setProperty('--_l3-r', String(p.l3[0]));
     this.style.setProperty('--_l3-g', String(p.l3[1]));
     this.style.setProperty('--_l3-b', String(p.l3[2]));
-    this.style.setProperty('--_surface-is-light', surfaceIsLight(colorForVA(this._padV, this._padA)).toFixed(4));
+    this.style.setProperty('--_surface-is-light', surfaceIsLight(colorForVA(face.v, face.a)).toFixed(4));
     this.style.setProperty('--_text-l3', css(p.l3Ink));
   }
 
-  // ── Change event ─────────────────────────────────────────────────────────
+  // ── Events ───────────────────────────────────────────────────────────────
 
   private _emitChange() {
-    const labels: Array<{ name: EmotionName; level: number }> = [];
-    for (const [name, level] of this._levels) {
-      if (level > 0) labels.push({ name: name as EmotionName, level: level as 1 | 2 | 3 });
-    }
-    const rating = buildRating({ face: { v: this._padV, a: this._padA }, labels });
+    const s = this._state;
+    if (!s.face && s.chosen.length === 0) return; // nothing to report yet
     this.dispatchEvent(new CustomEvent<Rating>('change', {
-      detail: rating,
+      detail: raterRating(s),
       bubbles: true,
       composed: true,
     }));
   }
-
-  // ── Commit (explicit submit) ──────────────────────────────────────────────
 
   private _onSubmit() {
-    const labels: Array<{ name: EmotionName; level: number }> = [];
-    for (const [name, level] of this._levels) {
-      if (level > 0) labels.push({ name: name as EmotionName, level: level as 1 | 2 | 3 });
-    }
-    const rating = buildRating({ face: { v: this._padV, a: this._padA }, labels });
+    if (!canFinish(this._state)) return; // Done waits for a word
     this.dispatchEvent(new CustomEvent<Rating>('commit', {
-      detail: rating,
+      detail: raterRating(this._state),
       bubbles: true,
       composed: true,
     }));
   }
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
+  // ── Lifecycle ────────────────────────────────────────────────────────────
 
   protected override updated(changed: PropertyValues) {
     // Color vars feed both modes:
@@ -562,50 +590,56 @@ export class AffectKitRater extends LitElement {
     if (typeof matchMedia === 'undefined') return;
     this._schemeQuery = matchMedia('(prefers-color-scheme: dark)');
     this._schemeQuery.addEventListener('change', this._onSchemeChange);
+    this._motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
   }
 
   override disconnectedCallback() {
     super.disconnectedCallback();
     this._schemeQuery?.removeEventListener('change', this._onSchemeChange);
+    this._clearDwell();
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // ── Render ───────────────────────────────────────────────────────────────
 
   override render() {
-    const [r, g, b] = colorForVA(this._padV, this._padA) as Rgb;
-    const glowBg = `rgb(${r},${g},${b})`;
-    // Surface glow only paints in 'background' mode. In 'words' mode the
-    // color story lives on the chips, so the surface stays neutral.
-    const glowOn = this.colorMode === 'background';
+    const s = this._state;
+    const unset = s.face === null;
+    const face = s.face ?? UNSET_FACE;
+    const theme = resolveTheme(this.theme);
+    const strings = this.strings;
+    // Surface glow only paints in 'background' mode, and only once the face
+    // is set. In 'words' mode the color story lives on the chips.
+    const glowOn = this.colorMode === 'background' && !unset;
     const wordsMode = this.colorMode === 'words';
-
-    const activeLabels: Array<{ name: EmotionName; level: number }> = [];
-    for (const [name, level] of this._levels) {
-      if (level > 0) activeLabels.push({ name: name as EmotionName, level: level as 1 | 2 | 3 });
-    }
-    const hasLabels = activeLabels.length > 0;
-    const vad = hasLabels
-      ? this._computeDisplayVAD(activeLabels)
-      : { v: this._padV, a: this._padA, d: 0 };
+    const hasWords = canFinish(s);
+    const pad = faceToPad(face.v, face.a);
+    // The dot under the finger: the chosen-word color on a face-colored
+    // surface, the ink at 35% otherwise (padColors).
+    const dot = padColors(face.v, face.a, theme, glowOn ? 'color' : 'neutral').dot;
 
     // One palette per mode, drawn by the same chipStyle an app can call. Words
     // mode gives each chip its own color; the others share one.
-    const theme = resolveTheme(this.theme);
-    const shared: ChipColors = this.colorMode === 'background'
-      ? surfacePalette(this._padV, this._padA, theme)
-      : neutralPalette(theme);
+    const shared: ChipColors = glowOn ? surfacePalette(face.v, face.a, theme) : neutralPalette(theme);
     const chipColors = (emotion: { name: string; v: number; a: number }): ChipColors =>
       wordsMode ? this._wordColors(emotion, theme) : shared;
+    const levelOf = (name: EmotionName) => s.chosen.find(c => c.name === name)?.level ?? 0;
+    // Each adjustable value sits on its nearest stop; an unset face sits at the centre.
+    const stop = (value: number | undefined) => {
+      if (value === undefined) return FACE_STEPS.indexOf(0);
+      let best = 0;
+      FACE_STEPS.forEach((step, i) => { if (Math.abs(step - value) < Math.abs(FACE_STEPS[best]! - value)) best = i; });
+      return best;
+    };
 
     return html`
       <div class="surface">
         <div
           class="glow${glowOn ? ' on' : ''}"
-          style="background: ${glowBg}"
+          style="background: ${vaColor(face.v, face.a)}"
         ></div>
 
         <div
-          class="face-zone"
+          class="face-zone${unset ? ' unset' : ''}"
           @pointerdown=${this._onPointerDown}
           @pointermove=${this._onPointerMove}
           @pointerup=${this._onPointerUp}
@@ -613,47 +647,72 @@ export class AffectKitRater extends LitElement {
         >
           <affect-kit-face
             id="face-el"
-            .v=${this._padV}
-            .a=${this._padA}
-            .animated=${this.animated}
-            .motionScale=${this._dragging ? 0.2 : 1.0}
+            .v=${face.v}
+            .a=${face.a}
+            .animated=${this.animated && !unset}
+            .motionScale=${s.dragging ? FACE_MOTION.dragScale : 1}
           ></affect-kit-face>
           <div
-            class="ghost-dot${this._padV !== 0 || this._padA !== 0 ? ' visible' : ''}"
-            style="left:${(this._ghostX * 100).toFixed(2)}%;top:${(this._ghostY * 100).toFixed(2)}%"
+            class="ghost-dot${unset ? '' : ' visible'}"
+            style="left:${(pad.x * 100).toFixed(2)}%;top:${(pad.y * 100).toFixed(2)}%;background:${dot}"
           ></div>
+          <input
+            class="adjust"
+            type="range" min="0" max="${FACE_STEPS.length - 1}" step="1"
+            .value=${String(stop(s.face?.v))}
+            aria-label=${strings.pleasant}
+            aria-valuetext=${axisValueText('pleasant', s.face, strings)}
+            @input=${(e: Event) => this._onAdjust('pleasant', e)}
+          />
+          <input
+            class="adjust"
+            type="range" min="0" max="${FACE_STEPS.length - 1}" step="1"
+            .value=${String(stop(s.face?.a))}
+            aria-label=${strings.energized}
+            aria-valuetext=${axisValueText('energized', s.face, strings)}
+            @input=${(e: Event) => this._onAdjust('energized', e)}
+          />
         </div>
 
-        <div class="chips-zone${this._revealed ? '' : ' empty'}">
-          <div class="chip-header${this._dragging ? ' dragging' : ''}">
-            <p class="chips-hint${hasLabels ? ' gone' : ''}">name what you feel</p>
+        ${s.revealed ? nothing : html`
+          <button class="to-words" type="button" @click=${this._showWords}>
+            ${strings.showWords ?? A11Y_STRINGS_EN.showWords}
+          </button>
+        `}
+
+        <div class="chips-zone${s.revealed ? '' : ' empty'}">
+          <div class="chip-header${s.dragging ? ' dragging' : ''}">
+            <p class="chips-hint${hasWords ? ' gone' : ''}">name what you feel</p>
             <button
-              class="submit-btn${hasLabels ? ' visible' : ''}"
+              class="submit-btn${hasWords ? ' visible' : ''}"
               @click=${this._onSubmit}
             >${this.submitLabel}</button>
           </div>
           <div class="chip-list">
-            ${EMOTIONS.map(emotion => {
-              const level = this._levels.get(emotion.name) ?? 0;
-              const order = this._sortOrder.indexOf(emotion.name);
-              return html`
-                <affect-kit-chip
-                  data-name="${emotion.name}"
-                  style="order:${order}"
-                  .label=${emotion.name}
-                  .level=${level}
-                  .colors=${chipColors(emotion)}
-                  .theme=${theme}
-                  @click=${() => this._cycleChip(emotion.name)}
-                ></affect-kit-chip>
-              `;
-            })}
+            ${EMOTIONS.map(emotion => html`
+              <affect-kit-chip
+                data-name="${emotion.name}"
+                style="order:${s.order.indexOf(emotion.name)}"
+                .label=${emotion.name}
+                .level=${levelOf(emotion.name)}
+                .colors=${chipColors(emotion)}
+                .theme=${theme}
+                .strings=${strings}
+                @click=${() => this._tap(emotion.name)}
+              ></affect-kit-chip>
+            `)}
           </div>
-          ${this.showVad ? html`
-            <p class="vad-readout">
-              V ${vad.v.toFixed(2)} &middot; A ${vad.a.toFixed(2)} &middot; D ${vad.d.toFixed(2)}
-            </p>
-          ` : nothing}
+          ${this.showVad ? (() => {
+            // Resolved VAD for the debug readout: the words' composite when
+            // chosen, otherwise the face with d = 0.
+            const r = raterRating(s);
+            const vad = r.composite ?? { v: face.v, a: face.a, d: 0 };
+            return html`
+              <p class="vad-readout">
+                V ${vad.v.toFixed(2)} &middot; A ${vad.a.toFixed(2)} &middot; D ${vad.d.toFixed(2)}
+              </p>
+            `;
+          })() : nothing}
         </div>
       </div>
     `;
@@ -670,13 +729,6 @@ export class AffectKitRater extends LitElement {
       this._wordColorCache.set(key, colors);
     }
     return colors;
-  }
-
-  private _computeDisplayVAD(labels: Array<{ name: EmotionName; level: number }>) {
-    // Resolved VAD for the debug readout: composite when labels are selected,
-    // otherwise the raw face position with d=0.
-    const rating = buildRating({ face: { v: this._padV, a: this._padA }, labels });
-    return rating.composite ?? { v: rating.face.v, a: rating.face.a, d: 0 };
   }
 }
 

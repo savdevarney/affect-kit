@@ -104,19 +104,20 @@ export interface EmotionLabel {
  *
  * **Two VAD sources, kept separate:**
  * - `face` — the pre-verbal pad gesture; drives the face glyph and color.
- *   Always present.
+ *   `null` when the person never set it: a rating chosen with words only.
+ *   The center is never recorded as if it were chosen.
  * - `composite` — intensity-weighted centroid of the selected labels' VAD
  *   coordinates. Novel derivation, grounded in affective theory; treat as
  *   exploratory. `null` when no labels were selected.
  *
- * Components that need a single resolved VAD vector should use
- * `rating.composite ?? { v: rating.face.v, a: rating.face.a, d: 0 }`.
+ * For a single position, use `ratingPosition(rating)`: the face when it was
+ * set, otherwise the words' composite, marked with which it is.
  */
 export interface Rating {
   /** ms since epoch at commit time. */
   timestamp: number;
-  /** Pad position that drives the face glyph and color. */
-  face: { v: number; a: number };
+  /** Pad position that drives the face glyph and color. `null` when the face was never set. */
+  face: { v: number; a: number } | null;
   /** Selected emotion words with intensity and per-word VAD coordinates. */
   labels: EmotionLabel[];
   /**

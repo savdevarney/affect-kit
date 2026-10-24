@@ -380,8 +380,9 @@ export class AffectKitCompare extends LitElement {
     // Outer gradient only paints in 'background' mode. In 'words' mode the
     // color story lives on the individual labels, so the card stays neutral.
     const showGradient = this.colorMode === 'background';
-    const lc = left  ? colorForVA(left.face.v,  left.face.a)  : [240, 240, 240] as const;
-    const rc = right ? colorForVA(right.face.v, right.face.a) : [240, 240, 240] as const;
+    // A side whose face was never set takes no face color.
+    const lc = left?.face  ? colorForVA(left.face.v,  left.face.a)  : [240, 240, 240] as const;
+    const rc = right?.face ? colorForVA(right.face.v, right.face.a) : [240, 240, 240] as const;
     const gradientStyle = showGradient
       ? `--_from: rgb(${lc[0]},${lc[1]},${lc[2]});--_to: rgb(${rc[0]},${rc[1]},${rc[2]});`
       : '';

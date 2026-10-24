@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { faceParams, faceGeometry, facePaths, toSvgPath, smoothFaceParams, FACE_PARTS } from '../../src/core/face-renderer';
+import { faceParams, faceGeometry, facePaths, toSvgPath, FACE_PARTS } from '../../src/core/face-renderer';
 import { FACE_STEPS } from '../../src/core/a11y';
 
 describe('faceParams', () => {
@@ -132,34 +132,5 @@ describe('faceGeometry and toSvgPath', () => {
     const g = faceGeometry(faceParams(0.5, 0.5));
     const left = g.leftEye[0]!, right = g.rightEye[0]!;
     expect(left.op === 'M' && right.op === 'M' && left.x).toBe(right.op === 'M' && -right.x);
-  });
-});
-
-describe('smoothFaceParams', () => {
-  it('moves current toward target', () => {
-    const current = faceParams(0, 0);
-    const target  = faceParams(1, 1);
-    const k = 0.11;
-    const next = smoothFaceParams(current, target, k);
-    // Every param should be strictly between current and target (moving toward it)
-    expect(next.browInnerY).toBeGreaterThanOrEqual(Math.min(current.browInnerY, target.browInnerY));
-    expect(next.browInnerY).toBeLessThanOrEqual(Math.max(current.browInnerY, target.browInnerY));
-    expect(next.crowsFeetOp).toBeGreaterThan(current.crowsFeetOp);
-    expect(next.crowsFeetOp).toBeLessThan(target.crowsFeetOp);
-  });
-
-  it('returns a new object (does not mutate current)', () => {
-    const current = faceParams(0, 0);
-    const orig = { ...current };
-    smoothFaceParams(current, faceParams(1, 1), 0.5);
-    expect(current.browInnerY).toBe(orig.browInnerY); // unchanged
-  });
-
-  it('converges to target after many steps', () => {
-    let current = faceParams(-1, -1);
-    const target = faceParams(1, 1);
-    for (let i = 0; i < 200; i++) current = smoothFaceParams(current, target, 0.11);
-    expect(current.crowsFeetOp).toBeCloseTo(target.crowsFeetOp, 2);
-    expect(current.mouthCornerY).toBeCloseTo(target.mouthCornerY, 2);
   });
 });
