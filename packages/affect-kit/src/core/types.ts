@@ -34,6 +34,12 @@ export type ColorMode = 'background' | 'words';
 export type Theme = 'light' | 'dark' | 'auto';
 
 /**
+ * A {@link Theme} with `'auto'` already resolved. The headless helpers take
+ * this: the renderer reads the OS setting, the helpers never do.
+ */
+export type ResolvedTheme = 'light' | 'dark';
+
+/**
  * What `<affect-kit-pad>` paints behind the face and under the finger.
  *
  * - `'color'` (default) — a halo and dot in the V/A color.

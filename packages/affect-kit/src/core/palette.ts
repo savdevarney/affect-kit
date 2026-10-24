@@ -4,8 +4,9 @@
 
 import {
   colorForVA, contrastRatio, darkerForChips, lighterForChips, mixOver,
-  SURFACE_MIX, type Rgb,
+  SURFACE_MIX, toHex as hex, type Rgb,
 } from './color';
+import type { ResolvedTheme } from './types';
 
 /**
  * Minimum WCAG contrast ratio for text in a {@link SurfacePalette}: the AA
@@ -69,6 +70,7 @@ const WHITE: Rgb = [255, 255, 255];
 // where black and white tie, pure black/white still clear 4.5:1 (about 4.58),
 // and #1a1a1a doesn't (about 4.18).
 function bestInk(bg: Rgb): Rgb {
+  'worklet';
   return contrastRatio(BLACK, bg) >= contrastRatio(WHITE, bg) ? BLACK : WHITE;
 }
 
@@ -78,6 +80,7 @@ const DIM_START = 0.6;
 const DIM_STEP = 0.05;
 
 function dimInk(ink: Rgb, bg: Rgb): Rgb {
+  'worklet';
   for (let alpha = DIM_START; alpha < 1; alpha += DIM_STEP) {
     const flat = mixOver(ink, bg, alpha);
     if (contrastRatio(flat, bg) >= MIN_TEXT_CONTRAST) return flat;
@@ -90,15 +93,18 @@ function dimInk(ink: Rgb, bg: Rgb): Rgb {
 const RING_SHARE: Record<'light' | 'dark', number> = { light: 0.5, dark: 0.45 };
 
 function ringFor(l3: Rgb, theme: 'light' | 'dark'): Rgb {
+  'worklet';
   return mixOver(l3, PAPER.dark, RING_SHARE[theme]);
 }
 
 /** @internal */
-export function surfacePaletteRgb(v: number, a: number, theme: 'light' | 'dark'): SurfacePaletteRgb {
+export function surfacePaletteRgb(v: number, a: number, theme: ResolvedTheme): SurfacePaletteRgb {
+  'worklet';
   const color = colorForVA(v, a);
   const surface = mixOver(color, PAPER[theme], SURFACE_MIX);
   const ink = bestInk(surface);
-  const isLight = ink === BLACK;
+  // By value, not identity: a worklet gets its own copy of BLACK.
+  const isLight = ink[0] === 0;
   // Chips tint toward the ink: a dark veil on light surfaces, a light one on dark.
   const chipBg = isLight
     ? { rgb: BLACK, alpha: 0.08 }
@@ -118,10 +124,6 @@ export function surfacePaletteRgb(v: number, a: number, theme: 'light' | 'dark')
   };
 }
 
-function hex(rgb: Rgb): string {
-  return '#' + rgb.map(c => c.toString(16).padStart(2, '0')).join('');
-}
-
 /**
  * The colors a surface takes from a V/A position: the same math
  * `<affect-kit-rater color-mode="background">` uses, so an app that paints a
@@ -131,13 +133,14 @@ function hex(rgb: Rgb): string {
  * (#1a1a1a). Resolve `'auto'` to one of these before calling.
  *
  * ```ts
- * import { surfacePalette } from 'affect-kit/data';
+ * import { surfacePalette } from 'affect-kit/core';
  * const p = surfacePalette(v, a, 'light');
  * screen.style.background = p.surface;
  * caption.style.color = p.inkDim;
  * ```
  */
-export function surfacePalette(v: number, a: number, theme: 'light' | 'dark'): SurfacePalette {
+export function surfacePalette(v: number, a: number, theme: ResolvedTheme): SurfacePalette {
+  'worklet';
   const p = surfacePaletteRgb(v, a, theme);
   const [r, g, b] = p.chipBg.rgb;
   return {
@@ -163,7 +166,8 @@ export function surfacePalette(v: number, a: number, theme: 'light' | 'dark'): S
  * chipStyle(0, neutralPalette('dark')); // a colorless unselected chip
  * ```
  */
-export function neutralPalette(theme: 'light' | 'dark'): SurfacePalette {
+export function neutralPalette(theme: ResolvedTheme): SurfacePalette {
+  'worklet';
   const paper = PAPER[theme];
   const ink: Rgb = theme === 'light' ? [26, 26, 26] : WHITE;
   const chipBg = { rgb: ink, alpha: 0.05 };
@@ -200,7 +204,8 @@ const WORD_TINT: Record<'light' | 'dark', number> = { light: 0.14, dark: 0.36 };
  * chipStyle(2, wordChipColors(v, a, 'light'));
  * ```
  */
-export function wordChipColors(v: number, a: number, theme: 'light' | 'dark'): WordChipColors {
+export function wordChipColors(v: number, a: number, theme: ResolvedTheme): WordChipColors {
+  'worklet';
   const paper = PAPER[theme];
   const raw = colorForVA(v, a);
   // On dark paper, lift the color so dim hues (cobalt, deep magenta) still read.

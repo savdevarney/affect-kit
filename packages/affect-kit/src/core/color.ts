@@ -12,11 +12,13 @@ export type Oklab = readonly [L: number, ab: number, bb: number];
 
 /** @internal */
 export function srgbToLin(c: number): number {
+  'worklet';
   return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
 }
 
 /** @internal */
 export function linToSrgb(c: number): number {
+  'worklet';
   return c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
 }
 
@@ -24,6 +26,7 @@ export function linToSrgb(c: number): number {
 
 /** @internal Accepts 0..255 byte inputs, returns OKLab triple. */
 export function rgbToOklab(rByte: number, gByte: number, bByte: number): Oklab {
+  'worklet';
   const r = srgbToLin(rByte / 255);
   const g = srgbToLin(gByte / 255);
   const b = srgbToLin(bByte / 255);
@@ -40,6 +43,7 @@ export function rgbToOklab(rByte: number, gByte: number, bByte: number): Oklab {
 
 /** @internal Returns 0..255 byte triple. */
 export function oklabToRgb(L: number, ab: number, bb: number): Rgb {
+  'worklet';
   const l_ = L + 0.3963377774 * ab + 0.2158037573 * bb;
   const m_ = L - 0.1055613458 * ab - 0.0638541728 * bb;
   const s_ = L - 0.0894841775 * ab - 1.2914855480 * bb;
@@ -53,6 +57,12 @@ export function oklabToRgb(L: number, ab: number, bb: number): Rgb {
   g  = Math.max(0, Math.min(1, linToSrgb(Math.max(0, Math.min(1, g)))));
   bl = Math.max(0, Math.min(1, linToSrgb(Math.max(0, Math.min(1, bl)))));
   return [Math.round(r * 255), Math.round(g * 255), Math.round(bl * 255)];
+}
+
+/** @internal A byte triple as `#rrggbb`. */
+export function toHex(rgb: Rgb): string {
+  'worklet';
+  return '#' + rgb.map(c => c.toString(16).padStart(2, '0')).join('');
 }
 
 // ─── Quadrant corners ──────────────────────────────────────────────────────
@@ -73,6 +83,7 @@ const Q: {
 };
 
 function lerp3(c1: Oklab, c2: Oklab, t: number): Oklab {
+  'worklet';
   return [
     c1[0] + (c2[0] - c1[0]) * t,
     c1[1] + (c2[1] - c1[1]) * t,
@@ -84,6 +95,7 @@ function lerp3(c1: Oklab, c2: Oklab, t: number): Oklab {
 
 /** @internal V/A ∈ [-1, 1] → sRGB byte triple via OKLab bilinear interpolation. */
 export function colorForVA(v: number, a: number): Rgb {
+  'worklet';
   const u = (v + 1) / 2; // 0..1, left→right
   const w = (a + 1) / 2; // 0..1, bottom→top
   const top = lerp3(Q.UL, Q.UR, u);
@@ -101,6 +113,7 @@ export function colorForVA(v: number, a: number): Rgb {
  * opposite lightness adjustment so the color reads against a dark background.
  */
 export function darkerForChips(rgb: Rgb): Rgb {
+  'worklet';
   const oklab = rgbToOklab(rgb[0], rgb[1], rgb[2]);
   const yellowness = Math.max(0, oklab[2]) / 0.20;
   const yellowFactor = Math.min(1, yellowness * Math.max(0, 1 - Math.abs(oklab[1]) / 0.15));
@@ -116,6 +129,7 @@ export function darkerForChips(rgb: Rgb): Rgb {
  * yellows lift more gently to stay yellow-tinted instead of going to cream.
  */
 export function lighterForChips(rgb: Rgb): Rgb {
+  'worklet';
   const oklab = rgbToOklab(rgb[0], rgb[1], rgb[2]);
   const yellowness = Math.max(0, oklab[2]) / 0.20;
   const yellowFactor = Math.min(1, yellowness * Math.max(0, 1 - Math.abs(oklab[1]) / 0.15));
@@ -133,6 +147,7 @@ export function lighterForChips(rgb: Rgb): Rgb {
  * Used for pick-appropriate-text-color decisions.
  */
 export function relativeLuminance(r: number, g: number, b: number): number {
+  'worklet';
   const lin = (c: number) => {
     const n = c / 255;
     return n <= 0.04045 ? n / 12.92 : Math.pow((n + 0.055) / 1.055, 2.4);
@@ -145,6 +160,7 @@ export function relativeLuminance(r: number, g: number, b: number): number {
  * WCAG contrast ratio between two byte-triples, 1 (none) to 21 (black on white).
  */
 export function contrastRatio(fg: Rgb, bg: Rgb): number {
+  'worklet';
   const l1 = relativeLuminance(fg[0], fg[1], fg[2]);
   const l2 = relativeLuminance(bg[0], bg[1], bg[2]);
   return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
@@ -156,6 +172,7 @@ export function contrastRatio(fg: Rgb, bg: Rgb): number {
  * `opacity` and `rgba()` composite.
  */
 export function mixOver(top: Rgb, bottom: Rgb, alpha: number): Rgb {
+  'worklet';
   return [
     Math.round(top[0] * alpha + bottom[0] * (1 - alpha)),
     Math.round(top[1] * alpha + bottom[1] * (1 - alpha)),
@@ -178,6 +195,7 @@ export const SURFACE_MIX = 0.85;
  * Text color decisions use {@link contrastRatio} instead; see surfacePalette.
  */
 export function surfaceIsLight(rgb: Rgb): number {
+  'worklet';
   const lum = relativeLuminance(rgb[0], rgb[1], rgb[2]);
   // Approximates the blend's luminance as the weighted sum.
   const surfaceLum = lum * SURFACE_MIX + (1 - SURFACE_MIX);

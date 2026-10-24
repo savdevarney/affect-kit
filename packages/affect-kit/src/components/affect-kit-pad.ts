@@ -1,11 +1,12 @@
 import { LitElement, html, css, type PropertyValues } from 'lit';
 import { property, state } from 'lit/decorators.js';
-import { colorForVA } from '../core/color';
-import { surfacePaletteRgb } from '../core/palette';
+import { padColors, PAD_HALO_INK_ALPHA, PAD_DOT_INK_ALPHA } from '../core/pad';
 import { resolveTheme, themeConverter } from '../core/theme';
 import type { PadGlow, Theme } from '../core/types';
 
 const DWELL_MS = 500;
+const PAD_HALO_PERCENT = `${PAD_HALO_INK_ALPHA * 100}%`;
+const PAD_DOT_PERCENT = `${PAD_DOT_INK_ALPHA * 100}%`;
 
 const animateConverter = {
   fromAttribute: (value: string | null): boolean => value !== 'false',
@@ -220,15 +221,16 @@ export class AffectKitPad extends LitElement {
   // ── Render ────────────────────────────────────────────────────────────────
 
   override render() {
-    let glowColor = 'color-mix(in srgb, var(--_ink) 18%, transparent)';
-    let dotColor = 'color-mix(in srgb, var(--_ink) 35%, transparent)';
+    // padColors (affect-kit/core) is the rule. Without color, the ink mixes stay
+    // in CSS so theme="auto" follows the OS live; the shares are the core's.
+    let glowColor = `color-mix(in srgb, var(--_ink) ${PAD_HALO_PERCENT}, transparent)`;
+    let dotColor = `color-mix(in srgb, var(--_ink) ${PAD_DOT_PERCENT}, transparent)`;
     if (this.glow === 'color') {
-      const [r, g, b] = colorForVA(this.v, this.a);
-      // The selected-chip color: it stands out against the V/A surface an app
-      // paints behind the pad, where the raw color would vanish.
-      const [dr, dg, db] = surfacePaletteRgb(this.v, this.a, resolveTheme(this.theme)).l3;
-      glowColor = `rgb(${r}, ${g}, ${b})`;
-      dotColor = `rgb(${dr}, ${dg}, ${db})`;
+      // The dot takes the chosen-word color: it stands out against the V/A
+      // surface an app paints behind the pad, where the raw color would vanish.
+      const colors = padColors(this.v, this.a, resolveTheme(this.theme), 'color');
+      glowColor = colors.halo!;
+      dotColor = colors.dot;
     }
     const x = (this.v + 1) / 2;
     const y = (1 - this.a) / 2;

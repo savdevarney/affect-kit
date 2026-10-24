@@ -7,7 +7,8 @@ import { colorModeConverter } from '../core/color-mode';
 import { resolveTheme, themeConverter } from '../core/theme';
 import { buildRating } from '../core/vad';
 import { EMOTIONS } from '../vocabulary/en';
-import { nearestLabels } from '../vocabulary/search';
+import { wordOrder } from '../vocabulary/order';
+import { WORD_LIST_GAP } from '../core/chip';
 import type { ColorMode, Rating, EmotionName, Theme } from '../core/types';
 import type { AffectKitFace } from './affect-kit-face';
 
@@ -163,7 +164,7 @@ export class AffectKitRater extends LitElement {
          outward rings (5.7px each side, so 11.4px ring-to-ring) come
          within ~0.5px of touching when adjacent — by design, conveys
          density without overlap. */
-      gap: 14px 12px;
+      gap: ${unsafeCSS(WORD_LIST_GAP.row)}px ${unsafeCSS(WORD_LIST_GAP.column)}px;
       align-items: center;
       justify-content: center;
     }
@@ -448,7 +449,7 @@ export class AffectKitRater extends LitElement {
   // ── Sort + FLIP ───────────────────────────────────────────────────────────
 
   private _computeSortOrder(): string[] {
-    return nearestLabels(this._padV, this._padA);
+    return wordOrder(this._padV, this._padA);
   }
 
   private async _sortWithFlip() {

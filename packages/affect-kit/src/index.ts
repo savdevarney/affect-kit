@@ -34,13 +34,8 @@ if (!customElements.get('affect-kit-chip'))    customElements.define('affect-kit
 
 export { AffectKitRater, AffectKitResult, AffectKitFace, AffectKitCompare, AffectKitPad, AffectKitChip };
 
-export type { ColorMode, Theme, Layout, PadGlow, Rating, EmotionLabel, EmotionName } from './core/types';
+export type { ColorMode, Theme, Layout } from './core/types';
 export type { PadPosition } from './components/affect-kit-pad';
-export { createRating, averageRatings, stripVad, rehydrate } from './core/vad';
-export { EMOTION_LABELS } from './vocabulary/en';
-export { SYNONYMS_EN } from './vocabulary/synonyms-en';
-export { nearestLabels, completeLabels, type LabelMatch } from './vocabulary/search';
-export { suggestLabels, type LabelSuggestion, type SuggestionConfidence } from './vocabulary/suggest';
-export { surfacePalette, neutralPalette, wordChipColors, MIN_TEXT_CONTRAST, type SurfacePalette, type WordChipColors } from './core/palette';
-export { chipStyle, type ChipStyle, type ChipColors, type ChipLevel, type ChipRing } from './core/chip';
-export { SURFACE_MIX } from './core/color';
+
+// The headless core, also here so one import covers both.
+export * from './core';

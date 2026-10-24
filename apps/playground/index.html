@@ -50,16 +50,6 @@
       transition: background 0.2s ease;
     }
     .pad-demo affect-kit-pad { width: min(240px, 100%); }
-    .pad-demo input {
-      width: min(320px, 100%);
-      font: inherit;
-      padding: 8px 12px;
-      border-radius: 10px;
-      border: 1.5px solid var(--pad-ink-dim, #555);
-      background: transparent;
-      color: var(--pad-ink, #000);
-    }
-    .pad-demo input::placeholder { color: var(--pad-ink-dim, #555); }
     .pad-words {
       list-style: none;
       margin: 0;
@@ -84,7 +74,6 @@
       background: var(--pad-l3);
       color: var(--pad-l3-ink);
     }
-    .pad-words small { opacity: 0.8; }
     .pad-caption { margin: 0; font-size: 0.8rem; color: var(--pad-ink-dim); }
     .card-label {
       font-size: 0.72rem;
@@ -334,7 +323,7 @@
     <!-- affect-kit-pad: the face pad alone, composed with an app's own word list -->
     <div class="card">
       <div class="card-header">
-        <p class="card-label">&lt;affect-kit-pad&gt; + surfacePalette + completeLabels</p>
+        <p class="card-label">&lt;affect-kit-pad&gt; + surfacePalette + wordOrder</p>
         <div class="toggles">
           <span class="seg">
             theme
@@ -355,7 +344,6 @@
       </div>
       <div class="demo-surface pad-demo" id="pad-demo">
         <affect-kit-pad id="pad"></affect-kit-pad>
-        <input id="pad-input" type="text" placeholder="Type a word" autocomplete="off">
         <ul id="pad-words" class="pad-words"></ul>
         <p id="pad-caption" class="pad-caption"></p>
       </div>

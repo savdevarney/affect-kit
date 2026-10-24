@@ -1,6 +1,7 @@
 import { LitElement, html, css, nothing } from 'lit';
 import { property } from 'lit/decorators.js';
-import { chipStyle, type ChipColors, type ChipStyle } from '../core/chip';
+import { chipStyle, BASE_FONT_PX, type ChipColors, type ChipStyle } from '../core/chip';
+import { A11Y_STRINGS_EN, type A11yStrings } from '../core/a11y';
 import { neutralPalette } from '../core/palette';
 import { resolveTheme, themeConverter } from '../core/theme';
 import type { Theme } from '../core/types';
@@ -20,7 +21,7 @@ import type { Theme } from '../core/types';
  * chip.colors = surfacePalette(v, a, 'light'); // or neutralPalette / wordChipColors
  * ```
  *
- * The look comes from `chipStyle()`, which `affect-kit/data` also exports, so
+ * The look comes from `chipStyle()`, which `affect-kit/core` also exports, so
  * native views can draw the same chip.
  */
 export class AffectKitChip extends LitElement {
@@ -74,6 +75,9 @@ export class AffectKitChip extends LitElement {
   @property({ converter: themeConverter, reflect: true })
   theme: Theme = 'light';
 
+  /** What a screen reader hears for the level. English by default. */
+  @property({ attribute: false }) strings: A11yStrings = A11Y_STRINGS_EN;
+
   /** The resolved look, for hosts that want to read it (rings, bleed). */
   get look(): ChipStyle {
     return chipStyle(this.level, this.colors ?? neutralPalette(resolveTheme(this.theme)));
@@ -85,9 +89,12 @@ export class AffectKitChip extends LitElement {
     // so the nearest stroke comes first.
     let spread = 0;
     const rings = s.rings.map(r => `0 0 0 ${(spread += r.width)}px ${r.color}`).join(', ');
+    // chipStyle gives px at the base size; here they become em, so the chip
+    // follows the page's text size. Padding is em of the chip's own text.
+    const em = (n: number) => Number(n.toFixed(4));
     const style = [
-      `padding:${s.paddingY}em ${s.paddingX}em`,
-      `font-size:${s.fontSize}em`,
+      `padding:${em(s.paddingY / s.fontSize)}em ${em(s.paddingX / s.fontSize)}em`,
+      `font-size:${em(s.fontSize / BASE_FONT_PX)}em`,
       `font-weight:${s.fontWeight}`,
       `border:${s.border.width}px solid ${s.border.color}`,
       `border-radius:${s.borderRadius}px`,
@@ -95,7 +102,10 @@ export class AffectKitChip extends LitElement {
       `color:${s.color}`,
       rings ? `--_rings:${rings}` : '',
     ].filter(Boolean).join(';');
-    const intensity = s.level > 0 ? html`<span class="sr-only">, intensity ${s.level} of 3</span>` : nothing;
+    // The visible word, then its level for screen readers: "anxious, strongly" (chipLabel's words).
+    const intensity = s.level > 0
+      ? html`<span class="sr-only">${this.strings.joiner}${this.strings.levels[s.level - 1]}</span>`
+      : nothing;
 
     return this.readonly
       ? html`<span class="chip" style=${style}>${this.label}${intensity}</span>`

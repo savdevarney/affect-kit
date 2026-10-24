@@ -2,7 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import '../../styles/global.css';
 // The demo below runs this exact file, and the page shows it as the code, so the two can't drift.
-import checkinSource from '../../examples/one-step-checkin.ts?raw';
+import checkinSource from '../../examples/checkin-from-pieces.ts?raw';
 ---
 <Base
   title="Component reference — affect-kit"
@@ -68,6 +68,7 @@ import checkinSource from '../../examples/one-step-checkin.ts?raw';
             <li><a href="#chip">chip</a></li>
             <li><a href="#compose">example: your own check-in</a></li>
             <li><a href="#compare">compare</a></li>
+            <li><a href="#core">headless core</a></li>
             <li><a href="#react">React wrapper</a></li>
             <li><a href="#types">TypeScript types</a></li>
           </ol>
@@ -95,8 +96,8 @@ import 'affect-kit/chip';    // registers &lt;affect-kit-chip&gt;
 
 // Or register all six at once:
 import 'affect-kit';</pre>
-        <p>On a server, in a web worker or in React Native, where there's no DOM, import the helpers, vocabulary and palette from <code>affect-kit/data</code>. It registers nothing:</p>
-        <pre class="docs-code" set:text={`import { createRating, rehydrate, EMOTION_LABELS, type Rating } from 'affect-kit/data';`}></pre>
+        <p>In React Native, on a server or in a web worker, where there's no DOM, import the <a href="#core">headless core</a> from <code>affect-kit/core</code>. It registers nothing:</p>
+        <pre class="docs-code" set:text={`import { createRating, rehydrate, EMOTION_LABELS, type Rating } from 'affect-kit/core';`}></pre>
 
         <h3>TypeScript types</h3>
         <pre class="docs-code" set:text={`import type { Rating, EmotionLabel, EmotionName } from 'affect-kit';
@@ -533,9 +534,9 @@ function App() {
         <p>
           The rater's face pad on its own: drag anywhere on it to move the face through
           valence (x) and arousal (y). No chips, no button. Use it when your app builds its
-          own word list, text field or form around the face. Pair it with
+          own word list or form around the face. Pair it with
           <a href="#surface-palette"><code>surfacePalette()</code></a> to color the rest of the
-          screen and <a href="#complete-labels"><code>completeLabels()</code></a> for the word list.
+          screen and <a href="#word-order"><code>wordOrder()</code></a> for the word list.
         </p>
         <pre class="docs-code" set:text={`<affect-kit-pad theme="dark" glow="neutral"></affect-kit-pad>
 
@@ -626,7 +627,7 @@ function App() {
 
 <script type="module">
   import 'affect-kit/chip';
-  import { surfacePalette } from 'affect-kit/data';
+  import { surfacePalette } from 'affect-kit/core';
 
   chip.colors = surfacePalette(v, a, 'light'); // or neutralPalette() / wordChipColors()
 </script>`}></pre>
@@ -638,27 +639,27 @@ function App() {
             <tbody>
               <tr><td><code>label</code></td><td>string</td><td><code>''</code></td><td>The word shown.</td></tr>
               <tr><td><code>level</code></td><td>0 | 1 | 2 | 3</td><td><code>0</code></td><td>0 is unselected. 1–3 fill the chip and add rings; 2 adds one ring, 3 adds two. Size never changes, so chips don't reflow.</td></tr>
-              <tr><td><code>readonly</code></td><td>boolean</td><td><code>false</code></td><td>A plain label, not a button. Screen readers hear "intensity N of 3".</td></tr>
+              <tr><td><code>readonly</code></td><td>boolean</td><td><code>false</code></td><td>A plain label, not a button.</td></tr>
               <tr><td><code>colors</code> <span class="docs-prop-tag">prop only</span></td><td><code>ChipColors</code></td><td>colorless</td><td>A <code>surfacePalette()</code>, <code>neutralPalette()</code> or <code>wordChipColors()</code> result.</td></tr>
               <tr><td><code>theme</code></td><td><code>'light' | 'dark' | 'auto'</code></td><td><code>'light'</code></td><td>Picks the colorless default, when <code>colors</code> isn't set.</td></tr>
             </tbody>
           </table>
         </div>
-        <p>Clicks bubble from the button, so the host decides what a tap does.</p>
+        <p>Clicks bubble from the button, so the host decides what a tap does. Screen readers hear the word and its level: "grateful, clearly" (<code>chipLabel</code>). Set the <code>strings</code> property for other words.</p>
 
         <h3 id="chip-style">chipStyle() — for native views</h3>
         <p>
           <code>chipStyle(level, colors)</code> returns a chip's look as plain data, so an app that
           can't use a web view for its word list (a tap in a web view drops the native keyboard)
-          can draw the same chip. Sizes in <code>em</code> scale with the text size; rings are in
-          px. Rings sit outside the chip's box like a CSS box-shadow with spread, so they don't
+          can draw the same chip. Sizes are px from a base text size (16 by default; pass the
+          platform's, so its text-size setting scales the chip); borders and rings stay in px. Rings sit outside the chip's box like a CSS box-shadow with spread, so they don't
           move neighbors; <code>bleed</code> is how much room to leave around the chip.
         </p>
-        <pre class="docs-code" set:text={`import { chipStyle, surfacePalette } from 'affect-kit/data';
+        <pre class="docs-code" set:text={`import { chipStyle, surfacePalette } from 'affect-kit/core';
 
-chipStyle(3, surfacePalette(v, a, 'light'));
+chipStyle(3, surfacePalette(v, a, 'light'), 16);
 // {
-//   level: 3, fontSize: 0.9, fontWeight: 700, paddingX: 1.3, paddingY: 0.55, borderRadius: 999,
+//   level: 3, fontSize: 14.4, fontWeight: 700, paddingX: 18.72, paddingY: 7.92, borderRadius: 999,
 //   background, color,                       // l3 / l3Ink when selected, chipBg / chipInk at rest
 //   border: { width: 2, color },             // inside the box; transparent when unselected
 //   rings: [                                 // outward from the border
@@ -685,12 +686,11 @@ chipStyle(3, surfacePalette(v, a, 'light'));
           needs a different screen, such as a native text field, its own word list or its own
           surface, build it from the pieces instead. This is a reference implementation: the face
           is <code>&lt;affect-kit-pad&gt;</code>, the words are <code>&lt;affect-kit-chip&gt;</code>,
-          and everything else is the helper functions. Drag the face, then type a word.
+          and everything else is the headless core. Drag the face, then tap words.
         </p>
         <ul>
-          <li>The list is the whole vocabulary sorted by the face (<code>nearestLabels</code>). Once you type, it becomes an autocomplete: labels and everyday words that start with what you typed, still in face order (<code>completeLabels</code>). Type “stre” to find <em>overwhelmed</em>.</li>
-          <li>Tap a word up to three times for strength.</li>
-          <li><code>suggestLabels</code> reads your text and offers words. You accept them by tapping; nothing is selected for you.</li>
+          <li>The list is the whole vocabulary in face order (<code>wordOrder</code>). As in the rater, it re-sorts when the face settles, not while your finger moves.</li>
+          <li>Tap a word up to three times for strength. Five words at most.</li>
           <li>Light: the whole screen takes the face's color, with text and chips chosen by contrast (<code>surfacePalette</code>). Dark: white face and chips, no color (<code>neutralPalette</code>).</li>
         </ul>
 
@@ -711,16 +711,15 @@ chipStyle(3, surfacePalette(v, a, 'light'));
         <pre class="docs-code" id="docs-checkin-rating">Drag the face.</pre>
 
         <p>
-          In an app with native views (the case this was built for: a tap that starts in a web view
-          drops the native keyboard), keep only the pad in a web view and draw the text field and
-          words natively. <a href="#chip-style"><code>chipStyle(level, colors)</code></a> returns the
-          chip as plain data, and the other helpers are pure functions from
-          <code>affect-kit/data</code>, which needs no DOM. To drive the pad from native touch, set
-          its <code>v</code> and <code>a</code> from outside.
+          In an app with native views, draw everything natively from the
+          <a href="#core">headless core</a>: <code>facePaths(faceParams(v, a))</code> is the face,
+          <a href="#chip-style"><code>chipStyle(level, colors)</code></a> is a chip, and
+          <code>padToFace(x, y)</code> turns a touch into a position. They're pure functions from
+          <code>affect-kit/core</code>, which needs no DOM.
         </p>
 
         <details class="docs-source" open>
-          <summary>Source: <code>apps/site/src/examples/one-step-checkin.ts</code></summary>
+          <summary>Source: <code>apps/site/src/examples/checkin-from-pieces.ts</code></summary>
           <pre class="docs-code" set:text={checkinSource}></pre>
         </details>
       </section>
@@ -930,7 +929,7 @@ const { v, a, d } = EMOTION_LABELS['joy'];
           Helpers for the DB-persistence flow. <code>stripVad()</code> drops
           the redundant coordinates before insert; <code>rehydrate()</code>
           fills them back on read. On a server, import them from
-          <code>affect-kit/data</code>.
+          <code>affect-kit/core</code>.
         </p>
         <pre class="docs-code" set:text={`import { stripVad, rehydrate } from 'affect-kit';
 
@@ -960,51 +959,11 @@ const r = createRating({
 
 const avg = averageRatings(sessionRatings); // Rating[] → Rating`}></pre>
 
-        <h3 id="nearest-labels">nearestLabels()</h3>
-        <p>Vocabulary labels ordered by distance from a face position, closest first: the order the rater sorts its chips in. Pass <code>n</code> for only the closest few:</p>
-        <pre class="docs-code" set:text={`import { nearestLabels } from 'affect-kit/data';
+        <h3 id="word-order">wordOrder()</h3>
+        <p>The 55 words ordered by distance from a face position, nearest first: the order the rater shows its words in. Ties keep vocabulary order, so every JavaScript engine sorts the same:</p>
+        <pre class="docs-code" set:text={`import { wordOrder } from 'affect-kit/core';
 
-nearestLabels(0.8, 0.7, 3); // ['surprise', 'amused', 'excited']`}></pre>
-
-        <h3 id="synonyms">SYNONYMS_EN</h3>
-        <p>Everyday words mapped to the label they name, so a search for "stressed" or "happy" finds <code>overwhelmed</code> or <code>joy</code>. Keys are lowercase single words; every value is a label in <code>EMOTION_LABELS</code>.</p>
-        <pre class="docs-code" set:text={`import { SYNONYMS_EN } from 'affect-kit/data';
-
-SYNONYMS_EN['stressed']; // 'overwhelmed'`}></pre>
-
-        <h3 id="complete-labels">completeLabels()</h3>
-        <p>
-          <code>completeLabels(prefix, v, a)</code> returns the labels that start with what
-          was typed, or have a synonym that does, in face order. Each match says which synonym
-          led to it.
-        </p>
-        <pre class="docs-code" set:text={`import { completeLabels } from 'affect-kit/data';
-
-completeLabels('stre', -0.4, 0.5);
-// [{ name: 'overwhelmed', synonym: 'stress' }]`}></pre>
-
-        <h3 id="suggest-labels">suggestLabels()</h3>
-        <p>
-          <code>suggestLabels(text)</code> returns the labels a piece of text points at, in order of
-          appearance, each with a <code>level</code> (1–3) and a <code>confidence</code>. It
-          matches whole words that are labels or in <code>SYNONYMS_EN</code>, skips a word that was
-          negated ("not stressed"), and reads intensity from the words just before ("really",
-          "a bit"). <code>confidence</code> says how directly the text names the label:
-          <code>'high'</code> for the label itself, <code>'medium'</code> for a synonym,
-          <code>'low'</code> when hedged ("maybe", "I guess"). It is not a probability.
-        </p>
-        <pre class="docs-code" set:text={`import { suggestLabels } from 'affect-kit/data';
-
-suggestLabels('Really stressed, but not sad');
-// [{ name: 'overwhelmed', level: 3, confidence: 'medium', synonym: 'stressed' }]`}></pre>
-        <p>
-          Rules only: no model and no network. It can't find feelings named indirectly ("I can't
-          switch my brain off"), words outside the lists, or tell whose feeling it is. "Never been
-          so frustrated" is read as a negation. Show the result as suggestions the person can
-          accept; it is not what they feel. On 47 realistic notes that name a feeling it found a
-          fitting word for 74%; on 21 more, written after the rules were fixed, 86%.
-          Intensity matched on 36 of 38 and 15 of 19.
-        </p>
+wordOrder(0.8, 0.7).slice(0, 3); // ['surprise', 'amused', 'excited']`}></pre>
 
         <h3 id="surface-palette">surfacePalette()</h3>
         <p>
@@ -1015,7 +974,7 @@ suggestLabels('Really stressed, but not sad');
           meets <code>MIN_TEXT_CONTRAST</code> (4.5:1) against what it sits on.
           <code>SURFACE_MIX</code> (0.85) is how strongly the color covers the paper.
         </p>
-        <pre class="docs-code" set:text={`import { surfacePalette } from 'affect-kit/data';
+        <pre class="docs-code" set:text={`import { surfacePalette } from 'affect-kit/core';
 
 const p = surfacePalette(v, a, 'light');
 // {
@@ -1031,9 +990,91 @@ const p = surfacePalette(v, a, 'light');
 // }`}></pre>
       </section>
 
+      <!-- ── Headless core ──────────────────────────────── -->
+      <section id="core" class="rp-section">
+        <h2>9. The headless core</h2>
+        <p>
+          <code>affect-kit/core</code> is everything a rater needs to draw and behave like
+          <code>&lt;affect-kit-rater&gt;</code>, as plain data and pure functions: no custom elements,
+          no DOM. Build a native rater in React Native (Skia or react-native-svg) or anything else,
+          and it draws the same face, sorts the same words and paints the same colors as the web
+          components, which are built on the same functions.
+        </p>
+        <ul>
+          <li><strong>Plain data.</strong> Colors are <code>#rrggbb</code> strings, sizes are px, and face geometry is in the face's own 170 × 170 box (<code>FACE_BOX</code>).</li>
+          <li><strong>Resolved themes.</strong> Functions take <code>'light'</code> or <code>'dark'</code>; your renderer reads the OS setting.</li>
+          <li><strong>Worklet-ready.</strong> Everything a frame calls starts with a <code>'worklet'</code> directive, so React Native Reanimated can run it on the UI thread. Elsewhere it's an ordinary string that does nothing.</li>
+        </ul>
+
+        <h3 id="core-face">The face</h3>
+        <p>
+          <code>faceParams(v, a)</code> gives the face's eleven numbers (brows, lids, mouth).
+          <code>facePaths(params)</code> turns them into SVG path data, and
+          <code>faceGeometry(params)</code> into commands a canvas can draw without parsing. To
+          animate, ease the numbers and rebuild the paths each frame; interpolating the path
+          strings would morph differently. Draw the parts in <code>FACE_PARTS</code> order with
+          <code>FACE_STYLE</code> (stroke widths and fills, in face units) in your ink, or
+          <code>faceInk(theme)</code>.
+        </p>
+        <pre class="docs-code" set:text={`import { faceParams, facePaths, FACE_PARTS, FACE_STYLE, faceInk } from 'affect-kit/core';
+
+const paths = facePaths(faceParams(0.6, 0.4));
+for (const part of FACE_PARTS) {
+  const { strokeWidth, fill, lineCap, lineJoin } = FACE_STYLE[part];
+  // draw paths[part] in faceInk('light'), stroked at strokeWidth, filled if fill
+}`}></pre>
+        <p>
+          <strong>Small faces.</strong> <code>faceTier(sizePx)</code> says how much to draw: the
+          whole face from 48 px, no crow's feet from 28 px, no nose either from 20 px, and below
+          that a dot in the face's color (<code>vaColor</code>). Below 48 px,
+          <code>faceStroke(sizePx)</code> scales every stroke together so the thinnest part still
+          drawn renders at 1 px or more. <code>&lt;affect-kit-face&gt;</code> applies both for its
+          own size.
+        </p>
+
+        <h3 id="core-pad">The pad</h3>
+        <p>
+          <code>padToFace(x, y)</code> turns a touch (0 to 1 from the pad's top-left) into a face
+          position; <code>faceToPad(v, a)</code> places the dot. <code>vaColor(v, a)</code> is the
+          face's own color, and <code>padColors(v, a, theme, glow)</code> gives the halo behind the
+          face and the dot under the finger.
+        </p>
+
+        <h3 id="core-a11y">Accessibility</h3>
+        <p>
+          Screen readers adjust the face as two values, "How pleasant" and "How energized", nine
+          stops each (<code>FACE_STEPS</code>). <code>nudgeFace(face, axis, ±1)</code> moves one
+          stop, <code>axisValueText(axis, face)</code> is what's spoken, and
+          <code>describeFace(v, a)</code> reads a position: "pleasant, very calm".
+          <code>chipLabel(word, level)</code> reads a chip: "anxious, strongly". Every string comes
+          from <code>A11Y_STRINGS_EN</code>; pass your own table for other words or languages.
+        </p>
+
+        <h3 id="apple-health">affect-kit/apple-health</h3>
+        <p>
+          What to write to Apple Health's State of Mind (iOS 18 and later) for a rating, as data:
+          your app calls HealthKit itself. <code>stateOfMind(rating)</code> gives the kind, the
+          face's valence and the labels for the words. A word maps only to Apple's label for
+          the same word, or its plain adjective (anger → angry); it's never forced into a near one,
+          so "serene" is never written as "peaceful".
+        </p>
+        <pre class="docs-code" set:text={`import { stateOfMind } from 'affect-kit/apple-health';
+
+stateOfMind(rating); // { kind: 'momentaryEmotion', valence: 0.4, labels: ['calm'] }`}></pre>
+
+        <h3 id="fixtures">affect-kit/fixtures</h3>
+        <p>
+          Golden JSON: what the core gives for known inputs. That covers the face's numbers and paths,
+          word order, colors and description on a 9 × 9 grid, plus every word's chip colors, every
+          chip level and the small-face sizes. Run your renderer against them in CI, so a native
+          rater and the web one fail together if they ever drift.
+        </p>
+        <pre class="docs-code" set:text={`import fixtures from 'affect-kit/fixtures' with { type: 'json' };`}></pre>
+      </section>
+
       <!-- ── 7: React wrapper ───────────────────────────────── -->
       <section id="react" class="rp-section">
-        <h2>9. React wrapper</h2>
+        <h2>10. React wrapper</h2>
         <p>
           <code>@affect-kit/react</code> wraps all four components using
           <a href="https://www.npmjs.com/package/@lit/react" target="_blank" rel="noopener"><code>@lit/react</code></a>.
@@ -1137,7 +1178,7 @@ const ref = useRef<AffectKitRater>(null);
     import 'affect-kit/compare';
     import { createRating, averageRatings } from 'affect-kit';
     import type { ColorMode } from 'affect-kit';
-    import { mountCheckin } from '../../examples/one-step-checkin';
+    import { mountCheckin } from '../../examples/checkin-from-pieces';
     import type { AffectKitRater }   from 'affect-kit/rater';
     import type { AffectKitResult }  from 'affect-kit/result';
     import type { AffectKitFace }    from 'affect-kit/face';

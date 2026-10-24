@@ -1,12 +1,16 @@
-import { LitElement, html, css, type PropertyValues } from 'lit';
-import { property } from 'lit/decorators.js';
+import { LitElement, html, svg, css, nothing, type PropertyValues } from 'lit';
+import { property, state } from 'lit/decorators.js';
 import {
-  computeTarget,
-  renderFace,
+  faceParams,
+  facePaths,
   smoothFaceParams,
+  FACE_BOX,
   FACE_VIEWBOX,
   type FaceParams,
+  type FacePart,
 } from '../core/face-renderer';
+import { FACE_STYLE, faceStroke, faceTier } from '../core/face-style';
+import { vaColor } from '../core/pad';
 import { computeAnimationOffsets } from '../core/animation';
 import { themeConverter } from '../core/theme';
 import type { Theme } from '../core/types';
@@ -56,40 +60,10 @@ export class AffectKitFace extends LitElement {
       height: 100%;
       overflow: visible;
     }
-    .brow {
-      fill: none;
+    /* Strokes and fills come from FACE_STYLE (affect-kit/core), as attributes,
+       so a native face draws the same. Everything takes currentColor. */
+    path {
       stroke: currentColor;
-      stroke-width: 3;
-      stroke-linecap: round;
-    }
-    /* Eyes: outlined shape so whites show through at higher arousal (wider open). */
-    .eye {
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 4;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-    .nose {
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 2.8;
-      stroke-linecap: round;
-    }
-    /* Mouth uses fill + stroke so closed lips read at full weight even
-       with zero-area path geometry, and corners stay soft and rounded. */
-    .mouth {
-      fill: currentColor;
-      stroke: currentColor;
-      stroke-width: 4.5;
-      stroke-linejoin: round;
-      stroke-linecap: round;
-    }
-    .crows-feet-line {
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 1.8;
-      stroke-linecap: round;
     }
   `;
 
@@ -122,8 +96,12 @@ export class AffectKitFace extends LitElement {
    */
   @property({ type: Number, attribute: false }) motionScale = 1;
 
-  private _current: FaceParams = computeTarget(0, 0);
-  private _target: FaceParams = computeTarget(0, 0);
+  private _current: FaceParams = faceParams(0, 0);
+  private _target: FaceParams = faceParams(0, 0);
+
+  /** The face's drawn width, which picks its tier (FACE_TIERS). Full until measured. */
+  @state() private _sizePx = Infinity;
+  private _resize: ResizeObserver | null = null;
   private _shockEnergy = 0;
   private _t = 0;
   private _lastTs: number | null = null;
@@ -145,21 +123,27 @@ export class AffectKitFace extends LitElement {
       this._mq = window.matchMedia('(prefers-reduced-motion: reduce)');
       this._mq.addEventListener('change', this._onMotionChange);
     }
+    if (typeof ResizeObserver !== 'undefined') {
+      this._resize = new ResizeObserver(entries => {
+        const width = entries[0]?.contentRect.width;
+        if (width) this._sizePx = width;
+      });
+      this._resize.observe(this);
+    }
     this._ensureRaf();
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
     this._mq?.removeEventListener('change', this._onMotionChange);
+    this._resize?.disconnect();
+    this._resize = null;
     this._stopRaf();
   }
 
   protected override updated(changed: PropertyValues): void {
     if (changed.has('v') || changed.has('a')) {
-      this._target = computeTarget(
-        Math.max(-1, Math.min(1, this.v)),
-        Math.max(-1, Math.min(1, this.a)),
-      );
+      this._target = faceParams(this.v, this.a);
     }
     if (changed.has('animated')) {
       this._ensureRaf();
@@ -211,8 +195,17 @@ export class AffectKitFace extends LitElement {
   }
 
   override render() {
+    const tier = faceTier(this._sizePx);
+    if (tier.draw === 'dot') {
+      return html`
+        <svg viewBox="${FACE_VIEWBOX}" aria-hidden="true">
+          <circle cx="0" cy="0" r="${FACE_BOX.width / 2}" fill="${vaColor(this.v, this.a)}"></circle>
+        </svg>
+      `;
+    }
     const p = this._current;
-    const paths = renderFace(p);
+    const paths = facePaths(p);
+    const widths = faceStroke(this._sizePx);
     const offsets = computeAnimationOffsets({
       t: this._t,
       v: this.v,
@@ -223,32 +216,32 @@ export class AffectKitFace extends LitElement {
     });
     const { groupX, groupY, perFeature } = offsets;
     const crowsFeetOp = p.crowsFeetOp * offsets.crowsFeetOpacityScale;
+    const shown = (part: FacePart) => !tier.omit.includes(part);
+    const path = (part: FacePart) => {
+      const style = FACE_STYLE[part];
+      return svg`<path
+        d="${paths[part]}"
+        fill="${style.fill ? 'currentColor' : 'none'}"
+        stroke-width="${widths[part]}"
+        stroke-linecap="${style.lineCap}"
+        stroke-linejoin="${style.lineJoin}"
+      ></path>`;
+    };
 
     return html`
       <svg viewBox="${FACE_VIEWBOX}" aria-hidden="true">
         <g transform="translate(${groupX.toFixed(2)},${groupY.toFixed(2)})">
-          <g transform="${this._tr(perFeature.leftBrow)}">
-            <path class="brow" d="${paths.leftBrow}"></path>
-          </g>
-          <g transform="${this._tr(perFeature.rightBrow)}">
-            <path class="brow" d="${paths.rightBrow}"></path>
-          </g>
-          <g transform="${this._tr(perFeature.leftEye)}">
-            <path class="eye" d="${paths.leftEye}"></path>
-          </g>
-          <g transform="${this._tr(perFeature.rightEye)}">
-            <path class="eye" d="${paths.rightEye}"></path>
-          </g>
-          <g style="opacity:${crowsFeetOp.toFixed(3)}">
-            <path class="crows-feet-line" d="${paths.crowsFeetLeft}"></path>
-            <path class="crows-feet-line" d="${paths.crowsFeetRight}"></path>
-          </g>
-          <g transform="${this._tr(perFeature.nose)}">
-            <path class="nose" d="${paths.nose}"></path>
-          </g>
-          <g transform="${this._tr(perFeature.mouth)}">
-            <path class="mouth" d="${paths.mouth}"></path>
-          </g>
+          <g transform="${this._tr(perFeature.leftBrow)}">${path('leftBrow')}</g>
+          <g transform="${this._tr(perFeature.rightBrow)}">${path('rightBrow')}</g>
+          <g transform="${this._tr(perFeature.leftEye)}">${path('leftEye')}</g>
+          <g transform="${this._tr(perFeature.rightEye)}">${path('rightEye')}</g>
+          ${shown('crowsFeetLeft') ? svg`
+            <g style="opacity:${crowsFeetOp.toFixed(3)}">
+              ${path('crowsFeetLeft')}
+              ${path('crowsFeetRight')}
+            </g>` : nothing}
+          ${shown('nose') ? svg`<g transform="${this._tr(perFeature.nose)}">${path('nose')}</g>` : nothing}
+          <g transform="${this._tr(perFeature.mouth)}">${path('mouth')}</g>
         </g>
       </svg>
     `;

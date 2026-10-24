@@ -45,31 +45,37 @@ Requires Lit 3 as a peer dependency.
 
 Each ships as its own entry point (`affect-kit/rater`, `/result`, `/compare`, `/face`, `/pad`, `/chip`) and as a bundled side-effect import (`affect-kit`).
 
-## Helpers
+## The headless core
 
-`affect-kit/data` registers no elements and needs no DOM, so it works on servers, in web workers and in React Native. The same names are also exported from `affect-kit`.
+`affect-kit/core` is everything a rater needs to draw and behave like `<affect-kit-rater>`, as plain data and pure functions. It registers no elements and needs no DOM, so it works in React Native, on servers and in web workers. The web components are built on it, so a native rater draws the same face, sorts the same words and paints the same colors. The same names are also exported from `affect-kit`.
 
 | Export | Role |
 |---|---|
 | `createRating`, `averageRatings`, `stripVad`, `rehydrate` | Build, average, store and restore `Rating`s. A rating with a face and no labels is valid. |
-| `EMOTION_LABELS` | V/A/D coordinates for each of the 55 labels. |
-| `nearestLabels(v, a, n?)` | Labels ordered by distance from a face position: the rater's chip order. |
-| `SYNONYMS_EN` | Everyday words mapped to labels (`stressed` → `overwhelmed`). |
-| `completeLabels(prefix, v, a)` | Labels or synonyms starting with `prefix`, in face order. |
-| `suggestLabels(text)` | Labels a text points at, each with a level (1-3) and a confidence. Skips negated words. Rules only: no model, no network. |
-| `chipStyle(level, colors)` | A word chip's look as plain data (colors, rings, sizes), so native views can draw the same chip. |
-| `neutralPalette(theme)`, `wordChipColors(v, a, theme)` | Colors for chips with no hue, or tinted by the word's own color. |
-| `surfacePalette(v, a, theme)` | Surface, text and chip colors for a face position, matching the rater's `color-mode="background"`. Text meets `MIN_TEXT_CONTRAST` (4.5:1). |
+| `EMOTION_LABELS` | V/A/D coordinates for each of the 55 words. |
+| `faceParams(v, a)`, `facePaths(params)`, `faceGeometry(params)` | The face as eleven numbers, then as SVG path data or path commands. Animate the numbers; rebuild the paths each frame. |
+| `FACE_PARTS`, `FACE_STYLE`, `FACE_BOX`, `faceInk(theme)` | How to draw it: part order, strokes and fills in face units, the coordinate space, the default ink. |
+| `faceTier(sizePx)`, `faceStroke(sizePx)` | Small faces: fewer parts below 48, 28 and 20 px, a dot below that, and strokes that never render under 1 px. |
+| `padToFace(x, y)`, `faceToPad(v, a)`, `vaColor(v, a)`, `padColors(v, a, theme, glow)` | The pad: touch to position, the dot's place, the face's color, the halo and dot colors. |
+| `wordOrder(v, a)` | The 55 words, nearest the face first: the rater's word order. |
+| `chipStyle(level, colors, basePx?)`, `WORD_LIST_GAP` | A word chip's look as plain data in px, and the space between chips. |
+| `surfacePalette(v, a, theme)`, `neutralPalette(theme)`, `wordChipColors(v, a, theme)` | Colors for a screen in the face's color, for chips with no hue, or for a word in its own color. Text meets `MIN_TEXT_CONTRAST` (4.5:1). |
+| `describeFace(v, a)`, `chipLabel(word, level)`, `nudgeFace(...)`, `axisValueText(...)`, `FACE_STEPS`, `A11Y_STRINGS_EN` | What screen readers hear, and the face as two adjustable values. Every string comes from a table you can replace. |
+
+Everything a frame calls starts with a `'worklet'` directive, so React Native Reanimated can run it on the UI thread.
 
 ```ts
-import { surfacePalette, completeLabels } from 'affect-kit/data';
+import { faceParams, facePaths, surfacePalette } from 'affect-kit/core';
 
+const paths = facePaths(faceParams(-0.4, 0.5)); // draw with any renderer
 const p = surfacePalette(-0.4, 0.5, 'light');
 screen.style.background = p.surface;
 caption.style.color = p.inkDim;
-
-completeLabels('stre', -0.4, 0.5); // [{ name: 'overwhelmed', synonym: 'stress' }]
 ```
+
+Two more entries, also without a DOM:
+- **`affect-kit/apple-health`:** `stateOfMind(rating)` is what to write to Apple Health's State of Mind: the kind, the face's valence, and Apple's labels for the words. A word maps only to Apple's label for the same word, never to a near one.
+- **`affect-kit/fixtures`:** golden JSON of what the core gives for known inputs. Run a renderer against it in CI, so a native rater and the web one fail together if they drift.
 
 ## How it works
 

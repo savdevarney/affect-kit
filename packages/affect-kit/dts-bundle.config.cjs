@@ -34,6 +34,7 @@ module.exports = {
     entry('compare'),
     entry('pad'),
     entry('chip'),
-    entry('data'),
+    entry('core'),
+    entry('apple-health'),
   ],
 };

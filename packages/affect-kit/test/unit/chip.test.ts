@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { chipStyle } from '../../src/core/chip';
+import { chipStyle, WORD_LIST_GAP } from '../../src/core/chip';
 import { surfacePalette, neutralPalette, wordChipColors, MIN_TEXT_CONTRAST } from '../../src/core/palette';
 import { contrastRatio, mixOver, colorForVA, type Rgb } from '../../src/core/color';
 import { EMOTIONS } from '../../src/vocabulary/en';
@@ -21,8 +21,26 @@ describe('chipStyle', () => {
     expect(levels.map(s => s.rings.filter(r => r.kind === 'ring').length)).toEqual([0, 0, 1, 2]);
     expect(levels.map(s => s.bleed)).toEqual([0, 0, 3, 5.7]);
     for (const s of levels) {
-      expect([s.fontSize, s.paddingX, s.paddingY, s.border.width]).toEqual([0.9, 1.3, 0.55, 2]);
+      expect(s.fontSize).toBeCloseTo(14.4);
+      expect(s.paddingX).toBeCloseTo(18.72);
+      expect(s.paddingY).toBeCloseTo(7.92);
+      expect(s.border.width).toBe(2);
     }
+  });
+
+  it('sizes in px from a base text size, so the platform text size scales it; rings stay put', () => {
+    const big = chipStyle(3, colors, 20);
+    expect(big.fontSize).toBeCloseTo(18);
+    expect(big.paddingX).toBeCloseTo(18 * 1.3);
+    expect(big.paddingY).toBeCloseTo(18 * 0.55);
+    expect(big.rings).toEqual(chipStyle(3, colors).rings);
+    expect(big.bleed).toBe(chipStyle(3, colors).bleed);
+  });
+
+  it('spaces a list wide enough for two level-3 chips side by side', () => {
+    const bleed = chipStyle(3, colors).bleed;
+    expect(2 * bleed).toBeLessThan(WORD_LIST_GAP.column);
+    expect(2 * bleed).toBeLessThan(WORD_LIST_GAP.row);
   });
 
   it('alternates gap and ring outward, gaps in the surface color', () => {

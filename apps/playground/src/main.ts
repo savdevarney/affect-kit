@@ -9,7 +9,7 @@ import type { AffectKitResult }  from 'affect-kit/result';
 import type { AffectKitRater }   from 'affect-kit/rater';
 import type { AffectKitCompare } from 'affect-kit/compare';
 import { createRating, averageRatings } from 'affect-kit';
-import { surfacePalette, completeLabels, suggestLabels } from 'affect-kit/data';
+import { surfacePalette, wordOrder } from 'affect-kit/core';
 import type { ColorMode, Layout, Rating, Theme } from 'affect-kit';
 
 // ── Element refs ───────────────────────────────────────────────────────────
@@ -369,8 +369,7 @@ function renderCompareCode() {
 
   codeCompare.textContent =
     `import 'affect-kit/compare';\n` +
-    `import { createRating, averageRatings } from 'affect-kit';
-import { surfacePalette, completeLabels, suggestLabels } from 'affect-kit/data';\n` +
+    `import { createRating, averageRatings } from 'affect-kit';\n` +
     `\n` +
     fmtRatings('yesterday', yesterday) + `\n\n` +
     fmtRatings('today', today) + `\n\n` +
@@ -418,13 +417,13 @@ afterInput?.addEventListener('input', () => {
   compareState.afterLabel = v; renderCompareCode();
 });
 
-// ── Pad + palette + autocomplete: an app composing its own check-in ────────
-// The pad is the only affect-kit element; the surface, text field and word
-// list are the app's own, colored from surfacePalette().
+// ── Pad + palette + word order: an app composing its own check-in ─────────
+// The pad is the only affect-kit element; the surface and word list are the
+// app's own, colored from surfacePalette() and sorted by wordOrder() when the
+// face settles, as the rater does.
 {
   const pad     = document.getElementById('pad') as import('affect-kit/pad').AffectKitPad | null;
   const demo    = document.getElementById('pad-demo');
-  const input   = document.getElementById('pad-input') as HTMLInputElement | null;
   const list    = document.getElementById('pad-words');
   const caption = document.getElementById('pad-caption');
   const levels  = new Map<string, number>();
@@ -447,30 +446,21 @@ afterInput?.addEventListener('input', () => {
 
   const renderWords = () => {
     if (!list) return;
-    const typed = input?.value ?? '';
-    // The text field filters by its last word.
-    const word = typed.split(/\s+/).pop() ?? '';
-    list.replaceChildren(...completeLabels(word, pos.v, pos.a).map(m => {
+    list.replaceChildren(...wordOrder(pos.v, pos.a).slice(0, 14).map(name => {
       const li = document.createElement('li');
       const btn = document.createElement('button');
       btn.type = 'button';
-      const lv = levels.get(m.name) ?? 0;
+      const lv = levels.get(name) ?? 0;
       btn.setAttribute('aria-pressed', String(lv > 0));
-      btn.textContent = m.name + (lv > 1 ? ' ' + '•'.repeat(lv) : '');
-      if (m.synonym) {
-        const small = document.createElement('small');
-        small.textContent = ` (${m.synonym})`;
-        btn.append(small);
-      }
+      btn.textContent = name + (lv > 1 ? ' ' + '•'.repeat(lv) : '');
       btn.addEventListener('click', () => {
-        levels.set(m.name, ((levels.get(m.name) ?? 0) + 1) % 4);
+        levels.set(name, ((levels.get(name) ?? 0) + 1) % 4);
         renderWords();
       });
       li.append(btn);
       return li;
     }));
-    const named = suggestLabels(typed).map(m => `${m.name} ${m.level}`).join(', ');
-    if (caption) caption.textContent = `v ${pos.v.toFixed(2)} · a ${pos.a.toFixed(2)}` + (named ? ` · text suggests: ${named}` : '');
+    if (caption) caption.textContent = `v ${pos.v.toFixed(2)} · a ${pos.a.toFixed(2)}`;
   };
 
   pad?.addEventListener('input', (e) => {
@@ -479,7 +469,6 @@ afterInput?.addEventListener('input', () => {
     paint();
   });
   pad?.addEventListener('change', () => renderWords());
-  input?.addEventListener('input', renderWords);
 
   document.querySelectorAll<HTMLElement>('[data-seg="pad-theme"], [data-seg="pad-glow"]').forEach(group => {
     group.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(b => b.addEventListener('click', () => {
