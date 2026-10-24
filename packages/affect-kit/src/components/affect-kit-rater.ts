@@ -208,10 +208,8 @@ export class AffectKitRater extends LitElement {
     .chip-list {
       display: flex;
       flex-wrap: wrap;
-      /* Tightened so unselected chips sit close together; level-3
-         outward rings (5.7px each side, so 11.4px ring-to-ring) come
-         within ~0.5px of touching when adjacent — by design, conveys
-         density without overlap. */
+      /* WORD_LIST_GAP clears two level-3 chips side by side: their
+         outward rings reach 7.5px each, 15px together. */
       gap: ${unsafeCSS(WORD_LIST_GAP.row)}px ${unsafeCSS(WORD_LIST_GAP.column)}px;
       align-items: center;
       justify-content: center;

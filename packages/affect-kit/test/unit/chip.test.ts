@@ -18,8 +18,8 @@ const colors = surfacePalette(-0.5, 0.5, 'light');
 describe('chipStyle', () => {
   it('draws intensity as ring count and never changes size', () => {
     const levels = [0, 1, 2, 3].map(l => chipStyle(l, colors));
-    expect(levels.map(s => s.rings.filter(r => r.kind === 'ring').length)).toEqual([0, 0, 1, 2]);
-    expect(levels.map(s => s.bleed)).toEqual([0, 0, 3, 5.7]);
+    expect(levels.map(s => s.rings.filter(r => r.kind === 'ring').length)).toEqual([0, 1, 2, 3]);
+    expect(levels.map(s => s.bleed)).toEqual([0, 2.75, 5.25, 7.5]);
     for (const s of levels) {
       expect(s.fontSize).toBeCloseTo(14.4);
       expect(s.paddingX).toBeCloseTo(18.72);
@@ -45,8 +45,8 @@ describe('chipStyle', () => {
 
   it('alternates gap and ring outward, gaps in the surface color', () => {
     const s = chipStyle(3, colors);
-    expect(s.rings.map(r => r.kind)).toEqual(['gap', 'ring', 'gap', 'ring']);
-    expect(s.rings.map(r => r.width)).toEqual([1.5, 1.5, 1.5, 1.2]);
+    expect(s.rings.map(r => r.kind)).toEqual(['gap', 'ring', 'gap', 'ring', 'gap', 'ring']);
+    expect(s.rings.map(r => r.width)).toEqual([1.25, 1.5, 1.25, 1.25, 1.25, 1]);
     for (const r of s.rings) expect(r.color).toBe(r.kind === 'gap' ? colors.surface : colors.ring);
   });
 
@@ -57,7 +57,7 @@ describe('chipStyle', () => {
     for (const l of [1, 2, 3]) {
       const s = chipStyle(l, colors);
       expect([s.background, s.color, s.fontWeight]).toEqual([colors.l3, colors.l3Ink, 700]);
-      expect(s.border.color).toBe(colors.ring);
+      expect(s.border.color).toBe(colors.l3); // the edge is the fill: only rings count
     }
   });
 

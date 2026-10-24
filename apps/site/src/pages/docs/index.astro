@@ -638,7 +638,7 @@ function App() {
             </thead>
             <tbody>
               <tr><td><code>label</code></td><td>string</td><td><code>''</code></td><td>The word shown.</td></tr>
-              <tr><td><code>level</code></td><td>0 | 1 | 2 | 3</td><td><code>0</code></td><td>0 is unselected. 1–3 fill the chip and add rings; 2 adds one ring, 3 adds two. Size never changes, so chips don't reflow.</td></tr>
+              <tr><td><code>level</code></td><td>0 | 1 | 2 | 3</td><td><code>0</code></td><td>0 is unselected. 1–3 fill the chip and add that many rings outside it. Size never changes, so chips don't reflow.</td></tr>
               <tr><td><code>readonly</code></td><td>boolean</td><td><code>false</code></td><td>A plain label, not a button.</td></tr>
               <tr><td><code>colors</code> <span class="docs-prop-tag">prop only</span></td><td><code>ChipColors</code></td><td>colorless</td><td>A <code>surfacePalette()</code>, <code>neutralPalette()</code> or <code>wordChipColors()</code> result.</td></tr>
               <tr><td><code>theme</code></td><td><code>'light' | 'dark' | 'auto'</code></td><td><code>'light'</code></td><td>Picks the colorless default, when <code>colors</code> isn't set.</td></tr>
@@ -661,14 +661,16 @@ chipStyle(3, surfacePalette(v, a, 'light'), 16);
 // {
 //   level: 3, fontSize: 14.4, fontWeight: 700, paddingX: 18.72, paddingY: 7.92, borderRadius: 999,
 //   background, color,                       // l3 / l3Ink when selected, chipBg / chipInk at rest
-//   border: { width: 2, color },             // inside the box; transparent when unselected
-//   rings: [                                 // outward from the border
-//     { kind: 'gap',  width: 1.5, color },   // gaps show the surface color
-//     { kind: 'ring', width: 1.5, color },
-//     { kind: 'gap',  width: 1.5, color },
-//     { kind: 'ring', width: 1.2, color },
+//   border: { width: 2, color },             // the chip's edge: the fill's color when selected, transparent at rest
+//   rings: [                                 // one per level, outward from the chip
+//     { kind: 'gap',  width: 1.25, color },  // gaps show the surface color
+//     { kind: 'ring', width: 1.5,  color },
+//     { kind: 'gap',  width: 1.25, color },
+//     { kind: 'ring', width: 1.25, color },
+//     { kind: 'gap',  width: 1.25, color },
+//     { kind: 'ring', width: 1,    color },
 //   ],
-//   bleed: 5.7,                              // px the rings extend past the border
+//   bleed: 7.5,                              // px the rings extend past the chip
 // }`}></pre>
         <p>
           For chips with no hue, pass <code>neutralPalette('light' | 'dark')</code>. For the rater's

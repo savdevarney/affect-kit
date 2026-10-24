@@ -31,11 +31,16 @@ export interface ChipStyle {
   borderRadius: number;
   background: string;
   color: string;
-  /** Innermost stroke. Inside the chip's box; transparent when unselected, so the size never changes. */
+  /**
+   * The chip's own edge, inside its box: the fill's color when selected,
+   * transparent when not, so the size never changes and the edge is never
+   * read as a ring.
+   */
   border: { width: number; color: string };
   /**
-   * Strokes outward from the border, nearest first. Drawn outside the layout box,
-   * like a CSS box-shadow with spread: they don't move neighbors. Empty at levels 0 and 1.
+   * Strokes outward from the chip, nearest first, each after a gap of the
+   * surface: one ring per level. Drawn outside the layout box, like a CSS
+   * box-shadow with spread, so they don't move neighbors. Empty at level 0.
    * React Native has no spread shadows: draw them as nested borders or Skia strokes.
    */
   rings: ChipRing[];
@@ -50,10 +55,11 @@ const FONT_SCALE = 0.9;
 const PADDING_X = 1.3;   // × the chip's text size
 const PADDING_Y = 0.55;
 const BORDER_PX = 2;
-const GAP_PX = 1.5;
-// Ring widths by level, innermost first. Intensity is the ring count: 1, 2, 3 strokes
-// counting the border.
-const RING_PX = [1.5, 1.2] as const;
+const GAP_PX = 1.25;
+// Ring widths by level, innermost first. Intensity is the ring count: one ring per level,
+// each separated from the chip and from the last by a gap, so every palette counts the
+// same (in mono, a border alone on an ink fill was nearly invisible).
+const RING_PX = [1.5, 1.25, 1] as const;
 
 function clampLevel(level: number): ChipLevel {
   'worklet';
@@ -62,8 +68,8 @@ function clampLevel(level: number): ChipLevel {
 
 /**
  * How a chip looks at a level, from a palette. Selection is color (unselected
- * tint, selected fill); intensity is ring count (1 to 3 strokes); size never
- * changes, so chips don't reflow when tapped.
+ * tint, selected fill); intensity is ring count (one ring per level, each
+ * outside the chip); size never changes, so chips don't reflow when tapped.
  *
  * Sizes are px from `basePx`, the surrounding text size (16 by default), so
  * the platform's text size setting scales the chip. Borders and rings stay in
@@ -80,9 +86,9 @@ export function chipStyle(level: number, colors: ChipColors, basePx: number = BA
   const lv = clampLevel(level);
   const selected = lv > 0;
   const fontSize = basePx * FONT_SCALE;
-  // Level 1 is the border alone; each level after adds a gap and a ring.
+  // Each level adds a gap and a ring.
   const rings: ChipRing[] = [];
-  for (let i = 0; i < Math.max(0, lv - 1); i++) {
+  for (let i = 0; i < lv; i++) {
     rings.push({ kind: 'gap', width: GAP_PX, color: colors.surface });
     rings.push({ kind: 'ring', width: RING_PX[i]!, color: colors.ring });
   }
@@ -95,7 +101,7 @@ export function chipStyle(level: number, colors: ChipColors, basePx: number = BA
     borderRadius: 999,
     background: selected ? colors.l3 : colors.chipBg,
     color: selected ? colors.l3Ink : colors.chipInk,
-    border: { width: BORDER_PX, color: selected ? colors.ring : 'transparent' },
+    border: { width: BORDER_PX, color: selected ? colors.l3 : 'transparent' },
     rings,
     bleed: rings.reduce((sum, r) => sum + r.width, 0),
   };
@@ -103,8 +109,8 @@ export function chipStyle(level: number, colors: ChipColors, basePx: number = BA
 
 /**
  * The space between chips in a list, in px. It clears two level-3 chips side
- * by side: each one's rings reach 5.7 px past its border, 11.4 px together,
- * under the 12 px between columns. The rings stay in px at every text size,
- * so the gap doesn't depend on the level or the size.
+ * by side: each one's rings reach 7.5 px past its edge, 15 px together. The
+ * rings stay in px at every text size, so the gap doesn't depend on the level
+ * or the size.
  */
-export const WORD_LIST_GAP = { row: 14, column: 12 } as const;
+export const WORD_LIST_GAP = { row: 16, column: 16 } as const;
