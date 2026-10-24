@@ -54,7 +54,8 @@ jobs:
               echo "(no $TAG tag on $pkg)"
             fi
 
-            # Find every snapshot version this PR published. Format:
+            # Find every snapshot version this PR published (never a canary:
+            # canary.yml's <version>-next.<N> versions don't match). Format:
             #   0.0.0-pr-<N>-<timestamp-or-sha>
             versions=$(npm view "$pkg" versions --json 2>/dev/null \
               | grep -oE "\"0\.0\.0-pr-${PR}-[A-Za-z0-9]+\"" \

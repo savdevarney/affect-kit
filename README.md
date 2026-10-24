@@ -14,6 +14,7 @@ Open-source web components for **dimensional emotion rating**. Built with Lit, g
 | `<affect-kit-result>`  | Display panel for a captured rating |
 | `<affect-kit-compare>` | Two snapshots side-by-side, or two arrays averaged |
 | `<affect-kit-face>`    | Reusable face glyph driven by `v` and `a` |
+| `<affect-kit-pad>`     | The face pad alone, for apps that build their own word list |
 
 ## How it works
 

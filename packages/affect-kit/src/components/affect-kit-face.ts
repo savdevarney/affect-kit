@@ -1,13 +1,16 @@
-import { LitElement, html, css, type PropertyValues } from 'lit';
-import { property } from 'lit/decorators.js';
+import { LitElement, html, svg, css, nothing, type PropertyValues } from 'lit';
+import { property, state } from 'lit/decorators.js';
 import {
-  computeTarget,
-  renderFace,
-  smoothFaceParams,
+  faceParams,
+  facePaths,
+  FACE_BOX,
   FACE_VIEWBOX,
   type FaceParams,
+  type FacePart,
 } from '../core/face-renderer';
-import { computeAnimationOffsets } from '../core/animation';
+import { FACE_STYLE, faceStroke, faceTier } from '../core/face-style';
+import { vaColor } from '../core/pad';
+import { decayShock, faceMotion, faceSettled, kickShock, smoothFaceParams } from '../core/motion';
 import { themeConverter } from '../core/theme';
 import type { Theme } from '../core/types';
 
@@ -17,9 +20,6 @@ const animateConverter = {
   toAttribute: (value: boolean): string | null => (value ? null : 'false'),
 };
 
-const SMOOTH_K = 0.11;
-const SHOCK_DECAY = 0.93;
-
 /**
  * `<affect-kit-face>` — animated face glyph driven by valence and arousal.
  *
@@ -28,8 +28,10 @@ const SHOCK_DECAY = 0.93;
  * <affect-kit-face v="-0.8" a="0.6" animated="false"></affect-kit-face>
  * ```
  *
- * Animation (breath, tremor, crows-feet) runs at 60 fps by default and
- * respects `prefers-reduced-motion: reduce` automatically.
+ * The face eases to a new position and breathes, trembles and shakes by
+ * elapsed time (affect-kit/core's motion), so it moves the same at any frame
+ * rate. With `prefers-reduced-motion: reduce` it still eases, faster, and
+ * holds still otherwise.
  */
 export class AffectKitFace extends LitElement {
   static override styles = css`
@@ -56,40 +58,10 @@ export class AffectKitFace extends LitElement {
       height: 100%;
       overflow: visible;
     }
-    .brow {
-      fill: none;
+    /* Strokes and fills come from FACE_STYLE (affect-kit/core), as attributes,
+       so a native face draws the same. Everything takes currentColor. */
+    path {
       stroke: currentColor;
-      stroke-width: 3;
-      stroke-linecap: round;
-    }
-    /* Eyes: outlined shape so whites show through at higher arousal (wider open). */
-    .eye {
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 4;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-    }
-    .nose {
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 2.8;
-      stroke-linecap: round;
-    }
-    /* Mouth uses fill + stroke so closed lips read at full weight even
-       with zero-area path geometry, and corners stay soft and rounded. */
-    .mouth {
-      fill: currentColor;
-      stroke: currentColor;
-      stroke-width: 4.5;
-      stroke-linejoin: round;
-      stroke-linecap: round;
-    }
-    .crows-feet-line {
-      fill: none;
-      stroke: currentColor;
-      stroke-width: 1.8;
-      stroke-linecap: round;
     }
   `;
 
@@ -100,9 +72,9 @@ export class AffectKitFace extends LitElement {
   @property({ type: Number }) a = 0;
 
   /**
-   * Breath + tremor animation. Defaults `true`.
-   * Use `animated="false"` in HTML to opt out.
-   * Reduced-motion users always get a static face regardless of this prop.
+   * Easing, breath and tremor. Defaults `true`. With `animated="false"` the
+   * face jumps to each position and holds still. With the OS's Reduce Motion
+   * the face eases, faster, and holds still.
    */
   @property({ converter: animateConverter, reflect: true }) animated = true;
 
@@ -122,9 +94,13 @@ export class AffectKitFace extends LitElement {
    */
   @property({ type: Number, attribute: false }) motionScale = 1;
 
-  private _current: FaceParams = computeTarget(0, 0);
-  private _target: FaceParams = computeTarget(0, 0);
-  private _shockEnergy = 0;
+  private _current: FaceParams = faceParams(0, 0);
+  private _target: FaceParams = faceParams(0, 0);
+
+  /** The face's drawn width, which picks its tier (FACE_TIERS). Full until measured. */
+  @state() private _sizePx = Infinity;
+  private _resize: ResizeObserver | null = null;
+  private _shock = 0;
   private _t = 0;
   private _lastTs: number | null = null;
   private _rafId: number | null = null;
@@ -135,7 +111,8 @@ export class AffectKitFace extends LitElement {
    * toggled so the face reacts to the user's selection.
    */
   triggerShock(): void {
-    this._shockEnergy = Math.min(1, this._shockEnergy + 0.6);
+    if (this._reducedMotion || !this.animated) return; // the shock is motion: Reduce Motion stops it
+    this._shock = kickShock(this._shock);
     this._ensureRaf();
   }
 
@@ -145,23 +122,29 @@ export class AffectKitFace extends LitElement {
       this._mq = window.matchMedia('(prefers-reduced-motion: reduce)');
       this._mq.addEventListener('change', this._onMotionChange);
     }
+    if (typeof ResizeObserver !== 'undefined') {
+      this._resize = new ResizeObserver(entries => {
+        const width = entries[0]?.contentRect.width;
+        if (width) this._sizePx = width;
+      });
+      this._resize.observe(this);
+    }
     this._ensureRaf();
   }
 
   override disconnectedCallback(): void {
     super.disconnectedCallback();
     this._mq?.removeEventListener('change', this._onMotionChange);
+    this._resize?.disconnect();
+    this._resize = null;
     this._stopRaf();
   }
 
   protected override updated(changed: PropertyValues): void {
     if (changed.has('v') || changed.has('a')) {
-      this._target = computeTarget(
-        Math.max(-1, Math.min(1, this.v)),
-        Math.max(-1, Math.min(1, this.a)),
-      );
-    }
-    if (changed.has('animated')) {
+      this._target = faceParams(this.v, this.a);
+      this._ensureRaf();
+    } else if (changed.has('animated')) {
       this._ensureRaf();
     }
   }
@@ -174,17 +157,19 @@ export class AffectKitFace extends LitElement {
     this._ensureRaf();
   };
 
+  // Animated: a frame loop runs. Under Reduce Motion it runs only until the
+  // face settles. Not animated: the face jumps and no loop runs.
   private _ensureRaf(): void {
-    const shouldAnimate = this.animated && !this._reducedMotion;
-    if (shouldAnimate) {
-      if (!this._rafId) {
-        this._lastTs = null;
-        this._rafId = requestAnimationFrame(this._tick);
-      }
-    } else {
+    if (!this.animated) {
       this._stopRaf();
       this._current = this._target;
       this.requestUpdate();
+      return;
+    }
+    if (this._reducedMotion && faceSettled(this._current, this._target)) return;
+    if (!this._rafId) {
+      this._lastTs = null;
+      this._rafId = requestAnimationFrame(this._tick);
     }
   }
 
@@ -196,59 +181,70 @@ export class AffectKitFace extends LitElement {
   }
 
   private _tick = (ts: number): void => {
-    const dt = this._lastTs != null ? (ts - this._lastTs) / 1000 : 0;
+    const dtMs = this._lastTs != null ? ts - this._lastTs : 0;
     this._lastTs = ts;
-    this._t += dt;
-    this._current = smoothFaceParams(this._current, this._target, SMOOTH_K);
-    this._shockEnergy *= SHOCK_DECAY;
-    this._rafId = requestAnimationFrame(this._tick);
+    this._t += dtMs / 1000;
+    const reducedMotion = this._reducedMotion;
+    this._current = smoothFaceParams(this._current, this._target, dtMs, { reducedMotion });
+    this._shock = decayShock(this._shock, dtMs);
     this.requestUpdate();
+    if (reducedMotion && faceSettled(this._current, this._target)) {
+      this._rafId = null;
+      return;
+    }
+    this._rafId = requestAnimationFrame(this._tick);
   };
 
-  private _tr(f: { dx: number; dy: number }): string {
-    if (f.dx === 0 && f.dy === 0) return '';
-    return `translate(${f.dx.toFixed(2)},${f.dy.toFixed(2)})`;
+  private _tr(f: { x: number; y: number }): string {
+    if (f.x === 0 && f.y === 0) return '';
+    return `translate(${f.x.toFixed(2)},${f.y.toFixed(2)})`;
   }
 
   override render() {
+    const tier = faceTier(this._sizePx);
+    if (tier.draw === 'dot') {
+      return html`
+        <svg viewBox="${FACE_VIEWBOX}" aria-hidden="true">
+          <circle cx="0" cy="0" r="${FACE_BOX.width / 2}" fill="${vaColor(this.v, this.a)}"></circle>
+        </svg>
+      `;
+    }
     const p = this._current;
-    const paths = renderFace(p);
-    const offsets = computeAnimationOffsets({
-      t: this._t,
-      v: this.v,
-      a: this.a,
+    const paths = facePaths(p);
+    const widths = faceStroke(this._sizePx);
+    const offsets = faceMotion(this._t, this.v, this.a, {
       motionScale: this.motionScale,
-      shockEnergy: this._shockEnergy,
+      shock: this._shock,
       reducedMotion: this._reducedMotion || !this.animated,
     });
-    const { groupX, groupY, perFeature } = offsets;
-    const crowsFeetOp = p.crowsFeetOp * offsets.crowsFeetOpacityScale;
+    const parts = offsets.parts;
+    const crowsFeetOp = p.crowsFeetOp;
+    const shown = (part: FacePart) => !tier.omit.includes(part);
+    const path = (part: FacePart) => {
+      const style = FACE_STYLE[part];
+      return svg`<path
+        d="${paths[part]}"
+        fill="${style.fill ? 'currentColor' : 'none'}"
+        stroke-width="${widths[part]}"
+        stroke-linecap="${style.lineCap}"
+        stroke-linejoin="${style.lineJoin}"
+      ></path>`;
+    };
 
     return html`
       <svg viewBox="${FACE_VIEWBOX}" aria-hidden="true">
-        <g transform="translate(${groupX.toFixed(2)},${groupY.toFixed(2)})">
-          <g transform="${this._tr(perFeature.leftBrow)}">
-            <path class="brow" d="${paths.leftBrow}"></path>
-          </g>
-          <g transform="${this._tr(perFeature.rightBrow)}">
-            <path class="brow" d="${paths.rightBrow}"></path>
-          </g>
-          <g transform="${this._tr(perFeature.leftEye)}">
-            <path class="eye" d="${paths.leftEye}"></path>
-          </g>
-          <g transform="${this._tr(perFeature.rightEye)}">
-            <path class="eye" d="${paths.rightEye}"></path>
-          </g>
-          <g style="opacity:${crowsFeetOp.toFixed(3)}">
-            <path class="crows-feet-line" d="${paths.crowsFeetLeft}"></path>
-            <path class="crows-feet-line" d="${paths.crowsFeetRight}"></path>
-          </g>
-          <g transform="${this._tr(perFeature.nose)}">
-            <path class="nose" d="${paths.nose}"></path>
-          </g>
-          <g transform="${this._tr(perFeature.mouth)}">
-            <path class="mouth" d="${paths.mouth}"></path>
-          </g>
+        <g transform="translate(${offsets.x.toFixed(2)},${offsets.y.toFixed(2)})">
+          <g transform="${this._tr(parts.leftBrow)}">${path('leftBrow')}</g>
+          <g transform="${this._tr(parts.rightBrow)}">${path('rightBrow')}</g>
+          <g transform="${this._tr(parts.leftEye)}">${path('leftEye')}</g>
+          <g transform="${this._tr(parts.rightEye)}">${path('rightEye')}</g>
+          ${shown('crowsFeetLeft') ? svg`
+            <g style="opacity:${crowsFeetOp.toFixed(3)}">
+              ${path('crowsFeetLeft')}
+              ${path('crowsFeetRight')}
+            </g>` : nothing}
+          ${shown('nose') ? svg`<g transform="${this._tr(parts.nose)}">${path('nose')}</g>` : nothing}
+          <g transform="${this._tr(parts.mouth)}">${path('mouth')}</g>
         </g>
       </svg>
     `;

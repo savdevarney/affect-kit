@@ -45,7 +45,7 @@ Monorepo-level conventions and the design rules behind the published package. Th
 
 ## Public API surface — what's exported
 
-The published package exposes **four custom elements**, a few TypeScript types, two helper functions, and a set of documented CSS custom properties. Everything else is internal.
+The published package exposes **six custom elements**, a few TypeScript types, rating, vocabulary and palette helpers, the vocabulary's coordinates and synonyms, and a set of documented CSS custom properties. Everything else is internal.
 
 ### Per-entry exports map
 
@@ -57,11 +57,17 @@ The `package.json#exports` field is the resolver-level wall:
   "./rater":   "./dist/rater.js",     // import 'affect-kit/rater'
   "./result":  "./dist/result.js",    // import 'affect-kit/result'
   "./compare": "./dist/compare.js",   // import 'affect-kit/compare'
-  "./face":    "./dist/face.js"       // import 'affect-kit/face'
+  "./face":    "./dist/face.js",      // import 'affect-kit/face'
+  "./pad":     "./dist/pad.js",       // import 'affect-kit/pad'
+  "./chip":    "./dist/chip.js",      // import 'affect-kit/chip'
+  "./core":    "./dist/core.js",      // import 'affect-kit/core'          (the headless core: no elements, no DOM)
+  "./apple-health": "./dist/apple-health.js", // Apple Health State of Mind, as data
+  "./text":    "./dist/text.js",       // reading a note for what it mentions, on the device
+  "./fixtures": "./fixtures/core.json" // golden JSON for parity tests
 }
 ```
 
-`import { computeTarget } from 'affect-kit/core/face-renderer'` does not resolve. There is no path to internal symbols from outside the package.
+`import { faceParams } from 'affect-kit/core/face-renderer'` does not resolve. There is no path to internal symbols from outside the package.
 
 ### Surface
 
@@ -71,8 +77,21 @@ The `package.json#exports` field is the resolver-level wall:
 | `<affect-kit-result>`  | custom element | Renders a `Rating` as face + words + optional color. |
 | `<affect-kit-compare>` | custom element | Two ratings or rating arrays side-by-side. |
 | `<affect-kit-face>`    | custom element | Standalone face glyph driven by `v` + `a`. |
+| `<affect-kit-pad>`     | custom element | The rater's face pad alone. Emits `input`/`change` with `{ v, a }`. |
+| `<affect-kit-chip>`    | custom element | One emotion word with 1-3 intensity rings; `readonly` variant. Draws from `chipStyle()`. |
 | `Rating`, `EmotionLabel`, `EmotionName`, `ColorMode` | TS types | Re-exported from each entry |
-| `createRating`, `averageRatings` | functions | Re-exported helpers |
+| `createRating`, `averageRatings`, `stripVad`, `rehydrate` | functions | Re-exported helpers |
+| `wordOrder` | function | The 55 words by distance from the face: the rater's word order |
+| `faceParams`, `facePaths`, `faceGeometry`, `FACE_STYLE`, `faceTier`, `faceStroke` | functions, constants | The face as numbers, paths and drawing rules, including small faces. `<affect-kit-face>` draws from them, and so can native renderers |
+| `padToFace`, `faceToPad`, `vaColor`, `padColors` | functions | The pad: touch to position, and the halo and dot colors |
+| `chipStyle`, `WORD_LIST_GAP`, `neutralPalette`, `wordChipColors` | functions, constant | A chip's look as plain data in px. The chip element and the rater draw from it, and so can native views |
+| `describeFace`, `chipLabel`, `nudgeFace`, `axisValueText`, `A11Y_STRINGS_EN` | functions, object | What screen readers hear, from a replaceable strings table, and the face as two adjustable values |
+| `surfacePalette`, `SURFACE_MIX`, `MIN_TEXT_CONTRAST` | function, constants | The colors a surface takes from V/A. The rater's `color-mode="background"` uses it, so app screens and the rater match |
+| `EMOTION_LABELS` | object | V/A/D per vocabulary word, for rehydrating stored ratings |
+| `affect-kit/core` | entry | The headless core: everything above that isn't an element, for React Native, servers and web workers, where Lit's browser build has no `HTMLElement`. Per-frame functions carry a `'worklet'` directive for Reanimated; the build checks they survive (`scripts/check-dist.mjs`) |
+| `affect-kit/apple-health` | entry | `stateOfMind(rating)`: what to write to Apple Health's State of Mind, as data |
+| `affect-kit/text` | entry | Reading a note for what it mentions, on the device: a bring-your-own classifier interface, `phraseListClassifier`, the library's `cut`, `heardReducer` for the note's screen, `literalMatch`, and dismissal and guard counts |
+| `affect-kit/fixtures` | JSON | What the core gives for known inputs, so renderers on other platforms can test against the web's |
 | CSS custom properties  | runtime | `--affect-kit-{ink,paper,rule}`, `--affect-kit-color-{pink,gold,green,blue}`, `--affect-kit-font-size` |
 
 ### Encapsulation enforcement (multi-layered)
@@ -109,7 +128,7 @@ All three display components default `animated=true`. The boolean attribute uses
 
 ## Vocabulary
 
-The 51-emotion English vocabulary in `src/vocabulary/en.ts` is sourced from the **NRC VAD Lexicon v2.1** (Mohammad 2025). Every entry's V/A/D coordinates are direct from the lexicon, scaled to `[-1, 1]`. The vocabulary is **not** a consumer-configurable surface — sort order and intensity ramps depend on the specific coordinate distribution.
+The 55-emotion English vocabulary in `src/vocabulary/en.ts` is sourced from the **NRC VAD Lexicon v2.1** (Mohammad 2025). Every entry's V/A/D coordinates are direct from the lexicon, scaled to `[-1, 1]`. The vocabulary is **not** a consumer-configurable surface — sort order and intensity ramps depend on the specific coordinate distribution.
 
 ## Versioning + releases
 

@@ -1,8 +1,17 @@
-// Pure module: V/A → face SVG path strings. No DOM, no Lit, no state.
-// Face anatomy based on FACS (Ekman & Friesen 1978). Cross-cultural
-// validation: Cordaro et al. 2018 (17 cultures).
+// Pure module: valence and arousal → the face's numbers → its paths.
+// No DOM, no Lit, no state. Face anatomy based on FACS (Ekman & Friesen 1978).
+// Cross-cultural validation: Cordaro et al. 2018 (17 cultures).
+//
+// Functions on the per-frame path start with a 'worklet' directive. React
+// Native Reanimated reads it to run the function on the UI thread; anywhere
+// else it's a plain string statement that does nothing. Worklets can only call
+// other worklets and read module constants, so these never close over state.
 
-/** @internal */
+/**
+ * The face's eleven numbers: brows, lids and mouth. Native and web renderers
+ * animate these, then rebuild the paths each frame. Interpolating the path
+ * strings themselves would morph differently.
+ */
 export interface FaceParams {
   browInnerY: number;
   browOuterY: number;
@@ -10,6 +19,7 @@ export interface FaceParams {
   thicknessTop: number;
   thicknessBottom: number;
   topAsymmetry: number;
+  /** Crow's-feet opacity, 0 to 0.7: only a strong, pleasant, energized face shows them. */
   crowsFeetOp: number;
   mouthCornerY: number;
   mouthMidY: number;
@@ -17,41 +27,54 @@ export interface FaceParams {
   mouthOpen: number;
 }
 
-/** @internal Path strings only — caller owns the <svg>/<g> shells. */
-export interface FacePaths {
-  leftBrow: string;
-  rightBrow: string;
-  leftEye: string;
-  rightEye: string;
-  crowsFeetLeft: string;   // rendered as a group; caller controls opacity
-  crowsFeetRight: string;
-  nose: string;
-  mouth: string;
-}
+/**
+ * One drawing command in face units, with absolute coordinates, as in SVG path
+ * data. Skia can build a path from these without parsing a string.
+ */
+export type PathCommand =
+  | { op: 'M'; x: number; y: number }
+  | { op: 'L'; x: number; y: number }
+  | { op: 'Q'; x1: number; y1: number; x: number; y: number }
+  | { op: 'C'; x1: number; y1: number; x2: number; y2: number; x: number; y: number }
+  | { op: 'Z' };
 
-export const FACE_VIEWBOX = '-85 -85 170 170';
+/** The face's parts, back to front: the order to draw them in. */
+export const FACE_PARTS = [
+  'leftBrow', 'rightBrow', 'leftEye', 'rightEye', 'crowsFeetLeft', 'crowsFeetRight', 'nose', 'mouth',
+] as const;
 
-/** @internal Ink color: overridable via --affect-kit-ink CSS custom property. */
-export const STROKE_COLOR = 'var(--affect-kit-ink, #1a1a1a)';
+export type FacePart = (typeof FACE_PARTS)[number];
 
-/** @internal */
-export const STROKE_WIDTH = 4.5;
+/** The face's coordinate space: -85 to 85 on both axes, centred on the face. */
+export const FACE_BOX = { x: -85, y: -85, width: 170, height: 170 } as const;
 
-// ─── Face parameter computation ────────────────────────────────────────────
+/** @internal {@link FACE_BOX} as an SVG `viewBox`. */
+export const FACE_VIEWBOX = `${FACE_BOX.x} ${FACE_BOX.y} ${FACE_BOX.width} ${FACE_BOX.height}`;
+
+// ─── The numbers ───────────────────────────────────────────────────────────
 
 /**
- * @internal
- * Map V/A ∈ [-1, 1] to static face parameters by blending four quadrant
- * expressions: anger (V<0, A>0), joy (V>0, A>0), calm (V>0, A<0),
- * sad (V<0, A<0). Quadrant weights are the product of clipped V and A
- * components — smooth, continuous blending through all positions.
+ * The face's numbers at a position. `v` and `a` are clamped to [-1, 1].
+ *
+ * Four quadrant expressions blend by weight: anger (v < 0, a > 0), joy
+ * (v > 0, a > 0), calm (v > 0, a < 0) and sadness (v < 0, a < 0). Each weight
+ * is the product of the clipped components, so the face changes smoothly
+ * everywhere.
+ *
+ * ```ts
+ * const p = faceParams(0.6, 0.4);
+ * const paths = facePaths(p); // draw them, or animate p first
+ * ```
  */
-export function computeTarget(v: number, a: number): FaceParams {
-  const angerW = Math.max(0, -v) * Math.max(0,  a);
-  const joyW   = Math.max(0,  v) * Math.max(0,  a);
-  const calmW  = Math.max(0,  v) * Math.max(0, -a);
-  const sadW   = Math.max(0, -v) * Math.max(0, -a);
-  const aPos   = Math.max(0, a);  // positive arousal component only
+export function faceParams(v: number, a: number): FaceParams {
+  'worklet';
+  const cv = Math.max(-1, Math.min(1, v));
+  const ca = Math.max(-1, Math.min(1, a));
+  const angerW = Math.max(0, -cv) * Math.max(0,  ca);
+  const joyW   = Math.max(0,  cv) * Math.max(0,  ca);
+  const calmW  = Math.max(0,  cv) * Math.max(0, -ca);
+  const sadW   = Math.max(0, -cv) * Math.max(0, -ca);
+  const aPos   = Math.max(0, ca);  // positive arousal component only
 
   // ── Brows ──
   // baseline: -32 (slightly above eye center at y=-12)
@@ -91,14 +114,14 @@ export function computeTarget(v: number, a: number): FaceParams {
   const crowsFeetOp = Math.min(0.7, joyW * 1.3);
 
   // ── Mouth ──
-  let mouthCornerY = 32 - v * 9;     // positive V → corners up
-  let mouthMidY    = 32 + v * 20;    // positive V → mid point up (wider smile arc)
-  let mouthWidth   = 22 + aPos * 3;
-  let mouthOpen    = aPos * 6;       // arousal → mouth open
+  const mouthCornerY = 32 - cv * 9;  // positive V → corners up
+  const mouthMidY    = 32 + cv * 20; // positive V → mid point up (wider smile arc)
+  let mouthWidth     = 22 + aPos * 3;
+  let mouthOpen      = aPos * 6;     // arousal → mouth open
 
   mouthWidth -= angerW * 4;          // anger: tight/narrow
   mouthWidth += joyW   * 2;          // joy: wide
-  mouthOpen  *= (1 - sadW * 0.6);   // sadness dampens mouth opening
+  mouthOpen  *= (1 - sadW * 0.6);    // sadness dampens mouth opening
 
   return {
     browInnerY, browOuterY,
@@ -108,92 +131,112 @@ export function computeTarget(v: number, a: number): FaceParams {
   };
 }
 
-// ─── SVG path builders ─────────────────────────────────────────────────────
+// ─── The paths ─────────────────────────────────────────────────────────────
 
-/**
- * @internal
- * Single-eye cubic bezier path. Top curve is asymmetric for the anger frown.
- * cy=-12 is the vertical center of both eyes.
- */
-export function eyePath(args: {
-  cx: number;
-  width: number;
-  topYOuter: number;
-  topYInner: number;
-  bottomY: number;
-  isLeft: boolean;
-}): string {
-  const { cx, width, topYOuter, topYInner, bottomY, isLeft } = args;
+// One eye: a cubic top lid (asymmetric for the anger frown) and a quadratic
+// underside. y = -12 is the centre of both eyes.
+function eyeCommands(
+  cx: number, width: number, topYOuter: number, topYInner: number, bottomY: number, isLeft: boolean,
+): PathCommand[] {
+  'worklet';
   const cy = -12;
   const outerX = cx + (isLeft ? -width : width);
   const innerX = cx + (isLeft ? width : -width);
-  const ctrlOuterX = outerX + (innerX - outerX) * 0.33;
-  const ctrlInnerX = outerX + (innerX - outerX) * 0.67;
-  return (
-    `M ${outerX.toFixed(2)} ${cy} ` +
-    `C ${ctrlOuterX.toFixed(2)} ${topYOuter.toFixed(2)} ` +
-      `${ctrlInnerX.toFixed(2)} ${topYInner.toFixed(2)} ` +
-      `${innerX.toFixed(2)} ${cy} ` +
-    `Q ${cx.toFixed(2)} ${bottomY.toFixed(2)} ${outerX.toFixed(2)} ${cy} Z`
-  );
+  return [
+    { op: 'M', x: outerX, y: cy },
+    {
+      op: 'C',
+      x1: outerX + (innerX - outerX) * 0.33, y1: topYOuter,
+      x2: outerX + (innerX - outerX) * 0.67, y2: topYInner,
+      x: innerX, y: cy,
+    },
+    { op: 'Q', x1: cx, y1: bottomY, x: outerX, y: cy },
+    { op: 'Z' },
+  ];
 }
 
-/**
- * @internal
- * Build all SVG `d` strings for a face given its FaceParams.
- * Returns a plain object of strings — no DOM, no innerHTML.
- * The caller (Lit component) owns the surrounding <svg> and <g> shells.
- */
-export function renderFace(p: FaceParams): FacePaths {
-  // Brows: quadratic bezier from outer corner to inner tip
-  const leftBrow  = `M -42 ${p.browOuterY} Q -27 ${(p.browOuterY + p.browInnerY) / 2 - 2} -12 ${p.browInnerY}`;
-  const rightBrow = `M 12 ${p.browInnerY} Q 27 ${(p.browOuterY + p.browInnerY) / 2 - 2} 42 ${p.browOuterY}`;
-
-  // Eyes: parameterized cubic bezier + quadratic underbelly
-  const cy       = -12;
+/** Every part's path for a set of numbers, as commands. Same shapes as {@link facePaths}. */
+export function faceGeometry(p: FaceParams): Record<FacePart, PathCommand[]> {
+  'worklet';
+  const browMidY = (p.browOuterY + p.browInnerY) / 2 - 2;
+  const cy = -12;
   const topYOuter = cy - p.thicknessTop;
   const topYInner = cy - p.thicknessTop * (1 - p.topAsymmetry);
-  const bottomY   = cy + p.thicknessBottom;
-  const leftEye  = eyePath({ cx: -28, width: p.eyeWidth, topYOuter, topYInner, bottomY, isLeft: true });
-  const rightEye = eyePath({ cx:  28, width: p.eyeWidth, topYOuter, topYInner, bottomY, isLeft: false });
-
-  // Crows feet: two lines per side (caller renders inside <g opacity={crowsFeetOp}>)
-  const crowsFeetLeft  = 'M -41 -10 L -47 -14 M -41 -7 L -48 -8';
-  const crowsFeetRight = 'M 41 -10 L 47 -14 M 41 -7 L 48 -8';
-
-  // Nose
-  const nose = 'M -3 5 Q 0 9 3 5';
-
-  // Mouth: closed = zero-area bezier arc (stroke alone makes it visible);
-  // open = filled shape with upper + lower arc. Matches prototype exactly.
-  const upperY  = p.mouthMidY - p.mouthOpen * 0.35;
-  const lowerY  = p.mouthMidY + p.mouthOpen * 0.65;
-  const mouth   = `M ${-p.mouthWidth} ${p.mouthCornerY} Q 0 ${upperY} ${p.mouthWidth} ${p.mouthCornerY} Q 0 ${lowerY} ${-p.mouthWidth} ${p.mouthCornerY} Z`;
-
-  return { leftBrow, rightBrow, leftEye, rightEye, crowsFeetLeft, crowsFeetRight, nose, mouth };
+  const bottomY = cy + p.thicknessBottom;
+  // Closed, the mouth is a zero-area arc that the stroke alone makes visible;
+  // open, it's a filled shape between an upper and a lower arc.
+  const upperY = p.mouthMidY - p.mouthOpen * 0.35;
+  const lowerY = p.mouthMidY + p.mouthOpen * 0.65;
+  return {
+    leftBrow: [
+      { op: 'M', x: -42, y: p.browOuterY },
+      { op: 'Q', x1: -27, y1: browMidY, x: -12, y: p.browInnerY },
+    ],
+    rightBrow: [
+      { op: 'M', x: 12, y: p.browInnerY },
+      { op: 'Q', x1: 27, y1: browMidY, x: 42, y: p.browOuterY },
+    ],
+    leftEye: eyeCommands(-28, p.eyeWidth, topYOuter, topYInner, bottomY, true),
+    rightEye: eyeCommands(28, p.eyeWidth, topYOuter, topYInner, bottomY, false),
+    crowsFeetLeft: [
+      { op: 'M', x: -41, y: -10 }, { op: 'L', x: -47, y: -14 },
+      { op: 'M', x: -41, y: -7 }, { op: 'L', x: -48, y: -8 },
+    ],
+    crowsFeetRight: [
+      { op: 'M', x: 41, y: -10 }, { op: 'L', x: 47, y: -14 },
+      { op: 'M', x: 41, y: -7 }, { op: 'L', x: 48, y: -8 },
+    ],
+    nose: [
+      { op: 'M', x: -3, y: 5 },
+      { op: 'Q', x1: 0, y1: 9, x: 3, y: 5 },
+    ],
+    mouth: [
+      { op: 'M', x: -p.mouthWidth, y: p.mouthCornerY },
+      { op: 'Q', x1: 0, y1: upperY, x: p.mouthWidth, y: p.mouthCornerY },
+      { op: 'Q', x1: 0, y1: lowerY, x: -p.mouthWidth, y: p.mouthCornerY },
+      { op: 'Z' },
+    ],
+  };
 }
 
-// ─── Smoothing ─────────────────────────────────────────────────────────────
+// Two decimals is a hundredth of a face unit: invisible at any size.
+function fmt(n: number): string {
+  'worklet';
+  return String(Math.round(n * 100) / 100);
+}
+
+/** SVG path data for one part's commands: `"M -42 -32 Q -27 -34 -12 -32"`. */
+export function toSvgPath(commands: readonly PathCommand[]): string {
+  'worklet';
+  let d = '';
+  for (const c of commands) {
+    if (d) d += ' ';
+    switch (c.op) {
+      case 'M':
+      case 'L': d += `${c.op} ${fmt(c.x)} ${fmt(c.y)}`; break;
+      case 'Q': d += `Q ${fmt(c.x1)} ${fmt(c.y1)} ${fmt(c.x)} ${fmt(c.y)}`; break;
+      case 'C': d += `C ${fmt(c.x1)} ${fmt(c.y1)} ${fmt(c.x2)} ${fmt(c.y2)} ${fmt(c.x)} ${fmt(c.y)}`; break;
+      case 'Z': d += 'Z'; break;
+    }
+  }
+  return d;
+}
 
 /**
- * @internal
- * Single exponential-smoothing step: current → target by factor k.
- * k=0.11 matches the prototype — settles to target in ~100ms at 60fps.
- * Returns a new FaceParams; caller owns the mutable state.
+ * SVG path data for every part: for react-native-svg and the web. Draw them in
+ * {@link FACE_PARTS} order with {@link FACE_STYLE}, in `faceInk(theme)`.
  */
-export function smoothFaceParams(current: FaceParams, target: FaceParams, k: number): FaceParams {
-  const s = (c: number, t: number) => c + (t - c) * k;
+export function facePaths(p: FaceParams): Record<FacePart, string> {
+  'worklet';
+  const g = faceGeometry(p);
   return {
-    browInnerY:     s(current.browInnerY,     target.browInnerY),
-    browOuterY:     s(current.browOuterY,     target.browOuterY),
-    eyeWidth:       s(current.eyeWidth,       target.eyeWidth),
-    thicknessTop:   s(current.thicknessTop,   target.thicknessTop),
-    thicknessBottom:s(current.thicknessBottom,target.thicknessBottom),
-    topAsymmetry:   s(current.topAsymmetry,   target.topAsymmetry),
-    crowsFeetOp:    s(current.crowsFeetOp,     target.crowsFeetOp),
-    mouthCornerY:   s(current.mouthCornerY,   target.mouthCornerY),
-    mouthMidY:      s(current.mouthMidY,      target.mouthMidY),
-    mouthWidth:     s(current.mouthWidth,     target.mouthWidth),
-    mouthOpen:      s(current.mouthOpen,      target.mouthOpen),
+    leftBrow: toSvgPath(g.leftBrow),
+    rightBrow: toSvgPath(g.rightBrow),
+    leftEye: toSvgPath(g.leftEye),
+    rightEye: toSvgPath(g.rightEye),
+    crowsFeetLeft: toSvgPath(g.crowsFeetLeft),
+    crowsFeetRight: toSvgPath(g.crowsFeetRight),
+    nose: toSvgPath(g.nose),
+    mouth: toSvgPath(g.mouth),
   };
 }

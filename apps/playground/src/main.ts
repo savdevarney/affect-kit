@@ -2,12 +2,14 @@ import 'affect-kit/rater';
 import 'affect-kit/result';
 import 'affect-kit/face';
 import 'affect-kit/compare';
+import 'affect-kit/pad';
 import './example-tabs';
 import type { AffectKitFace }    from 'affect-kit/face';
 import type { AffectKitResult }  from 'affect-kit/result';
 import type { AffectKitRater }   from 'affect-kit/rater';
 import type { AffectKitCompare } from 'affect-kit/compare';
 import { createRating, averageRatings } from 'affect-kit';
+import { surfacePalette, wordOrder } from 'affect-kit/core';
 import type { ColorMode, Layout, Rating, Theme } from 'affect-kit';
 
 // ── Element refs ───────────────────────────────────────────────────────────
@@ -340,7 +342,7 @@ function fmtRatings(name: string, ratings: Rating[]): string {
     const labelLines = r.labels
       .map(l => `    { name: '${l.name}', level: ${l.level} },`)
       .join('\n');
-    lines.push(`  createRating({ face: { v: ${r.face.v.toFixed(2).padStart(5)}, a: ${r.face.a.toFixed(2).padStart(5)} }, labels: [`);
+    lines.push(`  createRating({ face: ${r.face ? `{ v: ${r.face.v.toFixed(2).padStart(5)}, a: ${r.face.a.toFixed(2).padStart(5)} }` : 'null'}, labels: [`);
     lines.push(labelLines);
     lines.push(`  ]}),`);
   }
@@ -414,3 +416,74 @@ afterInput?.addEventListener('input', () => {
   if (compareEl) compareEl.afterLabel = v;
   compareState.afterLabel = v; renderCompareCode();
 });
+
+// ── Pad + palette + word order: an app composing its own check-in ─────────
+// The pad is the only affect-kit element; the surface and word list are the
+// app's own, colored from surfacePalette() and sorted by wordOrder() when the
+// face settles, as the rater does.
+{
+  const pad     = document.getElementById('pad') as import('affect-kit/pad').AffectKitPad | null;
+  const demo    = document.getElementById('pad-demo');
+  const list    = document.getElementById('pad-words');
+  const caption = document.getElementById('pad-caption');
+  const levels  = new Map<string, number>();
+  let theme: 'light' | 'dark' = 'light';
+  let pos = { v: 0, a: 0 };
+  let placed = false;
+
+  const paint = () => {
+    if (!demo) return;
+    const p = surfacePalette(pos.v, pos.a, theme);
+    // Light: the whole surface takes the face's color. Dark: stays dark.
+    demo.style.background = theme === 'light' && placed ? p.surface : (theme === 'dark' ? '#1a1a1a' : '');
+    const vars: Record<string, string> = theme === 'light' && placed
+      ? { ink: p.ink, 'ink-dim': p.inkDim, 'chip-bg': p.chipBg, 'chip-ink': p.chipInk, l3: p.l3, 'l3-ink': p.l3Ink }
+      : theme === 'dark'
+        ? { ink: '#fff', 'ink-dim': 'rgba(255,255,255,0.7)', 'chip-bg': 'rgba(255,255,255,0.12)', 'chip-ink': '#fff', l3: '#fff', 'l3-ink': '#000' }
+        : { ink: '#000', 'ink-dim': '#555', 'chip-bg': 'rgba(0,0,0,0.06)', 'chip-ink': '#333', l3: '#1a1a1a', 'l3-ink': '#fff' };
+    for (const [k, v] of Object.entries(vars)) demo.style.setProperty(`--pad-${k}`, v);
+  };
+
+  const renderWords = () => {
+    if (!list) return;
+    list.replaceChildren(...wordOrder(pos.v, pos.a).slice(0, 14).map(name => {
+      const li = document.createElement('li');
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      const lv = levels.get(name) ?? 0;
+      btn.setAttribute('aria-pressed', String(lv > 0));
+      btn.textContent = name + (lv > 1 ? ' ' + '•'.repeat(lv) : '');
+      btn.addEventListener('click', () => {
+        levels.set(name, ((levels.get(name) ?? 0) + 1) % 4);
+        renderWords();
+      });
+      li.append(btn);
+      return li;
+    }));
+    if (caption) caption.textContent = `v ${pos.v.toFixed(2)} · a ${pos.a.toFixed(2)}`;
+  };
+
+  pad?.addEventListener('input', (e) => {
+    pos = (e as CustomEvent<{ v: number; a: number }>).detail;
+    placed = true;
+    paint();
+  });
+  pad?.addEventListener('change', () => renderWords());
+
+  document.querySelectorAll<HTMLElement>('[data-seg="pad-theme"], [data-seg="pad-glow"]').forEach(group => {
+    group.querySelectorAll<HTMLButtonElement>('.seg-btn').forEach(b => b.addEventListener('click', () => {
+      group.querySelectorAll('.seg-btn').forEach(o => o.setAttribute('aria-pressed', String(o === b)));
+      const val = b.dataset.val!;
+      if (group.dataset.seg === 'pad-theme') {
+        theme = val as 'light' | 'dark';
+        pad?.setAttribute('theme', theme);
+      } else {
+        pad?.setAttribute('glow', val);
+      }
+      paint();
+    }));
+  });
+
+  paint();
+  renderWords();
+}

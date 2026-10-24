@@ -134,14 +134,29 @@ jobs:
         # `version --snapshot` step already set the snapshot versions in
         # package.json; `publish` just ships those under the `--tag`.
         run: |
+          # pipefail: without it the step takes tee's exit status, so a failed
+          # publish (an expired NPM_TOKEN, a registry error) still showed green.
+          set -o pipefail
           pnpm changeset publish --no-git-tag --tag pr-${{ github.event.pull_request.number }} | tee publish.log
-          VERSION="$(grep -oE 'affect-kit@[^ ]+' publish.log | head -1 | sed 's/affect-kit@//')"
-          if [ -n "$VERSION" ]; then
-            echo "published=true"  >> "$GITHUB_OUTPUT"
-            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          else
-            echo "published=false" >> "$GITHUB_OUTPUT"
-          fi
+
+          # Read the version from package.json, where `version --snapshot` put it.
+          # The log also prints `affect-kit@<version>` in npm's pack summary, which
+          # appears before the upload succeeds, so it can't prove anything shipped.
+          VERSION="$(node -p "require('./packages/affect-kit/package.json').version")"
+
+          # Only report a version the registry can serve. Retry briefly: a fresh
+          # publish can take a few seconds to show up.
+          for attempt in 1 2 3 4 5 6; do
+            if npm view "affect-kit@${VERSION}" version >/dev/null 2>&1; then
+              echo "published=true"   >> "$GITHUB_OUTPUT"
+              echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::affect-kit@${VERSION} is not on the npm registry after publishing. Check NPM_TOKEN."
+          echo "published=false" >> "$GITHUB_OUTPUT"
+          exit 1
 
   # ───────────────────────────────────────────────────────────────────────
   # Post a single PR comment summarising preview artifacts.

@@ -114,7 +114,8 @@ jobs:
         uses: changesets/action@v1
         with:
           publish: pnpm release
-          version: pnpm changeset version
+          # Also rewrites affect-kit's fixtures, which name the release.
+          version: pnpm run version
           commit: 'chore: version packages'
           title: 'chore: version packages'
         env:

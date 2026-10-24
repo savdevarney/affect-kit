@@ -17,6 +17,11 @@ export default defineConfig({
         result:  resolve(__dirname, 'src/result.ts'),
         face:    resolve(__dirname, 'src/face.ts'),
         compare: resolve(__dirname, 'src/compare.ts'),
+        pad:     resolve(__dirname, 'src/pad.ts'),
+        chip:    resolve(__dirname, 'src/chip.ts'),
+        core:    resolve(__dirname, 'src/core.ts'),
+        'apple-health': resolve(__dirname, 'src/apple-health.ts'),
+        text:    resolve(__dirname, 'src/text.ts'),
       },
       formats: ['es'],
     },
@@ -29,6 +34,8 @@ export default defineConfig({
     },
     sourcemap: true,
     target: 'es2022',
+    // Never minify: React Native Reanimated finds the core's per-frame
+    // functions by their 'worklet' directive, which a minifier may strip.
     minify: false,
     emptyOutDir: true,
   },

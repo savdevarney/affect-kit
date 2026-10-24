@@ -23,3 +23,16 @@ export const themeConverter = {
     return value;
   },
 };
+
+/**
+ * `'auto'` resolved to the OS setting now; `'light'` and `'dark'` as given.
+ * Without `matchMedia` (a server, a test), `'auto'` is light.
+ * @internal
+ */
+export function resolveTheme(theme: Theme): 'light' | 'dark' {
+  if (theme === 'dark') return 'dark';
+  if (theme === 'auto' && typeof matchMedia !== 'undefined' && matchMedia('(prefers-color-scheme: dark)').matches) {
+    return 'dark';
+  }
+  return 'light';
+}

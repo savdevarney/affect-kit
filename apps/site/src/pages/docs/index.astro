@@ -1,6 +1,8 @@
 ---
 import Base from '../../layouts/Base.astro';
 import '../../styles/global.css';
+// The demo below runs this exact file, and the page shows it as the code, so the two can't drift.
+import checkinSource from '../../examples/checkin-from-pieces.ts?raw';
 ---
 <Base
   title="Component reference — affect-kit"
@@ -62,7 +64,11 @@ import '../../styles/global.css';
             <li><a href="#rater">rater</a></li>
             <li><a href="#result">result</a></li>
             <li><a href="#face">face</a></li>
+            <li><a href="#pad">pad</a></li>
+            <li><a href="#chip">chip</a></li>
+            <li><a href="#compose">example: your own check-in</a></li>
             <li><a href="#compare">compare</a></li>
+            <li><a href="#core">headless core</a></li>
             <li><a href="#react">React wrapper</a></li>
             <li><a href="#types">TypeScript types</a></li>
           </ol>
@@ -85,9 +91,13 @@ import '../../styles/global.css';
 import 'affect-kit/result';  // registers &lt;affect-kit-result&gt;
 import 'affect-kit/face';    // registers &lt;affect-kit-face&gt;
 import 'affect-kit/compare'; // registers &lt;affect-kit-compare&gt;
+import 'affect-kit/pad';     // registers &lt;affect-kit-pad&gt;
+import 'affect-kit/chip';    // registers &lt;affect-kit-chip&gt;
 
-// Or register all four at once:
+// Or register all six at once:
 import 'affect-kit';</pre>
+        <p>In React Native, on a server or in a web worker, where there's no DOM, import the <a href="#core">headless core</a> from <code>affect-kit/core</code>. It registers nothing:</p>
+        <pre class="docs-code" set:text={`import { createRating, rehydrate, EMOTION_LABELS, type Rating } from 'affect-kit/core';`}></pre>
 
         <h3>TypeScript types</h3>
         <pre class="docs-code" set:text={`import type { Rating, EmotionLabel, EmotionName } from 'affect-kit';
@@ -205,7 +215,7 @@ function App() {
               <tr>
                 <td><code>change</code></td>
                 <td><code>Rating</code></td>
-                <td>On every pointer release from the pad, and on every chip toggle after the first pad placement. Not fired on the initial drag before first release.</td>
+                <td>On every pointer release from the pad, after a half-second pause mid-drag, and on every chip toggle after the first pad placement. Before any chip is picked, <code>labels</code> is empty and <code>composite</code> is <code>null</code>: a valid face-only rating.</td>
               </tr>
               <tr>
                 <td><code>commit</code></td>
@@ -518,9 +528,207 @@ function App() {
 <affect-kit-face style="width:200px;height:200px"></affect-kit-face>`}></pre>
       </section>
 
-      <!-- ── 5: affect-kit-compare ──────────────────────── -->
+      <!-- ── 5: affect-kit-pad ──────────────────────────── -->
+      <section id="pad" class="rp-section">
+        <h2>5. <code>&lt;affect-kit-pad&gt;</code></h2>
+        <p>
+          The rater's face pad on its own: drag anywhere on it to move the face through
+          valence (x) and arousal (y). No chips, no button. Use it when your app builds its
+          own word list or form around the face. Pair it with
+          <a href="#surface-palette"><code>surfacePalette()</code></a> to color the rest of the
+          screen and <a href="#word-order"><code>wordOrder()</code></a> for the word list.
+        </p>
+        <pre class="docs-code" set:text={`<affect-kit-pad theme="dark" glow="neutral"></affect-kit-pad>
+
+<script type="module">
+  import 'affect-kit/pad';
+  import { createRating } from 'affect-kit';
+
+  const pad = document.querySelector('affect-kit-pad');
+  pad.addEventListener('input',  e => paint(e.detail));   // { v, a } while dragging
+  pad.addEventListener('change', e => {                    // { v, a } on release
+    const rating = createRating({ face: e.detail });      // face-only is valid
+  });
+</script>`}></pre>
+
+        <h3>Attributes / props</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Attribute / prop</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>v</code>, <code>a</code></td>
+                <td>number</td>
+                <td><code>0</code></td>
+                <td>Face position ∈ [−1, 1]. Set them to place the face; dragging updates them.</td>
+              </tr>
+              <tr>
+                <td><code>glow</code></td>
+                <td><code>'color' | 'neutral' | 'none'</code></td>
+                <td><code>'color'</code></td>
+                <td>The halo behind the face and the dot under the finger. <code>'color'</code> uses the V/A color; <code>'neutral'</code> uses the ink, so both are white on <code>theme="dark"</code>; <code>'none'</code> drops the halo and keeps an ink dot.</td>
+              </tr>
+              <tr>
+                <td><code>theme</code></td>
+                <td><code>'light' | 'dark' | 'auto'</code></td>
+                <td><code>'light'</code></td>
+                <td><code>'dark'</code> draws the face in white.</td>
+              </tr>
+              <tr>
+                <td><code>animated</code></td>
+                <td>boolean</td>
+                <td><code>true</code></td>
+                <td>Breath + tremor animation. Always respects <code>prefers-reduced-motion: reduce</code>.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Events</h3>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Event</th><th>Detail type</th><th>When it fires</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>input</code></td>
+                <td><code>{"{ v, a }"}</code></td>
+                <td>On every pointer move while dragging, like a range input.</td>
+              </tr>
+              <tr>
+                <td><code>change</code></td>
+                <td><code>{"{ v, a }"}</code></td>
+                <td>On pointer release, and after a half-second pause mid-drag, like the rater.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Methods</h3>
+        <p><code>reset()</code> puts the face back in the center and hides the halo and dot.</p>
+
+        <h3>Size</h3>
+        <p>The pad is square and fills its width. Set the width with CSS: <code>{"affect-kit-pad { width: 240px; }"}</code></p>
+      </section>
+
+      <!-- ── 6: affect-kit-chip ─────────────────────────── -->
+      <section id="chip" class="rp-section">
+        <h2>6. <code>&lt;affect-kit-chip&gt;</code></h2>
+        <p>
+          One emotion word as a pill, with 1–3 concentric rings for intensity. The rater draws its
+          words with it. Use it on its own for a word list or a result screen. It has no color of
+          its own: it starts colorless, and you pass the colors you want.
+        </p>
+        <pre class="docs-code" set:text={`<affect-kit-chip label="grateful" level="2"></affect-kit-chip>
+<affect-kit-chip label="grateful" level="2" readonly></affect-kit-chip>
+
+<script type="module">
+  import 'affect-kit/chip';
+  import { surfacePalette } from 'affect-kit/core';
+
+  chip.colors = surfacePalette(v, a, 'light'); // or neutralPalette() / wordChipColors()
+</script>`}></pre>
+        <div class="docs-table-wrap">
+          <table class="docs-table">
+            <thead>
+              <tr><th>Attribute / prop</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>label</code></td><td>string</td><td><code>''</code></td><td>The word shown.</td></tr>
+              <tr><td><code>level</code></td><td>0 | 1 | 2 | 3</td><td><code>0</code></td><td>0 is unselected. 1–3 fill the chip and add that many rings outside it. Size never changes, so chips don't reflow.</td></tr>
+              <tr><td><code>readonly</code></td><td>boolean</td><td><code>false</code></td><td>A plain label, not a button.</td></tr>
+              <tr><td><code>colors</code> <span class="docs-prop-tag">prop only</span></td><td><code>ChipColors</code></td><td>colorless</td><td>A <code>surfacePalette()</code>, <code>neutralPalette()</code> or <code>wordChipColors()</code> result.</td></tr>
+              <tr><td><code>theme</code></td><td><code>'light' | 'dark' | 'auto'</code></td><td><code>'light'</code></td><td>Picks the colorless default, when <code>colors</code> isn't set.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Clicks bubble from the button, so the host decides what a tap does. Screen readers hear the word and its level: "grateful, clearly" (<code>chipLabel</code>). Set the <code>strings</code> property for other words.</p>
+
+        <h3 id="chip-style">chipStyle() — for native views</h3>
+        <p>
+          <code>chipStyle(level, colors)</code> returns a chip's look as plain data, so an app that
+          can't use a web view for its word list (a tap in a web view drops the native keyboard)
+          can draw the same chip. Sizes are px from a base text size (16 by default; pass the
+          platform's, so its text-size setting scales the chip); borders and rings stay in px. Rings sit outside the chip's box like a CSS box-shadow with spread, so they don't
+          move neighbors; <code>bleed</code> is how much room to leave around the chip.
+        </p>
+        <pre class="docs-code" set:text={`import { chipStyle, surfacePalette } from 'affect-kit/core';
+
+chipStyle(3, surfacePalette(v, a, 'light'), 16);
+// {
+//   level: 3, fontSize: 14.4, fontWeight: 700, paddingX: 18.72, paddingY: 7.92, borderRadius: 999,
+//   background, color,                       // l3 / l3Ink when selected, chipBg / chipInk at rest
+//   border: { width: 2, color },             // the chip's edge: the fill's color when selected, transparent at rest
+//   rings: [                                 // one per level, outward from the chip
+//     { kind: 'gap',  width: 1.25, color },  // gaps show the surface color
+//     { kind: 'ring', width: 1.5,  color },
+//     { kind: 'gap',  width: 1.25, color },
+//     { kind: 'ring', width: 1.25, color },
+//     { kind: 'gap',  width: 1.25, color },
+//     { kind: 'ring', width: 1,    color },
+//   ],
+//   bleed: 7.5,                              // px the rings extend past the chip
+// }`}></pre>
+        <p>
+          For chips with no hue, pass <code>neutralPalette('light' | 'dark')</code>. For the rater's
+          <code>color-mode="words"</code> look, where each word carries its own color, pass
+          <code>wordChipColors(v, a, theme)</code> with the word's V/A from
+          <code>EMOTION_LABELS</code>.
+        </p>
+      </section>
+
+      <!-- ── Example: a check-in built from the pieces ───── -->
+      <section id="compose" class="rp-section">
+        <h2>Example: build your own check-in</h2>
+        <p>
+          <code>&lt;affect-kit-rater&gt;</code> is the whole flow in one element. When your app
+          needs a different screen, such as a native text field, its own word list or its own
+          surface, build it from the pieces instead. This is a reference implementation: the face
+          is <code>&lt;affect-kit-pad&gt;</code>, the words are <code>&lt;affect-kit-chip&gt;</code>,
+          and everything else is the headless core. Drag the face, then tap words.
+        </p>
+        <ul>
+          <li>The list is the whole vocabulary in face order (<code>wordOrder</code>). As in the rater, it re-sorts when the face settles, not while your finger moves.</li>
+          <li>Tap a word up to three times for strength. Five words at most.</li>
+          <li>Light: the whole screen takes the face's color, with text and chips chosen by contrast (<code>surfacePalette</code>). Dark: white face and chips, no color (<code>neutralPalette</code>).</li>
+        </ul>
+
+        <div class="docs-controls">
+          <span class="docs-ctrl">
+            <span class="docs-ctrl-label">theme</span>
+            <span class="docs-seg-group" data-seg="docs-checkin-theme" data-value="light">
+              <button class="docs-seg-btn" type="button" data-val="light" aria-pressed="true">light</button>
+              <button class="docs-seg-btn" type="button" data-val="dark"  aria-pressed="false">dark</button>
+            </span>
+          </span>
+          <button class="docs-seg-btn docs-reset" id="docs-checkin-reset" type="button">reset</button>
+        </div>
+        <div class="docs-demo docs-checkin-demo">
+          <div id="docs-checkin"></div>
+        </div>
+        <p class="docs-demo-hint">What the app receives, the same <code>Rating</code> the rater emits (a face with no words is valid):</p>
+        <pre class="docs-code" id="docs-checkin-rating">Drag the face.</pre>
+
+        <p>
+          In an app with native views, draw everything natively from the
+          <a href="#core">headless core</a>: <code>facePaths(faceParams(v, a))</code> is the face,
+          <a href="#chip-style"><code>chipStyle(level, colors)</code></a> is a chip, and
+          <code>padToFace(x, y)</code> turns a touch into a position. They're pure functions from
+          <code>affect-kit/core</code>, which needs no DOM.
+        </p>
+
+        <details class="docs-source" open>
+          <summary>Source: <code>apps/site/src/examples/checkin-from-pieces.ts</code></summary>
+          <pre class="docs-code" set:text={checkinSource}></pre>
+        </details>
+      </section>
+
+      <!-- ── 6: affect-kit-compare ──────────────────────── -->
       <section id="compare" class="rp-section">
-        <h2>5. <code>&lt;affect-kit-compare&gt;</code></h2>
+        <h2>7. <code>&lt;affect-kit-compare&gt;</code></h2>
         <p>
           A paired side-by-side display for two ratings or two rating arrays. When
           <code>color-mode</code> is on, the card background is a gradient from the
@@ -663,7 +871,7 @@ cmp.afterRating  = averageRatings(lastWeekRatings);`}></pre>
 
       <!-- ── 6: TypeScript types ────────────────────────── -->
       <section id="types" class="rp-section">
-        <h2>6. TypeScript types</h2>
+        <h2>8. TypeScript types</h2>
         <pre class="docs-code" set:text={`import type { Rating, EmotionLabel, EmotionName } from 'affect-kit';
 import { createRating, averageRatings }           from 'affect-kit';`}></pre>
 
@@ -677,8 +885,11 @@ import { createRating, averageRatings }           from 'affect-kit';`}></pre>
   /** Unix timestamp (ms) at commit time. */
   timestamp: number;
 
-  /** Pad position that drives the face glyph and color. The pre-verbal gut gesture. */
-  face: { v: number; a: number };
+  /**
+   * Pad position that drives the face glyph and color. The pre-verbal gut gesture.
+   * null when the person never set it (words only): the centre is never saved as a choice.
+   */
+  face: { v: number; a: number } | null;
 
   /** Selected emotion words; each optionally carries its lexicon VAD coordinates. */
   labels: EmotionLabel[];
@@ -691,8 +902,8 @@ import { createRating, averageRatings }           from 'affect-kit';`}></pre>
   composite: { v: number; a: number; d: number } | null;
 }
 
-// To get a single resolved VAD vector:
-//   rating.composite ?? { v: rating.face.v, a: rating.face.a, d: 0 }`}></pre>
+// One position for a rating: the face when set, otherwise the words' composite.
+//   ratingPosition(rating) // { v, a, source: 'face' | 'words' } | null`}></pre>
 
         <h3>EmotionLabel</h3>
         <pre class="docs-code" set:text={`interface EmotionLabel {
@@ -722,7 +933,8 @@ const { v, a, d } = EMOTION_LABELS['joy'];
         <p>
           Helpers for the DB-persistence flow. <code>stripVad()</code> drops
           the redundant coordinates before insert; <code>rehydrate()</code>
-          fills them back on read.
+          fills them back on read. On a server, import them from
+          <code>affect-kit/core</code>.
         </p>
         <pre class="docs-code" set:text={`import { stripVad, rehydrate } from 'affect-kit';
 
@@ -751,11 +963,177 @@ const r = createRating({
         <pre class="docs-code" set:text={`import { averageRatings } from 'affect-kit';
 
 const avg = averageRatings(sessionRatings); // Rating[] → Rating`}></pre>
+
+        <h3 id="word-order">wordOrder()</h3>
+        <p>The 55 words ordered by distance from a face position, nearest first: the order the rater shows its words in. Ties keep vocabulary order, so every JavaScript engine sorts the same:</p>
+        <pre class="docs-code" set:text={`import { wordOrder } from 'affect-kit/core';
+
+wordOrder(0.8, 0.7).slice(0, 3); // ['surprise', 'amused', 'excited']`}></pre>
+
+        <h3 id="surface-palette">surfacePalette()</h3>
+        <p>
+          The colors a surface takes from a face position: the same math as
+          <code>&lt;affect-kit-rater color-mode="background"&gt;</code>, so a screen your app
+          paints matches the rater. <code>theme</code> is the paper under the color,
+          <code>'light'</code> or <code>'dark'</code>. Every text color is chosen by contrast and
+          meets <code>MIN_TEXT_CONTRAST</code> (4.5:1) against what it sits on.
+          <code>SURFACE_MIX</code> (0.85) is how strongly the color covers the paper.
+        </p>
+        <pre class="docs-code" set:text={`import { surfacePalette } from 'affect-kit/core';
+
+const p = surfacePalette(v, a, 'light');
+// {
+//   surface,  // screen background: the V/A color at SURFACE_MIX over the paper
+//   ink,      // primary text: black or white
+//   inkDim,   // secondary text, still at least 4.5:1
+//   chipBg,   // unselected chip / quiet control fill (translucent)
+//   chipInk,  // text on chipBg
+//   l3,       // selected chip / button fill
+//   l3Ink,    // text on l3
+//   ring,     // outline of a selected chip: l3 pulled toward the dark ink
+//   isLight,  // true when ink is black
+// }`}></pre>
+      </section>
+
+      <!-- ── Headless core ──────────────────────────────── -->
+      <section id="core" class="rp-section">
+        <h2>9. The headless core</h2>
+        <p>
+          <code>affect-kit/core</code> is everything a rater needs to draw and behave like
+          <code>&lt;affect-kit-rater&gt;</code>, as plain data and pure functions: no custom elements,
+          no DOM. Build a native rater in React Native (Skia or react-native-svg) or anything else,
+          and it draws the same face, sorts the same words and paints the same colors as the web
+          components, which are built on the same functions.
+        </p>
+        <ul>
+          <li><strong>Plain data.</strong> Colors are <code>#rrggbb</code> strings, sizes are px, and face geometry is in the face's own 170 × 170 box (<code>FACE_BOX</code>).</li>
+          <li><strong>Resolved themes.</strong> Functions take <code>'light'</code> or <code>'dark'</code>; your renderer reads the OS setting.</li>
+          <li><strong>Worklet-ready.</strong> Everything a frame calls starts with a <code>'worklet'</code> directive, so React Native Reanimated can run it on the UI thread. Elsewhere it's an ordinary string that does nothing.</li>
+        </ul>
+
+        <h3 id="core-face">The face</h3>
+        <p>
+          <code>faceParams(v, a)</code> gives the face's eleven numbers (brows, lids, mouth).
+          <code>facePaths(params)</code> turns them into SVG path data, and
+          <code>faceGeometry(params)</code> into commands a canvas can draw without parsing. To
+          animate, ease the numbers and rebuild the paths each frame; interpolating the path
+          strings would morph differently. Draw the parts in <code>FACE_PARTS</code> order with
+          <code>FACE_STYLE</code> (stroke widths and fills, in face units) in your ink, or
+          <code>faceInk(theme)</code>.
+        </p>
+        <pre class="docs-code" set:text={`import { faceParams, facePaths, FACE_PARTS, FACE_STYLE, faceInk } from 'affect-kit/core';
+
+const paths = facePaths(faceParams(0.6, 0.4));
+for (const part of FACE_PARTS) {
+  const { strokeWidth, fill, lineCap, lineJoin } = FACE_STYLE[part];
+  // draw paths[part] in faceInk('light'), stroked at strokeWidth, filled if fill
+}`}></pre>
+        <p>
+          <strong>Small faces.</strong> <code>faceTier(sizePx)</code> says how much to draw: the
+          whole face from 48 px, no crow's feet from 28 px, no nose either from 20 px, and below
+          that a dot in the face's color (<code>vaColor</code>). Below 48 px,
+          <code>faceStroke(sizePx)</code> scales every stroke together so the thinnest part still
+          drawn renders at 1 px or more. <code>&lt;affect-kit-face&gt;</code> applies both for its
+          own size.
+        </p>
+
+        <h3 id="core-motion">The face in motion</h3>
+        <p>
+          Motion runs by elapsed time, so the face moves the same at 60 and 120 Hz. Each frame,
+          ease the numbers with <code>smoothFaceParams(current, faceParams(v, a), dtMs)</code> and
+          add <code>faceMotion(t, v, a, opts)</code>'s offsets: an idle breath at 12 a minute,
+          tremor that grows with arousal, and a shock that <code>kickShock</code> starts when a
+          high-energy word goes up a level and <code>decayShock</code> fades. Under Reduce Motion
+          the face still eases, faster, and holds still otherwise.
+        </p>
+
+        <h3 id="core-rater">The rater's behavior</h3>
+        <p>
+          <code>raterReducer(state, event)</code> is the whole behavior of
+          <code>&lt;affect-kit-rater&gt;</code>, which runs on it. Your renderer owns the finger
+          and the dwell timer and sends events: <code>move</code> while the finger moves,
+          <code>settle</code> on release or after <code>RATER_TIMING.dwellMs</code> still,
+          <code>tap</code> on a word, <code>adjust</code> from a screen reader, and
+          <code>showWords</code> to go straight to the words. Five words at most, Done waits for one
+          (<code>canFinish</code>), and a face never touched is saved as <code>null</code>, never
+          the centre (<code>raterRating</code>). <code>RATER_TIMING</code> and
+          <code>RATER_LAYOUT</code> hold every transition and proportion, as numbers CSS and
+          Reanimated both take.
+        </p>
+        <pre class="docs-code" set:text={`import { createRater, raterReducer, raterRating, canFinish } from 'affect-kit/core';
+
+let state = createRater();
+state = raterReducer(state, { type: 'move', v: 0.6, a: 0.4 });
+state = raterReducer(state, { type: 'settle' });          // the words re-sort
+state = raterReducer(state, { type: 'tap', name: 'proud' });
+if (canFinish(state)) save(raterRating(state));`}></pre>
+
+        <h3 id="core-pad">The pad</h3>
+        <p>
+          <code>padToFace(x, y)</code> turns a touch (0 to 1 from the pad's top-left) into a face
+          position; <code>faceToPad(v, a)</code> places the dot. <code>vaColor(v, a)</code> is the
+          face's own color, and <code>padColors(v, a, theme, glow)</code> gives the halo behind the
+          face and the dot under the finger.
+        </p>
+
+        <h3 id="core-a11y">Accessibility</h3>
+        <p>
+          Screen readers adjust the face as two values, "How pleasant" and "How energized", nine
+          stops each (<code>FACE_STEPS</code>). <code>nudgeFace(face, axis, ±1)</code> moves one
+          stop, <code>axisValueText(axis, face)</code> is what's spoken, and
+          <code>describeFace(v, a)</code> reads a position: "pleasant, very calm".
+          <code>chipLabel(word, level)</code> reads a chip: "anxious, strongly", and
+          <code>chipA11y</code> adds whether it's chosen, since a chip is a toggle. Every string comes
+          from <code>A11Y_STRINGS_EN</code>; pass your own table for other words or languages.
+        </p>
+
+        <h3 id="apple-health">affect-kit/apple-health</h3>
+        <p>
+          What to write to Apple Health's State of Mind (iOS 18 and later) for a rating, as data:
+          your app calls HealthKit itself. <code>stateOfMind(rating)</code> gives the kind, the
+          face's valence and the labels for the words. A word maps only to Apple's label for
+          the same word, or its plain adjective (anger → angry); it's never forced into a near one,
+          so "serene" is never written as "peaceful".
+        </p>
+        <pre class="docs-code" set:text={`import { stateOfMind } from 'affect-kit/apple-health';
+
+stateOfMind(rating); // { kind: 'momentaryEmotion', valence: 0.4, labels: ['calm'] }`}></pre>
+
+        <h3 id="text">affect-kit/text</h3>
+        <p>
+          Read a note for what it mentions, on the device, and fill the note's screen in place when
+          the person taps Done. Nothing is suggested while they type, and note text never leaves the
+          device. Bring your own classifier (anything with <code>version</code> and
+          <code>classify(text)</code>), or build one from phrase lists with
+          <code>phraseListClassifier</code>. Either way the library's <code>cut</code> decides what
+          shows: per kind at most three, strongest first; none when the cut falls on a tie; nothing
+          for a note under four words; and never a pair the person dismissed twice.
+          <code>heardReducer</code> runs the screen: areas come in kept with ✕; feeling words, when
+          allowed, are offered dashed at the base level; and the crisis check can withdraw
+          everything at once.
+        </p>
+        <pre class="docs-code" set:text={`import { phraseListClassifier, cut, createHeard, heardReducer } from 'affect-kit/text';
+
+const areas = phraseListClassifier({
+  version: 'v1',
+  lists: { sleep: { anchors: ['slept|insomnia', 'nap|naps'], except: ['sleeping on it'] } },
+});
+const result = cut(areas.classify(note), note, { suppressed });
+const screen = heardReducer(createHeard(), { type: 'read', text: note, result, listVersion: areas.version });`}></pre>
+
+        <h3 id="fixtures">affect-kit/fixtures</h3>
+        <p>
+          Golden JSON: what the core gives for known inputs. That covers the face's numbers and paths,
+          word order, colors and description on a 9 × 9 grid, plus every word's chip colors, every
+          chip level and the small-face sizes. Run your renderer against them in CI, so a native
+          rater and the web one fail together if they ever drift.
+        </p>
+        <pre class="docs-code" set:text={`import fixtures from 'affect-kit/fixtures' with { type: 'json' };`}></pre>
       </section>
 
       <!-- ── 7: React wrapper ───────────────────────────────── -->
       <section id="react" class="rp-section">
-        <h2>7. React wrapper</h2>
+        <h2>10. React wrapper</h2>
         <p>
           <code>@affect-kit/react</code> wraps all four components using
           <a href="https://www.npmjs.com/package/@lit/react" target="_blank" rel="noopener"><code>@lit/react</code></a>.
@@ -859,6 +1237,7 @@ const ref = useRef<AffectKitRater>(null);
     import 'affect-kit/compare';
     import { createRating, averageRatings } from 'affect-kit';
     import type { ColorMode } from 'affect-kit';
+    import { mountCheckin } from '../../examples/checkin-from-pieces';
     import type { AffectKitRater }   from 'affect-kit/rater';
     import type { AffectKitResult }  from 'affect-kit/result';
     import type { AffectKitFace }    from 'affect-kit/face';
@@ -894,6 +1273,30 @@ const ref = useRef<AffectKitRater>(null);
     });
     seg('docs-rater-color',          (m) => { if (rater) rater.colorMode = m; });
     toggle('docs-rater-animated',    (v) => { if (rater) rater.animated  = v; });
+
+    // ── Example: a check-in built from the pad, chips and helpers ────
+    const checkinRoot = document.getElementById('docs-checkin');
+    const ratingOut   = document.getElementById('docs-checkin-rating');
+    const checkin = checkinRoot && mountCheckin(checkinRoot, (rating) => {
+      if (ratingOut) ratingOut.textContent = JSON.stringify({
+        face: rating.face && { v: +rating.face.v.toFixed(2), a: +rating.face.a.toFixed(2) },
+        labels: rating.labels.map(({ name, level }) => ({ name, level })),
+        composite: rating.composite && { v: +rating.composite.v.toFixed(2), a: +rating.composite.a.toFixed(2), d: +rating.composite.d.toFixed(2) },
+      }, null, 2);
+    });
+    document.querySelectorAll<HTMLElement>('[data-seg="docs-checkin-theme"] .docs-seg-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        const group = b.parentElement!;
+        group.dataset.value = b.dataset.val ?? 'light';
+        group.querySelectorAll('.docs-seg-btn').forEach(o => o.setAttribute('aria-pressed', String(o === b)));
+        checkin?.setTheme(b.dataset.val === 'dark' ? 'dark' : 'light');
+        document.getElementById('docs-checkin')?.closest<HTMLElement>('.docs-demo')?.classList.toggle('is-dark', b.dataset.val === 'dark');
+      });
+    });
+    document.getElementById('docs-checkin-reset')?.addEventListener('click', () => {
+      checkin?.reset();
+      if (ratingOut) ratingOut.textContent = 'Drag the face.';
+    });
 
     // ── Result pre-seed + controls ────────────────────────────────────
     const seed = createRating({ face: { v: 0.55, a: 0.2 }, labels: [
@@ -960,6 +1363,12 @@ const ref = useRef<AffectKitRater>(null);
     padding: 1.5rem;
     margin: 1.5rem 0 2rem;
   }
+
+  /* The check-in paints its own screen; the demo frame just gets out of its way. */
+  .docs-checkin-demo { padding: 0.75rem; }
+  .docs-checkin-demo.is-dark { background: #1a1a1a; }
+  .docs-reset { border: 1px solid var(--border); border-radius: var(--radius-sm); }
+  .docs-source summary { cursor: pointer; font-size: 0.85rem; margin-top: 1.5rem; }
 
   .docs-demo-hint {
     font-size: 0.75rem;

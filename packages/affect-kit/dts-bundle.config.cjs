@@ -32,5 +32,10 @@ module.exports = {
     entry('result'),
     entry('face'),
     entry('compare'),
+    entry('pad'),
+    entry('chip'),
+    entry('core'),
+    entry('apple-health'),
+    entry('text'),
   ],
 };

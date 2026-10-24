@@ -1,0 +1,80 @@
+name: Canary
+
+# Publishes affect-kit to npm under the `next` dist-tag, never `latest`, as
+# <next release>-next.<N> (for example 0.5.0-next.0). An app can pin one
+# exactly before a real release; a normal install keeps getting `latest`.
+#
+# Canary versions are never unpublished: pr-cleanup.yml only touches
+# 0.0.0-pr-<N>-* snapshots.
+#
+# Runs on a push to a `canary/**` branch, or from the Actions tab.
+
+on:
+  push:
+    branches: ['canary/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write   # npm provenance (publishConfig.provenance)
+
+concurrency:
+  group: canary
+  cancel-in-progress: false   # never cancel a publish mid-flight
+
+jobs:
+  canary:
+    name: npm publish affect-kit under next
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+
+      - run: pnpm install --frozen-lockfile
+
+      # The next release's version from the pending changesets (applied here
+      # only, never committed), plus -next.<N>, one past the last canary of it.
+      - name: Choose the version
+        id: version
+        run: |
+          pnpm changeset version
+          BASE=$(node -p "require('./packages/affect-kit/package.json').version")
+          N=$(npm view affect-kit versions --json 2>/dev/null | node -e '
+            let s = "";
+            process.stdin.on("data", d => (s += d)).on("end", () => {
+              const base = process.argv[1];
+              let versions = [];
+              try { versions = [].concat(JSON.parse(s || "[]")); } catch {}
+              const re = new RegExp("^" + base.replace(/\./g, "\\.") + "-next\\.(\\d+)$");
+              const taken = versions.map(v => re.exec(v)).filter(Boolean).map(m => Number(m[1]));
+              console.log(taken.length ? Math.max(...taken) + 1 : 0);
+            });' "$BASE")
+          VERSION="$BASE-next.$N"
+          (cd packages/affect-kit && npm version "$VERSION" --no-git-tag-version)
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      # The fixtures name the version, so regenerate them before building.
+      - run: pnpm --filter affect-kit fixtures
+      - run: pnpm --filter affect-kit build
+      - run: pnpm --filter affect-kit test
+
+      # pnpm publish rewrites workspace: dependencies; --tag next keeps it off `latest`.
+      - name: Publish under next
+        working-directory: packages/affect-kit
+        run: pnpm publish --tag next --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # npm can report success for a publish that didn't land (an expired token).
+      - name: Check it's on the registry
+        run: |
+          VERSION='${{ steps.version.outputs.version }}'
+          npm view "affect-kit@$VERSION" version
+          echo "Published affect-kit@$VERSION under the next tag: npm install affect-kit@$VERSION" >> "$GITHUB_STEP_SUMMARY"
