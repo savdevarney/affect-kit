@@ -1097,6 +1097,28 @@ if (canFinish(state)) save(raterRating(state));`}></pre>
 
 stateOfMind(rating); // { kind: 'momentaryEmotion', valence: 0.4, labels: ['calm'] }`}></pre>
 
+        <h3 id="text">affect-kit/text</h3>
+        <p>
+          Read a note for what it mentions, on the device, and fill the note's screen in place when
+          the person taps Done. Nothing is suggested while they type, and note text never leaves the
+          device. Bring your own classifier (anything with <code>version</code> and
+          <code>classify(text)</code>), or build one from phrase lists with
+          <code>phraseListClassifier</code>. Either way the library's <code>cut</code> decides what
+          shows: per kind at most three, strongest first; none when the cut falls on a tie; nothing
+          for a note under four words; and never a pair the person dismissed twice.
+          <code>heardReducer</code> runs the screen: areas come in kept with ✕; feeling words, when
+          allowed, are offered dashed at the base level; and the crisis check can withdraw
+          everything at once.
+        </p>
+        <pre class="docs-code" set:text={`import { phraseListClassifier, cut, createHeard, heardReducer } from 'affect-kit/text';
+
+const areas = phraseListClassifier({
+  version: 'v1',
+  lists: { sleep: { anchors: ['slept|insomnia', 'nap|naps'], except: ['sleeping on it'] } },
+});
+const result = cut(areas.classify(note), note, { suppressed });
+const screen = heardReducer(createHeard(), { type: 'read', text: note, result, listVersion: areas.version });`}></pre>
+
         <h3 id="fixtures">affect-kit/fixtures</h3>
         <p>
           Golden JSON: what the core gives for known inputs. That covers the face's numbers and paths,

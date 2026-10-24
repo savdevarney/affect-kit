@@ -62,6 +62,7 @@ The `package.json#exports` field is the resolver-level wall:
   "./chip":    "./dist/chip.js",      // import 'affect-kit/chip'
   "./core":    "./dist/core.js",      // import 'affect-kit/core'          (the headless core: no elements, no DOM)
   "./apple-health": "./dist/apple-health.js", // Apple Health State of Mind, as data
+  "./text":    "./dist/text.js",       // reading a note for what it mentions, on the device
   "./fixtures": "./fixtures/core.json" // golden JSON for parity tests
 }
 ```
@@ -89,6 +90,7 @@ The `package.json#exports` field is the resolver-level wall:
 | `EMOTION_LABELS` | object | V/A/D per vocabulary word, for rehydrating stored ratings |
 | `affect-kit/core` | entry | The headless core: everything above that isn't an element, for React Native, servers and web workers, where Lit's browser build has no `HTMLElement`. Per-frame functions carry a `'worklet'` directive for Reanimated; the build checks they survive (`scripts/check-dist.mjs`) |
 | `affect-kit/apple-health` | entry | `stateOfMind(rating)`: what to write to Apple Health's State of Mind, as data |
+| `affect-kit/text` | entry | Reading a note for what it mentions, on the device: a bring-your-own classifier interface, `phraseListClassifier`, the library's `cut`, `heardReducer` for the note's screen, `literalMatch`, and dismissal and guard counts |
 | `affect-kit/fixtures` | JSON | What the core gives for known inputs, so renderers on other platforms can test against the web's |
 | CSS custom properties  | runtime | `--affect-kit-{ink,paper,rule}`, `--affect-kit-color-{pink,gold,green,blue}`, `--affect-kit-font-size` |
 

@@ -1,6 +1,6 @@
 // Checks the built headless entries, after `vite build`.
 //
-// - No DOM: dist/core.js and dist/apple-health.js must import nothing from Lit
+// - No DOM: dist/core.js, dist/apple-health.js and dist/text.js must import nothing from Lit
 //   and touch no browser global, so React Native, servers and workers can load them.
 // - Worklets: React Native Reanimated runs a function on the UI thread only if
 //   it starts with a 'worklet' directive. The build must keep them (no minifier
@@ -27,7 +27,7 @@ function reachable(file, seen = new Set()) {
 }
 
 const coreFiles = reachable('core.js');
-for (const entry of ['core.js', 'apple-health.js']) {
+for (const entry of ['core.js', 'apple-health.js', 'text.js']) {
   for (const file of reachable(entry)) {
     const code = dist(file);
     if (/from\s+["']lit(\/[^"']*)?["']/.test(code)) fail(`${entry} reaches ${file}, which imports Lit`);
@@ -61,5 +61,5 @@ for (const name of worklets) {
 if (checked === 0) fail("found no worklet functions in the core's build");
 
 if (!process.exitCode) {
-  console.log(`check-dist: core and apple-health reach ${coreFiles.size} files, none with the DOM; ${checked} of ${worklets.size} worklets built, all kept`);
+  console.log(`check-dist: core, apple-health and text reach ${coreFiles.size} files, none with the DOM; ${checked} of ${worklets.size} worklets built, all kept`);
 }

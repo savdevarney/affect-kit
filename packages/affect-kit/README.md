@@ -75,8 +75,9 @@ screen.style.background = p.surface;
 caption.style.color = p.inkDim;
 ```
 
-Two more entries, also without a DOM:
+Three more entries, also without a DOM:
 - **`affect-kit/apple-health`:** `stateOfMind(rating)` is what to write to Apple Health's State of Mind: the kind, the face's valence, and Apple's labels for the words. A word maps only to Apple's label for the same word, never to a near one.
+- **`affect-kit/text`:** read a note for what it mentions, on the device, and fill the note's screen when the person taps Done. Bring your own classifier, or build one from phrase lists with `phraseListClassifier`. Either way `cut` decides what shows (at most three of a kind, none on a tie, nothing under four words, never a pair the person dismissed twice), and `heardReducer` runs the screen. Note text never leaves the device.
 - **`affect-kit/fixtures`:** golden JSON of what the core gives for known inputs. Run a renderer against it in CI, so a native rater and the web one fail together if they drift.
 
 ## How it works

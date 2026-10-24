@@ -48,7 +48,7 @@ describe('affect-kit/core', () => {
     ].sort());
   });
 
-  for (const entry of ['core.ts', 'apple-health.ts']) {
+  for (const entry of ['core.ts', 'apple-health.ts', 'text.ts']) {
     it(`${entry} reaches no Lit and no component, so React Native and servers can import it`, () => {
       const modules = [...reachable(resolve(SRC, entry))];
       const dom = modules.filter(

@@ -36,5 +36,6 @@ module.exports = {
     entry('chip'),
     entry('core'),
     entry('apple-health'),
+    entry('text'),
   ],
 };

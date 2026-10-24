@@ -21,6 +21,7 @@ export default defineConfig({
         chip:    resolve(__dirname, 'src/chip.ts'),
         core:    resolve(__dirname, 'src/core.ts'),
         'apple-health': resolve(__dirname, 'src/apple-health.ts'),
+        text:    resolve(__dirname, 'src/text.ts'),
       },
       formats: ['es'],
     },

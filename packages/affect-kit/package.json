@@ -75,6 +75,11 @@
       "import": "./dist/apple-health.js",
       "default": "./dist/apple-health.js"
     },
+    "./text": {
+      "types": "./dist/text.d.ts",
+      "import": "./dist/text.js",
+      "default": "./dist/text.js"
+    },
     "./fixtures": {
       "default": "./fixtures/core.json"
     },
