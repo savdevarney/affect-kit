@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  createHeard, cut, heardReducer, literalMatch, newDismissals, normalizeNote, phraseListClassifier,
+  createHeard, cut, heardReducer, heardSchedule, literalMatch, dismissalsAtSave, normalizeNote, phraseListClassifier, HEARD_TIMING,
   recordDismissals, suppressedPairs, suggestAgain, tallyCheckin, guardRate, overGuard, guardKey,
   type Candidate, type ClassifierOutput, type HeardState,
 } from '../../src/text';
@@ -168,10 +168,26 @@ describe('heardReducer', () => {
     let s = read(createHeard(), true, feelingResult('tired'));
     s = heardReducer(s, { type: 'keep', kind: 'feeling', name: 'tired' });
     expect(s.found.find(f => f.name === 'tired')!.state).toBe('kept');
-    const before = s;
     s = heardReducer(s, { type: 'remove', kind: 'area', name: 'work' });
     expect(s.found.find(f => f.name === 'work')!.state).toBe('removed');
-    expect(newDismissals(before, s)).toEqual([{ kind: 'area', name: 'work', phrase: 'my boss' }]);
+    expect(dismissalsAtSave(s)).toEqual([{ kind: 'area', name: 'work', phrase: 'my boss' }]);
+  });
+
+  it('takes an area added back by hand after its ✕ as a mistake: no dismissal, no removal, still shown', () => {
+    let s = read(createHeard());
+    s = heardReducer(s, { type: 'remove', kind: 'area', name: 'work' });
+    s = heardReducer(s, { type: 'add', kind: 'area', name: 'work' });
+    expect(s.found.find(f => f.name === 'work')).toMatchObject({ source: 'picker', state: 'kept', foundInNote: { matchedPhrase: 'my boss', listVersion: 't1' } });
+    expect(dismissalsAtSave(s)).toEqual([]);
+    const counts = tallyCheckin({}, 'd', 't1', s, { suppressed: [] });
+    expect(counts[guardKey('d', 't1', 'area', 'work')]).toEqual({ shown: 1, removed: 0, suppressed: 0 });
+  });
+
+  it('lights entries in reading order, 450 ms apart after a 300 ms pause; all at once under Reduce Motion', () => {
+    const s = read(createHeard());
+    expect(heardSchedule(s).map(e => [e.name, e.atMs])).toEqual([['family', 300], ['work', 750], ['sleep', 1200]]);
+    expect(heardSchedule(s, { reducedMotion: true }).every(e => e.atMs === 0)).toBe(true);
+    expect(HEARD_TIMING.chipIn).toEqual({ ms: 320, bezier: [0.16, 1, 0.3, 1] });
   });
 
   it('closing the rater clears un-acted offers (not a dismissal), keeps tapped ones, makes its words solid, and stops new offers', () => {
@@ -180,13 +196,12 @@ describe('heardReducer', () => {
       shown: [...result.shown, ...['tired', 'proud'].map(name => ({ kind: 'feeling' as const, name, score: 1, phrases: [{ phrase: name, spans: [] }] }))],
     });
     s = heardReducer(s, { type: 'keep', kind: 'feeling', name: 'proud' });
-    const before = s;
     s = heardReducer(s, { type: 'raterClosed', rating: createRating({ face: { v: 0.2, a: 0.1 }, labels: [{ name: 'calm', level: 2 }] }) });
     expect(s.found.filter(f => f.kind === 'feeling').map(f => [f.name, f.source, f.state])).toEqual([
       ['calm', 'rater', 'chosen'], ['proud', 'note', 'kept'],
     ]);
     expect(s.offersBeforeRater).toBe(true);
-    expect(newDismissals(before, s)).toEqual([]);
+    expect(dismissalsAtSave(s)).toEqual([]); // cleared offers aren't dismissals
     expect(read(s, true, feelingResult('sad')).found.some(f => f.name === 'sad')).toBe(false);
   });
 

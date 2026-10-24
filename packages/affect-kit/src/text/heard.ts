@@ -4,7 +4,6 @@
 // base level. Nothing is suggested while typing. A native screen and a web one
 // run the same reducer, so they agree.
 
-import { RATER_TIMING } from '../core/rater';
 import type { Rating } from '../core/types';
 import type { CutResult } from './cut';
 import { literalMatch } from './literal';
@@ -17,14 +16,45 @@ import type { Candidate, Found, FoundKind, SuppressedPair } from './types';
  */
 export const HOPELESS_FAMILY: readonly string[] = ['hopeless', 'worthless', 'empty', 'despairing'];
 
-/** Timing for the screen filling in. */
+const EASE = [0.25, 0.1, 0.25, 1] as const;
+
+/**
+ * The heard moment, when the screen fills in after Done: the quote settles,
+ * then each phrase the note was read for lights in reading order and its chip
+ * rises in. With at most three areas and one offer it stays under two seconds.
+ */
 export const HEARD_TIMING = {
-  /** Results are on screen within this long after Done; slower, and the quote shows first while the chips rise in. No spinner. */
+  /** Results are ready within this long after Done. Slower, and the quote shows first while the chips arrive. No spinner. */
   budgetMs: 300,
-  /** The chips rising in, as the rater's words appear. */
-  chipsIn: RATER_TIMING.reveal,
-  chipsFade: RATER_TIMING.revealFade,
+  /** After the quote settles, before the first phrase lights. */
+  delayMs: 300,
+  /** Between one phrase and the next, in reading order. */
+  staggerMs: 450,
+  /** A chip rising in: up `chipRise` px with an opacity fade, no blur. */
+  chipIn: { ms: 320, bezier: [0.16, 1, 0.3, 1] },
+  chipRise: 8,
+  /** A phrase's highlight fading. */
+  highlightFade: { ms: 500, bezier: EASE },
+  /** With Reduce Motion: everything at once, a 200 ms opacity fade. */
+  reduced: { fade: { ms: 200, bezier: EASE } },
 } as const;
+
+/**
+ * When each entry from the note lights, in ms after the quote settles: in
+ * reading order (where the note first says it), `HEARD_TIMING.staggerMs`
+ * apart. Under Reduce Motion, all at 0.
+ */
+export function heardSchedule(state: HeardState, opts: { reducedMotion?: boolean } = {}): Array<{ kind: FoundKind; name: string; atMs: number }> {
+  const shown = state.found
+    .filter(f => f.source === 'note' && (f.state === 'kept' || f.state === 'offered'))
+    .map((f, i) => ({ f, i, at: f.spans[0]?.start ?? Number.MAX_SAFE_INTEGER }))
+    .sort((x, y) => x.at - y.at || x.i - y.i);
+  return shown.map(({ f }, n) => ({
+    kind: f.kind,
+    name: f.name,
+    atMs: opts.reducedMotion ? 0 : HEARD_TIMING.delayMs + n * HEARD_TIMING.staggerMs,
+  }));
+}
 
 export interface HeardConfig {
   /**
@@ -54,9 +84,9 @@ export type HeardEvent =
   | { type: 'reread'; text: string; result: CutResult; listVersion: string; config?: HeardConfig }
   /** A tap on an offered feeling: it's kept. */
   | { type: 'keep'; kind: FoundKind; name: string }
-  /** ✕ on an area, or "Not now" on an offer. A note entry stays as removed, which counts as a dismissal. */
+  /** ✕ on an area, or "Not now" on an offer. A note entry stays as removed: a dismissal when the check-in is saved (`dismissalsAtSave`). */
   | { type: 'remove'; kind: FoundKind; name: string }
-  /** Added by hand, from the full list or "add a word". */
+  /** Added by hand, from the full list or "add a word". Adding back an area taken off undoes that ✕: it isn't a dismissal or a removal. */
   | { type: 'add'; kind: FoundKind; name: string; level?: 1 | 2 | 3 }
   /** The rater sheet closed with words. */
   | { type: 'raterClosed'; rating: Rating }
@@ -181,6 +211,7 @@ export function heardReducer(state: HeardState, event: HeardEvent): HeardState {
     }
 
     case 'add': {
+      const before = state.found.find(f => same(f, event.kind, event.name) && f.source === 'note' && f.state === 'removed');
       const others = state.found.filter(f => !(same(f, event.kind, event.name) && f.source !== 'rater'));
       if (others.some(f => same(f, event.kind, event.name))) return state; // already chosen in the rater
       const entry: Found = {
@@ -192,6 +223,9 @@ export function heardReducer(state: HeardState, event: HeardEvent): HeardState {
         spans: event.kind === 'feeling' ? literalMatch(event.name, state.text) : [],
         matchedPhrase: null,
         listVersion: null,
+        ...(before?.matchedPhrase != null && before.listVersion != null
+          ? { foundInNote: { matchedPhrase: before.matchedPhrase, listVersion: before.listVersion } }
+          : {}),
       };
       return { ...state, found: [...others, entry] };
     }
@@ -219,12 +253,13 @@ export function heardReducer(state: HeardState, event: HeardEvent): HeardState {
 }
 
 /**
- * The dismissals in a step: note entries that went to removed. Pass them to
- * `recordDismissals`. Offers cleared when the rater closed aren't dismissals.
+ * The dismissals to record when the check-in is saved: note entries the person
+ * took off and left off. Pass them to `recordDismissals`. An offer cleared when
+ * the rater closed isn't one, and neither is an area added back by hand.
+ * Nothing counts if the check-in isn't saved.
  */
-export function newDismissals(prev: HeardState, next: HeardState): SuppressedPair[] {
-  return next.found
+export function dismissalsAtSave(state: HeardState): SuppressedPair[] {
+  return state.found
     .filter(f => f.source === 'note' && f.state === 'removed')
-    .filter(f => !prev.found.some(p => same(p, f.kind, f.name) && p.state === 'removed'))
     .map(f => ({ kind: f.kind, name: f.name, phrase: f.matchedPhrase ?? '' }));
 }

@@ -21,7 +21,7 @@ export {
 export { cut, CUT_RULES, type CutOptions, type CutResult } from './text/cut';
 export { literalMatch } from './text/literal';
 export {
-  createHeard, heardReducer, newDismissals, HOPELESS_FAMILY, HEARD_TIMING,
+  createHeard, heardReducer, heardSchedule, dismissalsAtSave, HOPELESS_FAMILY, HEARD_TIMING,
   type HeardState, type HeardEvent, type HeardConfig,
 } from './text/heard';
 export {

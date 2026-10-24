@@ -14,7 +14,7 @@ export type DismissalLog = Readonly<Record<string, number>>;
 
 const key = (p: SuppressedPair) => JSON.stringify([p.kind, p.name, p.phrase]);
 
-/** The log with these dismissals added (from `newDismissals`). */
+/** The log with these dismissals added (from `dismissalsAtSave`). */
 export function recordDismissals(log: DismissalLog, pairs: readonly SuppressedPair[]): DismissalLog {
   const next: Record<string, number> = { ...log };
   for (const p of pairs) next[key(p)] = (next[key(p)] ?? 0) + 1;
@@ -73,9 +73,12 @@ export function tallyCheckin(
     next[k] = { ...c, [field]: c[field] + 1 };
   };
   for (const f of state.found) {
-    if (f.source !== 'note' || f.listVersion !== listVersion) continue;
-    bump(f.kind, f.name, 'shown');
-    if (f.state === 'removed') bump(f.kind, f.name, 'removed');
+    if (f.source === 'note' && f.listVersion === listVersion) {
+      bump(f.kind, f.name, 'shown');
+      if (f.state === 'removed') bump(f.kind, f.name, 'removed');
+    } else if (f.foundInNote?.listVersion === listVersion) {
+      bump(f.kind, f.name, 'shown'); // added back by hand after ✕: shown, and not a removal
+    }
   }
   for (const c of cutResult.suppressed) bump(c.kind, c.name, 'suppressed');
   return next;

@@ -43,6 +43,12 @@ export interface Found {
   matchedPhrase: string | null;
   /** The classifier's version that found it (`'note'` entries), so counts and evals keep versions apart. */
   listVersion: string | null;
+  /**
+   * An area added back by hand after its ✕: the note found it, so it still
+   * counts as shown, and the ✕ was a mistake, so it doesn't count as a removal
+   * or a dismissal.
+   */
+  foundInNote?: { matchedPhrase: string; listVersion: string };
 }
 
 /** Why a phrase that looked like a mention wasn't one. */

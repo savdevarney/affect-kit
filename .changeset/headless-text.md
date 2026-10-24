@@ -22,6 +22,10 @@ New `affect-kit/text` entry: read a note for what it mentions, on the device, an
   - **Editing the note** keeps removed areas removed unless new words mention them, keeps hand-added ones, and leaves chosen words alone.
   - **Closing the rater** clears un-acted offers and stops new ones.
 - **`literalMatch(word, note)`:** where a chosen word, or a form of it, appears in the note. Never a word that only means something like it.
-- **`recordDismissals`, `suppressedPairs` and `suggestAgain`:** the person's dismissals, as pairs only.
+- **`dismissalsAtSave`, `recordDismissals`, `suppressedPairs` and `suggestAgain`:** the person's dismissals, as pairs only, counted when the check-in is saved. An area added back by hand after its ✕ is neither a dismissal nor a removal.
 - **`tallyCheckin`, `guardRate` and `overGuard`:** shown, removed and suppressed counts per day, list version and name, against a 1-in-20 guard. No person and no note text.
-- **`HEARD_TIMING`:** results within 300 ms of Done, the quote first, then the chips rise in.
+- **`HEARD_TIMING` and `heardSchedule`:** the moment the screen fills in.
+  - Results arrive within 300 ms of Done.
+  - The quote settles, then each phrase lights in reading order, 450 ms apart after a 300 ms pause.
+  - Chips rise 8 px over 320 ms with no blur, and highlights fade over 500 ms.
+  - Under Reduce Motion everything appears at once, with a 200 ms fade.
