@@ -364,6 +364,18 @@ export class AffectKitRater extends LitElement {
   submitLabel = 'Done';
 
   /**
+   * Hide the submit button, for an app whose own screen has the button that
+   * moves on (Next, Save). `change` still fires on every edit; an app can
+   * enable its button when `rating.labels.length > 0`, as `canFinish` does.
+   */
+  @property({ type: Boolean, attribute: 'hide-submit' })
+  hideSubmit = false;
+
+  /** The line above the chips until a word is chosen. An empty string hides it, for an app that writes its own. */
+  @property({ attribute: 'chips-hint' })
+  chipsHint = 'name what you feel';
+
+  /**
    * Surface theme. See {@link Theme}.
    * - `'light'` (default) — dark ink on white paper.
    * - `'dark'` — white ink on dark paper. Chip backgrounds invert.
@@ -679,13 +691,17 @@ export class AffectKitRater extends LitElement {
         `}
 
         <div class="chips-zone${s.revealed ? '' : ' empty'}">
-          <div class="chip-header${s.dragging ? ' dragging' : ''}">
-            <p class="chips-hint${hasWords ? ' gone' : ''}">name what you feel</p>
-            <button
-              class="submit-btn${hasWords ? ' visible' : ''}"
-              @click=${this._onSubmit}
-            >${this.submitLabel}</button>
-          </div>
+          ${this.hideSubmit && !this.chipsHint ? nothing : html`
+            <div class="chip-header${s.dragging ? ' dragging' : ''}">
+              ${this.chipsHint ? html`<p class="chips-hint${hasWords ? ' gone' : ''}">${this.chipsHint}</p>` : nothing}
+              ${this.hideSubmit ? nothing : html`
+                <button
+                  class="submit-btn${hasWords ? ' visible' : ''}"
+                  @click=${this._onSubmit}
+                >${this.submitLabel}</button>
+              `}
+            </div>
+          `}
           <div class="chip-list">
             ${EMOTIONS.map(emotion => html`
               <affect-kit-chip
