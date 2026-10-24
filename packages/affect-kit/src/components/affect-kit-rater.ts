@@ -374,7 +374,10 @@ export class AffectKitRater extends LitElement {
   @property({ type: Boolean, attribute: 'hide-submit' })
   hideSubmit = false;
 
-  /** The line above the chips until a word is chosen. An empty string hides it, for an app that writes its own. */
+  /**
+   * The line above the chips until a word is chosen. An empty string hides it, for an app that
+   * writes its own. Style it from outside with `affect-kit-rater::part(hint)`.
+   */
   @property({ attribute: 'chips-hint' })
   chipsHint = 'name what you feel';
 
@@ -698,7 +701,7 @@ export class AffectKitRater extends LitElement {
         <div class="chips-zone${s.revealed ? '' : ' empty'}">
           ${this.hideSubmit && !this.chipsHint ? nothing : html`
             <div class="chip-header${s.dragging ? ' dragging' : ''}">
-              ${this.chipsHint ? html`<p class="chips-hint${hasWords ? ' gone' : ''}">${this.chipsHint}</p>` : nothing}
+              ${this.chipsHint ? html`<p class="chips-hint${hasWords ? ' gone' : ''}" part="hint">${this.chipsHint}</p>` : nothing}
               ${this.hideSubmit ? nothing : html`
                 <button
                   class="submit-btn${hasWords ? ' visible' : ''}"
