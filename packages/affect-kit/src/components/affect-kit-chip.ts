@@ -99,7 +99,10 @@ export class AffectKitChip extends LitElement {
     // Cumulative spread: each stroke sits outside the last. First-listed shadow is on top,
     // so the nearest stroke comes first.
     let spread = 0;
-    const rings = s.rings.map(r => `0 0 0 ${(spread += r.width)}px ${r.color}`).join(', ');
+    // A gap is the surface behind the chip: the page's paper when the app sets --affect-kit-paper.
+    const rings = s.rings
+      .map(r => `0 0 0 ${(spread += r.width)}px ${r.kind === 'gap' ? `var(--affect-kit-paper, ${r.color})` : r.color}`)
+      .join(', ');
     // chipStyle gives px at the base size; here they become em, so the chip
     // follows the page's text size. Padding is em of the chip's own text.
     const em = (n: number) => Number(n.toFixed(4));
