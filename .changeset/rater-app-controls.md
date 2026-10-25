@@ -11,3 +11,5 @@ A chip's ring gaps take `--affect-kit-paper` too, so the rings sit on the page.
 The chips hint is `::part(hint)`, so an app can set its case, size and color.
 
 With `hide-submit`, the hint's row folds away once a word is chosen, so the words sit up under the face.
+
+`--affect-kit-face-shadow` sets the shadow under the rater's face; `none` leaves the bare glyph.

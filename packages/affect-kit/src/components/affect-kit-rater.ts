@@ -123,7 +123,8 @@ export class AffectKitRater extends LitElement {
       width: ${unsafeCSS(RATER_LAYOUT.faceInset * 100)}%;
       height: ${unsafeCSS(RATER_LAYOUT.faceInset * 100)}%;
       pointer-events: none;
-      filter: drop-shadow(0 ${unsafeCSS(RATER_LAYOUT.faceShadow.y)}px ${unsafeCSS(RATER_LAYOUT.faceShadow.blur)}px rgba(0,0,0,${unsafeCSS(RATER_LAYOUT.faceShadow.opacity)}));
+      /* An app that wants the bare glyph sets --affect-kit-face-shadow: none. */
+      filter: var(--affect-kit-face-shadow, drop-shadow(0 ${unsafeCSS(RATER_LAYOUT.faceShadow.y)}px ${unsafeCSS(RATER_LAYOUT.faceShadow.blur)}px rgba(0,0,0,${unsafeCSS(RATER_LAYOUT.faceShadow.opacity)})));
       transition: opacity ${curve(T.inkIn)};
     }
     /* Before the first touch: the face at the centre in faded ink, with no
