@@ -183,7 +183,10 @@ export class AffectKitRater extends LitElement {
       padding: 0;
       border: 0;
     }
-    .ghost-dot.visible { opacity: 1; }
+    /* Where the face sits on the pad: shown while dragging or with keyboard focus,
+       never at rest, where it read as a stray mark beside the face. */
+    .ghost-dot.visible,
+    .face-zone:not(.unset):has(.adjust:focus-visible) .ghost-dot { opacity: 1; }
 
     /* ── Chips ────────────────────────────────────────────── */
     .chips-zone {
@@ -681,7 +684,7 @@ export class AffectKitRater extends LitElement {
             .motionScale=${s.dragging ? FACE_MOTION.dragScale : 1}
           ></affect-kit-face>
           <div
-            class="ghost-dot${unset ? '' : ' visible'}"
+            class="ghost-dot${!unset && s.dragging ? ' visible' : ''}"
             style="left:${(pad.x * 100).toFixed(2)}%;top:${(pad.y * 100).toFixed(2)}%;background:${dot}"
           ></div>
           <input
