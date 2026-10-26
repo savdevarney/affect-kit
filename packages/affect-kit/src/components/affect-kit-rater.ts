@@ -152,9 +152,11 @@ export class AffectKitRater extends LitElement {
       opacity: 0;
       pointer-events: none;
     }
+    /* Inside the pad, so the card's clipping never cuts it: the pad sits 4px from
+       the card's top, and a ring outside it lost its top edge. */
     .face-zone:has(.adjust:focus-visible) {
       outline: 2px solid var(--_ink);
-      outline-offset: 4px;
+      outline-offset: -2px;
       border-radius: 50%;
     }
 
