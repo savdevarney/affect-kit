@@ -1,7 +1,7 @@
 {
   "name": "affect-kit",
   "version": "0.4.1",
-  "description": "Web components for dimensional emotion rating — built with Lit, grounded in affective science.",
+  "description": "Web components for dimensional emotion rating \u2014 built with Lit, grounded in affective science.",
   "license": "MIT",
   "author": "Savannah DeVarney <savannah.devarney@gmail.com>",
   "homepage": "https://affectkit.com",
@@ -32,7 +32,9 @@
     "./dist/rater.js",
     "./dist/result.js",
     "./dist/face.js",
-    "./dist/compare.js"
+    "./dist/compare.js",
+    "./dist/pad.js",
+    "./dist/chip.js"
   ],
   "exports": {
     ".": {
@@ -55,24 +57,52 @@
       "types": "./dist/compare.d.ts",
       "import": "./dist/compare.js"
     },
+    "./pad": {
+      "types": "./dist/pad.d.ts",
+      "import": "./dist/pad.js"
+    },
+    "./chip": {
+      "types": "./dist/chip.d.ts",
+      "import": "./dist/chip.js"
+    },
+    "./core": {
+      "types": "./dist/core.d.ts",
+      "import": "./dist/core.js",
+      "default": "./dist/core.js"
+    },
+    "./apple-health": {
+      "types": "./dist/apple-health.d.ts",
+      "import": "./dist/apple-health.js",
+      "default": "./dist/apple-health.js"
+    },
+    "./text": {
+      "types": "./dist/text.d.ts",
+      "import": "./dist/text.js",
+      "default": "./dist/text.js"
+    },
+    "./fixtures": {
+      "default": "./fixtures/core.json"
+    },
     "./package.json": "./package.json"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "fixtures",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
-    "build": "vite build && pnpm build:types",
+    "build": "vite build && pnpm build:types && node scripts/check-dist.mjs",
     "build:types": "dts-bundle-generator --config dts-bundle.config.cjs",
     "dev": "vite",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:visual": "playwright test",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "clean": "rm -rf dist .turbo coverage test-results playwright-report"
+    "clean": "rm -rf dist .turbo coverage test-results playwright-report",
+    "fixtures": "UPDATE_FIXTURES=1 vitest run test/unit/fixtures.test.ts"
   },
   "peerDependencies": {
     "lit": "^3.2.0"

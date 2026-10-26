@@ -6,6 +6,7 @@ import { themeConverter } from '../core/theme';
 import { layoutConverter } from '../core/layout';
 import type { ColorMode, Layout, Rating, Theme } from '../core/types';
 import { EMOTIONS_BY_NAME } from '../vocabulary/en';
+import { A11Y_STRINGS_EN, type A11yStrings } from '../core/a11y';
 
 const animateConverter = {
   fromAttribute: (value: string | null): boolean => value !== 'false',
@@ -279,6 +280,14 @@ export class AffectKitResult extends LitElement {
       }
       :host([layout="row"]) .content.has-face .words { flex: 1 1 auto; min-width: 0; }
     }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
   `;
 
   /** The captured rating to display. Required for any visible content. */
@@ -351,6 +360,9 @@ export class AffectKitResult extends LitElement {
   @property({ converter: layoutConverter, reflect: true })
   layout: Layout = 'auto';
 
+  /** What a screen reader hears, such as "Face, not set" for a rating with no face. English by default. */
+  @property({ attribute: false }) strings: A11yStrings = A11Y_STRINGS_EN;
+
   override render() {
     const r = this.rating;
     if (!r) return nothing;
@@ -358,34 +370,37 @@ export class AffectKitResult extends LitElement {
     // Face shape and color always follow the pre-verbal pad gesture, not the
     // label composite — the visual represents WHERE the user placed their
     // feeling, not what words they chose afterward.
-    const padV = r.face.v;
-    const padA = r.face.a;
-    const [cr, cg, cb] = colorForVA(padV, padA);
-    const glowOn = this.colorMode === 'background';
+    // A rating whose face was never set draws no face and no mark of one, and
+    // takes no color from it: just its words.
+    const face = r.face;
+    const showFace = this.showFace && face !== null;
+    const [cr, cg, cb] = face ? colorForVA(face.v, face.a) : [0, 0, 0];
+    const glowOn = this.colorMode === 'background' && face !== null;
     const glowStyle = glowOn
       ? `background: rgb(${cr},${cg},${cb})`
       : '';
 
     const wordsVisible = this.showLabels && r.labels.length > 0;
-    const faceOnly = this.showFace && !wordsVisible;
+    const faceOnly = showFace && !wordsVisible;
 
     return html`
-      <div class="panel${this.variant === 'compact' ? ' compact' : ''}${this.showFace ? ' with-face' : ''}">
+      <div class="panel${this.variant === 'compact' ? ' compact' : ''}${showFace ? ' with-face' : ''}">
         <div
           class="glow${glowOn ? ' on' : ''}"
           style="${glowStyle}"
         ></div>
-        <div class="content align-${this.align}${this.showFace ? ' has-face' : ''}${faceOnly ? ' face-only' : ''}">
+        <div class="content align-${this.align}${showFace ? ' has-face' : ''}${faceOnly ? ' face-only' : ''}">
 
-          ${this.showFace ? html`
+          ${showFace ? html`
             <div class="face-zone">
               <affect-kit-face
-                .v=${padV}
-                .a=${padA}
+                .v=${face!.v}
+                .a=${face!.a}
                 .animated=${this.animated}
               ></affect-kit-face>
             </div>
           ` : nothing}
+          ${this.showFace && face === null ? html`<span class="sr-only">${this.strings.faceNotSet}</span>` : nothing}
 
           ${this.showLabels && r.labels.length > 0 ? (() => {
             // Bump font-size when few labels are present so a sparse rating
@@ -438,8 +453,8 @@ export class AffectKitResult extends LitElement {
 
           ${this.showVad ? (() => {
             // Resolved VAD: composite (when labels selected) ?? face fallback with d=0.
-            const v = r.composite?.v ?? r.face.v;
-            const a = r.composite?.a ?? r.face.a;
+            const v = r.composite?.v ?? r.face?.v ?? 0;
+            const a = r.composite?.a ?? r.face?.a ?? 0;
             const d = r.composite?.d ?? 0;
             return html`
               <div class="vad">

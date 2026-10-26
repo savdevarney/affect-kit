@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="-85 -85 170 170">
   <!-- joy face: v=0.8, a=0.8 — raised brows, wide eyes, big smile -->
 
-  <!-- brows: raised outer corners for joy -->
+  <!-- brows: a gentle lift, inner ends a touch higher (no V: that reads as anger) -->
   <path stroke="#1a1a1a" stroke-width="4.5" stroke-linecap="round" fill="none"
-    d="M -42 -39 Q -27 -36 -12 -35"/>
+    d="M -42 -34.48 Q -27 -36.8 -12 -35.12"/>
   <path stroke="#1a1a1a" stroke-width="4.5" stroke-linecap="round" fill="none"
-    d="M 12 -35 Q 27 -36 42 -39"/>
+    d="M 12 -35.12 Q 27 -36.8 42 -34.48"/>
 
   <!-- eyes: wide open with Duchenne arch (joy) -->
   <path stroke="#1a1a1a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"

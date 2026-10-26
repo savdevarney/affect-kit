@@ -1,16 +1,25 @@
-import { LitElement, html, css, nothing, type PropertyValues } from 'lit';
+import { LitElement, html, css, nothing, unsafeCSS, type PropertyValues } from 'lit';
 import { property, state, query } from 'lit/decorators.js';
-import { colorForVA, darkerForChips, lighterForChips, surfaceIsLight, type Rgb } from '../core/color';
+import { colorForVA, surfaceIsLight, SURFACE_MIX, type Rgb } from '../core/color';
+import { surfacePaletteRgb, surfacePalette, neutralPalette, wordChipColors } from '../core/palette';
+import { WORD_LIST_GAP, type ChipColors } from '../core/chip';
 import { colorModeConverter } from '../core/color-mode';
-import { themeConverter } from '../core/theme';
-import { buildRating } from '../core/vad';
+import { resolveTheme, themeConverter } from '../core/theme';
 import { EMOTIONS } from '../vocabulary/en';
+import { FACE_MOTION } from '../core/motion';
+import { faceToPad, padColors, padToFace, vaColor } from '../core/pad';
+import { A11Y_STRINGS_EN, FACE_STEPS, axisValueText, type A11yStrings, type FaceAxis } from '../core/a11y';
+import {
+  canFinish, createRater, raterRating, raterReducer, tapShocks,
+  RATER_LAYOUT, RATER_TIMING, UNSET_FACE,
+  type Curve, type RaterEvent, type RaterState,
+} from '../core/rater';
 import type { ColorMode, Rating, EmotionName, Theme } from '../core/types';
 import type { AffectKitFace } from './affect-kit-face';
 
-const DWELL_MS = 500;
-const HIGH_AROUSAL_THRESH = 0.3;
-const MAX_LABELS = 5;
+// A transition from RATER_TIMING, as CSS.
+const curve = (c: Curve) => unsafeCSS(`${c.ms}ms cubic-bezier(${c.bezier.join(', ')})`);
+const T = RATER_TIMING;
 
 const animateConverter = {
   fromAttribute: (value: string | null): boolean => value !== 'false',
@@ -41,23 +50,25 @@ export class AffectKitRater extends LitElement {
 
       /* Theme: --_ink and --_paper are the polarity of the surface. Default
          light; flipped by [theme="dark"] below. Everything else in this
-         stylesheet derives text/bg from these via color-mix. */
-      --_ink:   #1a1a1a;
-      --_paper: white;
+         stylesheet derives text/bg from these via color-mix.
+         An app sets --affect-kit-paper and --affect-kit-ink to put the rater
+         on its own page; they win in both themes, so give them the page's
+         light and dark values (light-dark() does both in one). */
+      --_ink:   var(--affect-kit-ink, #1a1a1a);
+      --_paper: var(--affect-kit-paper, white);
 
       /* V/A-driven (set by _updateColorVars at runtime; defaults are neutral). */
-      --_r: 128; --_g: 128; --_b: 128;
       --_l3-r: 80; --_l3-g: 80; --_l3-b: 80;
       --_surface-is-light: 0;
     }
     :host([theme="dark"]) {
-      --_ink:   white;
-      --_paper: #1a1a1a;
+      --_ink:   var(--affect-kit-ink, white);
+      --_paper: var(--affect-kit-paper, #1a1a1a);
     }
     @media (prefers-color-scheme: dark) {
       :host([theme="auto"]) {
-        --_ink:   white;
-        --_paper: #1a1a1a;
+        --_ink:   var(--affect-kit-ink, white);
+        --_paper: var(--affect-kit-paper, #1a1a1a);
       }
     }
 
@@ -85,16 +96,17 @@ export class AffectKitRater extends LitElement {
       pointer-events: none;
       opacity: 0;
       z-index: 0;
-      transition: opacity 0.5s ease, background 50ms linear;
+      transition: opacity ${curve(T.halo)}, background 50ms linear;
     }
-    .glow.on { opacity: 0.85; }
+    /* Same ratio surfacePalette() blends at, so apps can match this surface. */
+    .glow.on { opacity: ${unsafeCSS(SURFACE_MIX)}; }
 
     /* ── Face pad ─────────────────────────────────────────── */
     .face-zone {
       position: relative;
       flex: 0 0 auto;
       width: 100%;
-      max-width: 200px;
+      max-width: ${unsafeCSS(RATER_LAYOUT.faceMax)}px;
       aspect-ratio: 1;
       margin: 4px auto 0;
       cursor: grab;
@@ -108,24 +120,73 @@ export class AffectKitRater extends LitElement {
       position: absolute;
       inset: 0;
       margin: auto;
-      width: 94%;
-      height: 94%;
+      width: ${unsafeCSS(RATER_LAYOUT.faceInset * 100)}%;
+      height: ${unsafeCSS(RATER_LAYOUT.faceInset * 100)}%;
       pointer-events: none;
-      filter: drop-shadow(0 10px 28px rgba(0,0,0,0.14));
+      /* An app that wants the bare glyph sets --affect-kit-face-shadow: none. */
+      filter: var(--affect-kit-face-shadow, drop-shadow(0 ${unsafeCSS(RATER_LAYOUT.faceShadow.y)}px ${unsafeCSS(RATER_LAYOUT.faceShadow.blur)}px rgba(0,0,0,${unsafeCSS(RATER_LAYOUT.faceShadow.opacity)})));
+      transition: opacity ${curve(T.inkIn)};
     }
+    /* Before the first touch: the face at the centre in faded ink, with no
+       breath, glow or color. The first move inks it in. */
+    .face-zone.unset affect-kit-face { opacity: ${unsafeCSS(UNSET_FACE.inkOpacity)}; }
 
     .ghost-dot {
       position: absolute;
-      width: 9px;
-      height: 9px;
-      background: color-mix(in srgb, var(--_ink) 28%, transparent);
+      width: ${unsafeCSS(RATER_LAYOUT.dotSize)}px;
+      height: ${unsafeCSS(RATER_LAYOUT.dotSize)}px;
       border-radius: 50%;
       transform: translate(-50%, -50%);
       pointer-events: none;
       opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: opacity ${curve(T.dot)};
     }
-    .ghost-dot.visible { opacity: 1; }
+
+    /* The face as two adjustable values, for screen readers and the keyboard
+       (affect-kit/core's FACE_STEPS). Hidden, but focus shows on the pad. */
+    .adjust {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    /* Inside the pad, so the card's clipping never cuts it: the pad sits 4px from
+       the card's top, and a ring outside it lost its top edge. */
+    .face-zone:has(.adjust:focus-visible) {
+      outline: 2px solid var(--_ink);
+      outline-offset: -2px;
+      border-radius: 50%;
+    }
+
+    /* Straight to the words, leaving the face unset: hidden until focused. */
+    .to-words {
+      align-self: center;
+      margin: 6px auto 0;
+      font: inherit;
+      font-size: 0.75em;
+      color: var(--_ink);
+      background: var(--_paper);
+      border: 1.5px solid var(--_ink);
+      border-radius: 0.88em;
+      padding: 0.4em 0.9em;
+      z-index: 1;
+    }
+    .to-words:not(:focus-visible) {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+      padding: 0;
+      border: 0;
+    }
+    /* Where the face sits on the pad: shown while dragging or with keyboard focus,
+       never at rest, where it read as a stray mark beside the face. */
+    .ghost-dot.visible,
+    .face-zone:not(.unset):has(.adjust:focus-visible) .ghost-dot { opacity: 1; }
 
     /* ── Chips ────────────────────────────────────────────── */
     .chips-zone {
@@ -135,18 +196,18 @@ export class AffectKitRater extends LitElement {
       min-height: 380px;
       overflow: hidden;
       transition:
-        opacity 0.65s ease,
-        filter  0.65s ease,
-        transform 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+        opacity ${curve(T.revealFade)},
+        filter  ${curve(T.revealFade)},
+        transform ${curve(T.reveal)},
         max-height 0.7s cubic-bezier(0.4, 0, 0.2, 1),
         min-height 0.7s cubic-bezier(0.4, 0, 0.2, 1),
         padding   0.6s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .chips-zone.empty {
       opacity: 0;
-      filter: blur(4px);
+      filter: blur(${unsafeCSS(RATER_LAYOUT.revealBlur)}px);
       pointer-events: none;
-      transform: translateY(8px);
+      transform: translateY(${unsafeCSS(RATER_LAYOUT.revealRise)}px);
       max-height: 0;
       min-height: 0;
       padding-top: 0;
@@ -156,229 +217,11 @@ export class AffectKitRater extends LitElement {
     .chip-list {
       display: flex;
       flex-wrap: wrap;
-      /* Tightened so unselected chips sit close together; level-3
-         outward rings (5.7px each side, so 11.4px ring-to-ring) come
-         within ~0.5px of touching when adjacent — by design, conveys
-         density without overlap. */
-      gap: 14px 12px;
+      /* WORD_LIST_GAP clears two level-3 chips side by side: their
+         outward rings reach 7.5px each, 15px together. */
+      gap: ${unsafeCSS(WORD_LIST_GAP.row)}px ${unsafeCSS(WORD_LIST_GAP.column)}px;
       align-items: center;
       justify-content: center;
-    }
-
-    /*
-     * Chip: pill button. Color is BINARY — muted at rest, full
-     * saturation when selected (any level). Intensity (1/2/3) is
-     * carried by chip SIZE growth (font-size + padding). Sizes grow
-     * modestly per level to minimize reflow; what reflow remains is
-     * smoothed by a 0.35s ease-in-out transition with a small delay
-     * so neighbours settle gracefully rather than jumping.
-     */
-    /*
-     * Chip: pill button. Uniform size across ALL states (selected or
-     * not, any level) — selection is signaled by COLOR (binary
-     * unmuted → saturated) and LEVEL is signaled by RING COUNT (1, 2,
-     * or 3 concentric inset rings).
-     *
-     * Shadows compose via two CSS vars:
-     *  --_chip-rings: the inset ring stack (set by .level-N rules)
-     *  --_chip-lift:  the hover lift (set by :hover rules)
-     * They merge into one box-shadow on the base .chip rule.
-     */
-    .chip {
-      box-sizing: border-box;
-      padding: 0.55em 1.30em;
-      background: color-mix(in srgb, var(--_ink) 5%, transparent);
-      color:      color-mix(in srgb, var(--_ink) 55%, transparent);
-      /* Transparent border on every chip — sizes are stable across
-         selection. When selected the border-color flips to the ring
-         color, becoming the outermost ring. Borders render with the
-         same anti-aliasing as the bg at rounded corners (unlike inset
-         box-shadows, which leave a thin halo where chip-fill bleeds
-         through the AA pixels at the pill edge). */
-      border: 2px solid transparent;
-      border-radius: 999px;
-      font-family: inherit;
-      font-size: 0.90em;
-      font-weight: 500;
-      --_chip-rings: 0 0 transparent;
-      --_chip-lift:  0 0 transparent;
-      /* Now that rings extend OUTWARD into the surrounding surface,
-         flip the mix: ring color leans toward --_ink (same polarity
-         as the chip fill, opposite of the surface) so rings have
-         strong contrast against the surrounding paper:
-           light theme: ~75% dark + 25% white = dark rings on white
-           dark theme:  ~75% white + 25% dark = light rings on dark */
-      --_ring-color: color-mix(in srgb, var(--_ink) 75%, var(--_paper));
-      --_chip-fill:  var(--_ink);
-      /* --_surface is the color BEHIND the chip — used as 'gap mask'
-         in the outward ring stack so each ring reads as a distinct
-         stroke against the surrounding surface. Defaults to --_paper
-         (mono + words modes both sit on a paper-colored surface);
-         color-mode=background overrides to the V/A pad color. */
-      --_surface: var(--_paper);
-      box-shadow: var(--_chip-rings), var(--_chip-lift);
-      cursor: pointer;
-      transition:
-        background 0.22s ease,
-        color      0.22s ease,
-        box-shadow 0.18s ease;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .chip:hover {
-      --_chip-lift: 0 4px 12px rgba(0,0,0,0.16), 0 2px 4px rgba(0,0,0,0.10);
-    }
-
-    /* Binary color flip: selected chips (any level) take the full
-       ink fill in mono mode. Weight bumps for emphasis. Border-color
-       flips to the ring color — this is now the outermost ring. */
-    .chip:is(.level-1, .level-2, .level-3) {
-      background: var(--_ink);
-      color: var(--_paper);
-      font-weight: 700;
-      border-color: var(--_ring-color);
-    }
-
-    /*
-     * Level signal: 1 / 2 / 3 concentric inset rings inside the chip's
-     * pill edge, separated by gaps that are the chip's own bg color
-     * (so the rings read as distinct strokes against the fill).
-     *
-     * Stack order: first-listed shadow is drawn ON TOP. Each ring is a
-     * solid inset shadow with a spread; the "gap" shadow at a larger
-     * spread uses --_chip-fill to mask the ring behind it.
-     */
-    /*
-     * Ring stack geometry: rings now extend OUTWARD from the chip
-     * into the margin (rather than inset). The chip's interior size
-     * never changes — higher levels just radiate more rings into the
-     * surrounding space, like ripples of intensity.
-     *
-     * The innermost ring is the chip's 2px border. Outward rings
-     * use stacked box-shadows masked by --_surface so each ring
-     * reads as a discrete stroke separated by the surface color.
-     *
-     *   border (chip edge): 2px ring color
-     *   gap 1:              1.5px surface mask — 0 0 0 1.5px
-     *   middle:             1.5px ring         — 0 0 0 3px
-     *   gap 2:              1.5px surface mask — 0 0 0 4.5px
-     *   outer:              1.2px ring         — 0 0 0 5.7px
-     *
-     * Box-shadow stack order: first-listed shadow is on top. The
-     * smaller-spread shadow masks the larger one inside it, so
-     * outward rings appear as nested concentric strokes.
-     */
-    .chip.level-1 {
-      --_chip-rings: 0 0 transparent;
-    }
-    .chip.level-2 {
-      --_chip-rings:
-        0 0 0 1.5px var(--_surface),
-        0 0 0 3px   var(--_ring-color);
-    }
-    .chip.level-3 {
-      --_chip-rings:
-        0 0 0 1.5px var(--_surface),
-        0 0 0 3px   var(--_ring-color),
-        0 0 0 4.5px var(--_surface),
-        0 0 0 5.7px var(--_ring-color);
-    }
-
-    /* Color mode: unselected chips adapt to surface lightness */
-    :host([color-mode]) .chip {
-      background: var(--_chip-bg, color-mix(in srgb, var(--_ink) 5%, transparent));
-      color: var(--_chip-ink, color-mix(in srgb, var(--_ink) 55%, transparent));
-    }
-    /* Background mode: the rater pad is washed in the current V/A
-       color, so the outward ring 'gap' shadows need to match that
-       color (not --_paper) to blend invisibly with the surrounding. */
-    :host([color-mode="background"]) .chip {
-      --_surface: rgb(var(--_r), var(--_g), var(--_b));
-    }
-    /* Color mode: selected chips absorb the V/A color. Ring + fill
-       vars retarget to the V/A palette so the inset rings appear in
-       the chip's own hue family (darkened) against its V/A fill.
-       In light theme --_ink is the dark color → rings darken nicely.
-       In dark theme --_ink is white → rings would LIGHTEN (no contrast),
-       so the dark-theme overrides below remix toward --_paper which
-       is the dark color in dark theme. */
-    :host([color-mode]) .chip:is(.level-1, .level-2, .level-3) {
-      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
-      color: var(--_text-l3, rgba(0,0,0,0.95));
-      --_chip-fill: rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b));
-      --_ring-color: color-mix(
-        in srgb,
-        rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b)) 50%,
-        var(--_ink)
-      );
-    }
-    /* Dark theme: rings need to go DARKER than the (already lifted)
-       V/A chip fill. --_paper in dark mode = #1a1a1a, so mixing toward
-       it darkens the V/A color and gives the rings strong contrast. */
-    :host([color-mode][theme="dark"]) .chip:is(.level-1, .level-2, .level-3) {
-      --_ring-color: color-mix(
-        in srgb,
-        rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b)) 45%,
-        var(--_paper)
-      );
-    }
-    @media (prefers-color-scheme: dark) {
-      :host([color-mode][theme="auto"]) .chip:is(.level-1, .level-2, .level-3) {
-        --_ring-color: color-mix(
-          in srgb,
-          rgb(var(--_l3-r), var(--_l3-g), var(--_l3-b)) 45%,
-          var(--_paper)
-        );
-      }
-    }
-
-    /*
-     * 'words' mode: unselected chips get a faint tint of their OWN
-     * emotion color (the per-chip --_l3-{r,g,b} are set inline in render).
-     * Selected chips already absorb the color via the level rules above.
-     */
-    :host([color-mode="words"]) .chip {
-      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.14);
-      color: color-mix(in srgb, var(--_ink) 68%, transparent);
-    }
-    /* Dark theme: the whole alpha ramp is rebuilt so V/A colors don't
-       mix into muddy hues against the dark surface.
-
-       Light theme: 14% tint reads as a clear pastel on white because
-       alpha blending toward white preserves saturation perception.
-       Dark theme: 14-28% tint blends toward #1a1a1a, killing saturation
-       and pulling distinct hues toward similar olive/gray. So the dark
-       ramp is bumped:
-
-         unselected: 0.14 → 0.36 (colors actually look like colors)
-         level 1:    0.30 → 0.55 (visibly distinct from unselected step)
-         level 2:    0.65 → 0.78 (stronger step toward level 3)
-         level 3:    1.00     (unchanged — full V/A color)
-
-       Text color is also re-set per level: level 1 keeps light text
-       (chip bg is still mostly dark); level 2/3 use dark text (chip
-       bg is bright enough). The pad-derived --_text-l3 is overridden
-       because in words mode each chip has its own V/A color, not the
-       pad's. */
-    :host([color-mode="words"][theme="dark"]) .chip {
-      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.36);
-      color: color-mix(in srgb, var(--_ink) 85%, transparent);
-    }
-    /* Selected (any level): full V/A color on dark — single binary
-       saturation flip. Intensity comes from .chip-text transform scale. */
-    :host([color-mode="words"][theme="dark"]) .chip:is(.level-1, .level-2, .level-3) {
-      background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
-      color: rgba(0,0,0,0.95);
-    }
-    @media (prefers-color-scheme: dark) {
-      :host([color-mode="words"][theme="auto"]) .chip {
-        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.36);
-        color: color-mix(in srgb, var(--_ink) 85%, transparent);
-      }
-      :host([color-mode="words"][theme="auto"]) .chip:is(.level-1, .level-2, .level-3) {
-        background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 1);
-        color: rgba(0,0,0,0.95);
-      }
     }
 
     .vad-readout {
@@ -398,8 +241,15 @@ export class AffectKitRater extends LitElement {
       grid-template-areas: "stack";
       min-height: 2.6em;
       margin-bottom: 0.75em;
-      transition: opacity 0.25s ease;
+      transition: opacity ${curve(T.header)}, min-height ${curve(T.header)}, margin ${curve(T.header)};
     }
+    /* With the app's own button (hide-submit), nothing is left in the row once the hint fades, so the
+       row folds away and the words sit up under the face. */
+    .chip-header.folded {
+      min-height: 0;
+      margin-bottom: 0;
+    }
+    .chip-header.folded .chips-hint { display: none; }
     .chip-header > * { grid-area: stack; }
     .chip-header.dragging {
       opacity: 0;
@@ -471,8 +321,14 @@ export class AffectKitRater extends LitElement {
       background: rgba(var(--_l3-r), var(--_l3-g), var(--_l3-b), 0.82);
     }
 
+    /* Reduce Motion: fades stay; travel and blur go. */
+    @media (prefers-reduced-motion: reduce) {
+      .chips-zone { transition: opacity ${curve(T.reduced.reveal)}; }
+      .chips-zone.empty { filter: none; transform: none; }
+    }
+
     /* Wide layout: face left, chips right */
-    @container (min-width: 860px) {
+    @container (min-width: ${unsafeCSS(RATER_LAYOUT.wideAt)}px) {
       .surface {
         flex-direction: row;
         align-items: stretch;
@@ -481,8 +337,8 @@ export class AffectKitRater extends LitElement {
       .surface:has(.chips-zone.empty) { min-height: 0; }
       .face-zone {
         flex: 0 0 auto;
-        width: 280px;
-        max-width: 280px;
+        width: ${unsafeCSS(RATER_LAYOUT.faceMaxWide)}px;
+        max-width: ${unsafeCSS(RATER_LAYOUT.faceMaxWide)}px;
         margin: 10px 0 10px 24px;
         align-self: center;
       }
@@ -524,6 +380,21 @@ export class AffectKitRater extends LitElement {
   submitLabel = 'Done';
 
   /**
+   * Hide the submit button, for an app whose own screen has the button that
+   * moves on (Next, Save). `change` still fires on every edit; an app can
+   * enable its button when `rating.labels.length > 0`, as `canFinish` does.
+   */
+  @property({ type: Boolean, attribute: 'hide-submit' })
+  hideSubmit = false;
+
+  /**
+   * The line above the chips until a word is chosen. An empty string hides it, for an app that
+   * writes its own. Style it from outside with `affect-kit-rater::part(hint)`.
+   */
+  @property({ attribute: 'chips-hint' })
+  chipsHint = 'name what you feel';
+
+  /**
    * Surface theme. See {@link Theme}.
    * - `'light'` (default) — dark ink on white paper.
    * - `'dark'` — white ink on dark paper. Chip backgrounds invert.
@@ -534,238 +405,197 @@ export class AffectKitRater extends LitElement {
   @property({ converter: themeConverter, reflect: true })
   theme: Theme = 'light';
 
-  @state() private _padV = 0;
-  @state() private _padA = 0;
-  @state() private _levels = new Map<string, 0 | 1 | 2 | 3>();
-  @state() private _revealed = false;
-  @state() private _sortOrder: string[] = EMOTIONS.map(e => e.name);
-  @state() private _dragging = false;
+  /** What a screen reader hears. English by default; pass your own words. */
+  @property({ attribute: false }) strings: A11yStrings = A11Y_STRINGS_EN;
+
+  /** The rater's state. affect-kit/core's raterReducer runs it, as it would a native rater. */
+  @state() private _state: RaterState = createRater();
 
   @query('#face-el') private _faceEl?: AffectKitFace;
+  @query('.chip-list') private _chipList?: HTMLElement;
 
   private _dwellTimer: ReturnType<typeof setTimeout> | null = null;
-  private _hasFlippedOnce = false;
-  private _ghostX = 0.5;
-  private _ghostY = 0.5;
+  private _motionQuery?: MediaQueryList;
 
-  /**
-   * Programmatic prefill — rare, but useful for editing a captured rating.
-   * Reveals chips immediately and sets the pad + label state from the rating.
-   */
+  /** Open a saved rating to change it: the face where it was, its words chosen. */
   setRating(rating: Rating): void {
-    this._padV = rating.face.v;
-    this._padA = rating.face.a;
-    const levels = new Map<string, 0 | 1 | 2 | 3>();
-    // Rating.level is `number` to support averaged longitudinal data, but the
-    // rater itself only renders integer chip levels — round and clamp on prefill.
-    for (const l of rating.labels) {
-      const lv = Math.round(l.level);
-      const chipLv = (lv < 1 ? 1 : lv > 3 ? 3 : lv) as 1 | 2 | 3;
-      levels.set(l.name, chipLv);
-    }
-    this._levels = levels;
-    this._revealed = true;
-    this._ghostX = (rating.face.v + 1) / 2;
-    this._ghostY = (1 - rating.face.a) / 2;
-    this._sortOrder = this._computeSortOrder();
-    this._hasFlippedOnce = true;
-    this._updateColorVars();
+    this._dispatch({ type: 'load', rating });
   }
 
-  /**
-   * Clear all state back to the initial empty position.
-   */
+  /** Back to the start: no face, no words. */
   reset(): void {
-    this._padV = 0;
-    this._padA = 0;
-    this._levels = new Map();
-    this._revealed = false;
-    this._hasFlippedOnce = false;
-    this._ghostX = 0.5;
-    this._ghostY = 0.5;
-    this._sortOrder = EMOTIONS.map(e => e.name);
-    this._updateColorVars();
+    this._clearDwell();
+    this._dispatch({ type: 'reset' });
   }
 
-  // ── Pointer handling ──────────────────────────────────────────────────────
+  private get _reducedMotion(): boolean {
+    return this._motionQuery?.matches ?? false;
+  }
+
+  // ── Every change goes through the reducer ────────────────────────────────
+
+  private _dispatch(event: RaterEvent): RaterState {
+    const prev = this._state;
+    const next = raterReducer(prev, event);
+    if (next === prev) return prev;
+    if (tapShocks(prev, next)) this._faceEl?.triggerShock();
+    // The words show for the first time: by the face settling, or "Choose words without the face".
+    if (!prev.revealed && next.revealed) this.dispatchEvent(new CustomEvent('reveal', { bubbles: true, composed: true }));
+    // The first sort is silent: the words are still fading in.
+    if (prev.revealed && next.order !== prev.order) void this._reorder(next);
+    else this._state = next;
+    this._updateColorVars();
+    return next;
+  }
+
+  // ── Pointer: the renderer owns the finger and the dwell timer ────────────
 
   private _onPointerDown(e: PointerEvent) {
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-    this._dragging = true;
-    this._updatePad(e);
+    this._moveTo(e);
   }
 
   private _onPointerMove(e: PointerEvent) {
-    if (!this._dragging) return;
-    this._updatePad(e);
-    // Reset dwell timer: settle fires if user pauses for DWELL_MS
-    if (this._dwellTimer != null) clearTimeout(this._dwellTimer);
-    this._dwellTimer = setTimeout(() => this._settle(), DWELL_MS);
+    if (!this._state.dragging) return;
+    this._moveTo(e);
+    // A pause mid-drag counts as a choice.
+    this._clearDwell();
+    this._dwellTimer = setTimeout(() => this._settle(), RATER_TIMING.dwellMs);
   }
 
   private _onPointerUp() {
-    if (!this._dragging) return;
-    this._dragging = false;
-    if (this._dwellTimer != null) { clearTimeout(this._dwellTimer); this._dwellTimer = null; }
+    if (!this._state.dragging) return;
+    this._clearDwell();
     this._settle();
   }
 
+  // A cancelled drag (the browser took the gesture) leaves the face where it was.
   private _onPointerCancel() {
-    this._dragging = false;
+    this._clearDwell();
+    if (this._state.dragging) this._settle();
+  }
+
+  private _clearDwell() {
     if (this._dwellTimer != null) { clearTimeout(this._dwellTimer); this._dwellTimer = null; }
   }
 
-  private _updatePad(e: PointerEvent) {
+  private _moveTo(e: PointerEvent) {
     const zone = this.shadowRoot!.querySelector<HTMLElement>('.face-zone')!;
     const rect = zone.getBoundingClientRect();
-    this._ghostX = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-    this._ghostY = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
-    this._padV = this._ghostX * 2 - 1;
-    this._padA = 1 - this._ghostY * 2;
-    this._updateColorVars();
+    const { v, a } = padToFace((e.clientX - rect.left) / rect.width, (e.clientY - rect.top) / rect.height);
+    this._dispatch({ type: 'move', v, a });
   }
-
-  // ── Settle: reveal + sort + emit ─────────────────────────────────────────
 
   private _settle() {
-    if (!this._revealed) this._revealed = true;
-    this._sortWithFlip().catch(() => {/* ignore async errors */});
+    this._dispatch({ type: 'settle' });
     this._emitChange();
   }
 
-  // ── Chip interaction ──────────────────────────────────────────────────────
+  // ── Screen readers and the keyboard ──────────────────────────────────────
 
-  private _cycleChip(name: string) {
-    const cur = this._levels.get(name) ?? 0;
-    // Cap total selected labels at MAX_LABELS — only block adding a new one.
-    if (cur === 0) {
-      const active = [...this._levels.values()].filter(l => l > 0).length;
-      if (active >= MAX_LABELS) return;
+  // The adjustable value moved to a stop: step the face there, one stop at a time.
+  private _adjustTo(axis: FaceAxis, target: number) {
+    for (let i = 0; i < FACE_STEPS.length; i++) {
+      const face = this._state.face;
+      const current = face ? (axis === 'pleasant' ? face.v : face.a) : null;
+      if (current !== null && Math.abs(current - target) < 1e-6) break;
+      const up = current === null ? target >= 0 : target > current;
+      this._dispatch({ type: 'adjust', axis, direction: up ? 1 : -1 });
     }
-    const next = ((cur + 1) % 4) as 0 | 1 | 2 | 3;
-    const levels = new Map(this._levels);
-    levels.set(name, next);
-    this._levels = levels;
-
-    // Shock face on high-arousal chip toggle up
-    if (next > cur && next > 0) {
-      const emotion = EMOTIONS.find(e => e.name === name);
-      if (emotion && emotion.a > HIGH_AROUSAL_THRESH) {
-        this._faceEl?.triggerShock();
-      }
-    }
-
     this._emitChange();
   }
 
-  // ── Sort + FLIP ───────────────────────────────────────────────────────────
-
-  private _computeSortOrder(): string[] {
-    return [...EMOTIONS]
-      .map(e => ({
-        name: e.name,
-        dist: Math.hypot(e.v - this._padV, e.a - this._padA),
-      }))
-      .sort((a, b) => a.dist - b.dist)
-      .map(e => e.name);
+  private _onAdjust(axis: FaceAxis, e: Event) {
+    const step = FACE_STEPS[Number((e.currentTarget as HTMLInputElement).value)];
+    if (step !== undefined) this._adjustTo(axis, step);
   }
 
-  private async _sortWithFlip() {
-    const newOrder = this._computeSortOrder();
+  private _showWords() {
+    this._dispatch({ type: 'showWords' });
+  }
 
-    if (!this._hasFlippedOnce) {
-      this._hasFlippedOnce = true;
-      this._sortOrder = newOrder;
-      return; // silent first sort — chips are still fading in
-    }
+  // ── Words ────────────────────────────────────────────────────────────────
 
-    // FIRST: capture positions before order change
-    const chips = this.shadowRoot!.querySelectorAll<HTMLElement>('.chip');
-    const first = new Map<string, DOMRect>();
-    chips.forEach(el => first.set(el.dataset.name!, el.getBoundingClientRect()));
+  private _tap(name: EmotionName) {
+    const prev = this._state;
+    if (this._dispatch({ type: 'tap', name }) !== prev) this._emitChange();
+  }
 
-    // Apply new order (triggers Lit re-render)
-    this._sortOrder = newOrder;
-    await this.updateComplete;
-
-    // LAST + INVERT: read new positions, apply inverse transforms
-    this.shadowRoot!.querySelectorAll<HTMLElement>('.chip').forEach(el => {
-      const name = el.dataset.name!;
-      const oldRect = first.get(name);
-      if (!oldRect) return;
-      const newRect = el.getBoundingClientRect();
-      const dx = oldRect.left - newRect.left;
-      const dy = oldRect.top  - newRect.top;
-      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) return;
-      el.style.transition = 'none';
-      el.style.transform = `translate(${dx}px,${dy}px)`;
-    });
-
-    // PLAY: next frame — restore transitions, clear transforms
-    requestAnimationFrame(() => {
-      this.shadowRoot?.querySelectorAll<HTMLElement>('.chip').forEach(el => {
-        el.style.transition = '';
-        el.style.transform = '';
+  // The words slide to their new order together (RATER_TIMING.reorder). Under
+  // Reduce Motion the list crossfades instead, with no travel.
+  private async _reorder(next: RaterState) {
+    const chips = [...(this.shadowRoot?.querySelectorAll<HTMLElement>('affect-kit-chip') ?? [])];
+    if (this._reducedMotion) {
+      const list = this._chipList;
+      if (list) { list.style.transition = 'none'; list.style.opacity = '0'; }
+      this._state = next;
+      await this.updateComplete;
+      if (!list) return;
+      requestAnimationFrame(() => {
+        list.style.transition = `opacity ${curve(RATER_TIMING.reduced.reorder)}`;
+        list.style.opacity = '';
       });
+      return;
+    }
+    const before = new Map(chips.map(el => [el.dataset['name']!, el.getBoundingClientRect()]));
+    this._state = next;
+    await this.updateComplete;
+    for (const el of chips) {
+      const from = before.get(el.dataset['name']!);
+      if (!from) continue;
+      const to = el.getBoundingClientRect();
+      const dx = from.left - to.left;
+      const dy = from.top - to.top;
+      if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue;
+      el.style.transition = 'none';
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+    }
+    requestAnimationFrame(() => {
+      for (const el of chips) {
+        if (!el.style.transform) continue;
+        el.style.transition = `transform ${curve(RATER_TIMING.reorder)}`;
+        el.style.transform = '';
+      }
     });
   }
 
-  // ── Color vars ────────────────────────────────────────────────────────────
+  // ── Color vars ───────────────────────────────────────────────────────────
 
   private _updateColorVars() {
-    const rgb = colorForVA(this._padV, this._padA);
-    const darker = darkerForChips(rgb);
-    const isLight = surfaceIsLight(rgb);
-    const darkerLum =
-      0.2126 * (darker[0] / 255) + 0.7152 * (darker[1] / 255) + 0.0722 * (darker[2] / 255);
-    this.style.setProperty('--_r',   String(rgb[0]));
-    this.style.setProperty('--_g',   String(rgb[1]));
-    this.style.setProperty('--_b',   String(rgb[2]));
-    this.style.setProperty('--_l3-r', String(darker[0]));
-    this.style.setProperty('--_l3-g', String(darker[1]));
-    this.style.setProperty('--_l3-b', String(darker[2]));
-    this.style.setProperty('--_surface-is-light', isLight.toFixed(4));
-    this.style.setProperty('--_text-l3',
-      darkerLum > 0.45 ? 'rgba(0,0,0,0.95)' : 'rgba(255,255,255,0.96)');
-    this.style.setProperty('--_chip-ink',
-      isLight ? 'rgba(0,0,0,0.60)' : 'rgba(255,255,255,0.82)');
-    this.style.setProperty('--_chip-bg',
-      isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.16)');
-    this.style.setProperty('--_chip-hover-bg',
-      isLight ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.26)');
+    // surfacePalette's math, so an app painting a screen with surfacePalette()
+    // gets the same surface, chips and text as this rater.
+    const face = this._state.face ?? UNSET_FACE;
+    const p = surfacePaletteRgb(face.v, face.a, resolveTheme(this.theme));
+    const css = (c: Rgb) => `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+    this.style.setProperty('--_l3-r', String(p.l3[0]));
+    this.style.setProperty('--_l3-g', String(p.l3[1]));
+    this.style.setProperty('--_l3-b', String(p.l3[2]));
+    this.style.setProperty('--_surface-is-light', surfaceIsLight(colorForVA(face.v, face.a)).toFixed(4));
+    this.style.setProperty('--_text-l3', css(p.l3Ink));
   }
 
-  // ── Change event ─────────────────────────────────────────────────────────
+  // ── Events ───────────────────────────────────────────────────────────────
 
   private _emitChange() {
-    const labels: Array<{ name: EmotionName; level: number }> = [];
-    for (const [name, level] of this._levels) {
-      if (level > 0) labels.push({ name: name as EmotionName, level: level as 1 | 2 | 3 });
-    }
-    const rating = buildRating({ face: { v: this._padV, a: this._padA }, labels });
+    const s = this._state;
+    if (!s.face && s.chosen.length === 0) return; // nothing to report yet
     this.dispatchEvent(new CustomEvent<Rating>('change', {
-      detail: rating,
+      detail: raterRating(s),
       bubbles: true,
       composed: true,
     }));
   }
-
-  // ── Commit (explicit submit) ──────────────────────────────────────────────
 
   private _onSubmit() {
-    const labels: Array<{ name: EmotionName; level: number }> = [];
-    for (const [name, level] of this._levels) {
-      if (level > 0) labels.push({ name: name as EmotionName, level: level as 1 | 2 | 3 });
-    }
-    const rating = buildRating({ face: { v: this._padV, a: this._padA }, labels });
+    if (!canFinish(this._state)) return; // Done waits for a word
     this.dispatchEvent(new CustomEvent<Rating>('commit', {
-      detail: rating,
+      detail: raterRating(this._state),
       bubbles: true,
       composed: true,
     }));
   }
 
-  // ── Lifecycle ─────────────────────────────────────────────────────────────
+  // ── Lifecycle ────────────────────────────────────────────────────────────
 
   protected override updated(changed: PropertyValues) {
     // Color vars feed both modes:
@@ -773,39 +603,74 @@ export class AffectKitRater extends LitElement {
     //  - 'words' uses them for the submit button (the only thing that still
     //    pulls a host-level color in that mode); each chip overrides via
     //    inline `--_l3-{r,g,b}` from its own emotion's V/A.
-    if (changed.has('colorMode') && this.colorMode) {
+    if ((changed.has('colorMode') || changed.has('theme')) && this.colorMode) {
       this._updateColorVars();
     }
   }
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  // theme="auto" follows the OS setting, which can change while mounted.
+  private _schemeQuery?: MediaQueryList;
+  private _onSchemeChange = () => {
+    if (this.theme !== 'auto') return;
+    if (this.colorMode) this._updateColorVars();
+    this.requestUpdate(); // chips are drawn from JS colors, not CSS, so they need a re-render
+  };
+
+  override connectedCallback() {
+    super.connectedCallback();
+    if (typeof matchMedia === 'undefined') return;
+    this._schemeQuery = matchMedia('(prefers-color-scheme: dark)');
+    this._schemeQuery.addEventListener('change', this._onSchemeChange);
+    this._motionQuery = matchMedia('(prefers-reduced-motion: reduce)');
+  }
+
+  override disconnectedCallback() {
+    super.disconnectedCallback();
+    this._schemeQuery?.removeEventListener('change', this._onSchemeChange);
+    this._clearDwell();
+  }
+
+  // ── Render ───────────────────────────────────────────────────────────────
 
   override render() {
-    const [r, g, b] = colorForVA(this._padV, this._padA) as Rgb;
-    const glowBg = `rgb(${r},${g},${b})`;
-    // Surface glow only paints in 'background' mode. In 'words' mode the
-    // color story lives on the chips, so the surface stays neutral.
-    const glowOn = this.colorMode === 'background';
+    const s = this._state;
+    const unset = s.face === null;
+    const face = s.face ?? UNSET_FACE;
+    const theme = resolveTheme(this.theme);
+    const strings = this.strings;
+    // Surface glow only paints in 'background' mode, and only once the face
+    // is set. In 'words' mode the color story lives on the chips.
+    const glowOn = this.colorMode === 'background' && !unset;
     const wordsMode = this.colorMode === 'words';
+    const hasWords = canFinish(s);
+    const pad = faceToPad(face.v, face.a);
+    // The dot under the finger: the chosen-word color on a face-colored
+    // surface, the ink at 35% otherwise (padColors).
+    const dot = padColors(face.v, face.a, theme, glowOn ? 'color' : 'neutral').dot;
 
-    const activeLabels: Array<{ name: EmotionName; level: number }> = [];
-    for (const [name, level] of this._levels) {
-      if (level > 0) activeLabels.push({ name: name as EmotionName, level: level as 1 | 2 | 3 });
-    }
-    const hasLabels = activeLabels.length > 0;
-    const vad = hasLabels
-      ? this._computeDisplayVAD(activeLabels)
-      : { v: this._padV, a: this._padA, d: 0 };
+    // One palette per mode, drawn by the same chipStyle an app can call. Words
+    // mode gives each chip its own color; the others share one.
+    const shared: ChipColors = glowOn ? surfacePalette(face.v, face.a, theme) : neutralPalette(theme);
+    const chipColors = (emotion: { name: string; v: number; a: number }): ChipColors =>
+      wordsMode ? this._wordColors(emotion, theme) : shared;
+    const levelOf = (name: EmotionName) => s.chosen.find(c => c.name === name)?.level ?? 0;
+    // Each adjustable value sits on its nearest stop; an unset face sits at the centre.
+    const stop = (value: number | undefined) => {
+      if (value === undefined) return FACE_STEPS.indexOf(0);
+      let best = 0;
+      FACE_STEPS.forEach((step, i) => { if (Math.abs(step - value) < Math.abs(FACE_STEPS[best]! - value)) best = i; });
+      return best;
+    };
 
     return html`
       <div class="surface">
         <div
           class="glow${glowOn ? ' on' : ''}"
-          style="background: ${glowBg}"
+          style="background: ${vaColor(face.v, face.a)}"
         ></div>
 
         <div
-          class="face-zone"
+          class="face-zone${unset ? ' unset' : ''}"
           @pointerdown=${this._onPointerDown}
           @pointermove=${this._onPointerMove}
           @pointerup=${this._onPointerUp}
@@ -813,73 +678,92 @@ export class AffectKitRater extends LitElement {
         >
           <affect-kit-face
             id="face-el"
-            .v=${this._padV}
-            .a=${this._padA}
-            .animated=${this.animated}
-            .motionScale=${this._dragging ? 0.2 : 1.0}
+            .v=${face.v}
+            .a=${face.a}
+            .animated=${this.animated && !unset}
+            .motionScale=${s.dragging ? FACE_MOTION.dragScale : 1}
           ></affect-kit-face>
           <div
-            class="ghost-dot${this._padV !== 0 || this._padA !== 0 ? ' visible' : ''}"
-            style="left:${(this._ghostX * 100).toFixed(2)}%;top:${(this._ghostY * 100).toFixed(2)}%"
+            class="ghost-dot${!unset && s.dragging ? ' visible' : ''}"
+            style="left:${(pad.x * 100).toFixed(2)}%;top:${(pad.y * 100).toFixed(2)}%;background:${dot}"
           ></div>
+          <input
+            class="adjust"
+            type="range" min="0" max="${FACE_STEPS.length - 1}" step="1"
+            .value=${String(stop(s.face?.v))}
+            aria-label=${strings.pleasant}
+            aria-valuetext=${axisValueText('pleasant', s.face, strings)}
+            @input=${(e: Event) => this._onAdjust('pleasant', e)}
+          />
+          <input
+            class="adjust"
+            type="range" min="0" max="${FACE_STEPS.length - 1}" step="1"
+            .value=${String(stop(s.face?.a))}
+            aria-label=${strings.energized}
+            aria-valuetext=${axisValueText('energized', s.face, strings)}
+            @input=${(e: Event) => this._onAdjust('energized', e)}
+          />
         </div>
 
-        <div class="chips-zone${this._revealed ? '' : ' empty'}">
-          <div class="chip-header${this._dragging ? ' dragging' : ''}">
-            <p class="chips-hint${hasLabels ? ' gone' : ''}">name what you feel</p>
-            <button
-              class="submit-btn${hasLabels ? ' visible' : ''}"
-              @click=${this._onSubmit}
-            >${this.submitLabel}</button>
-          </div>
-          <div class="chip-list">
-            ${EMOTIONS.map(emotion => {
-              const level = this._levels.get(emotion.name) ?? 0;
-              const order = this._sortOrder.indexOf(emotion.name);
-              // 'words' mode: each chip carries its own emotion's color
-              // via inline --_l3-{r,g,b}, which shadows the host-level
-              // (pad-V/A-derived) variables so the existing chip rules
-              // resolve to the per-emotion color. Uses the raw lexicon
-              // color on light theme (chips match the result's V/A panel
-              // for the same emotion), and lighterForChips on dark theme
-              // so dim hues (cobalt, deep magenta) read through the 14%
-              // alpha unselected tint against a dark surface.
-              let chipStyle = `order:${order}`;
-              if (wordsMode) {
-                const raw = colorForVA(emotion.v, emotion.a);
-                const useDark =
-                  this.theme === 'dark' ||
-                  (this.theme === 'auto' &&
-                    typeof matchMedia !== 'undefined' &&
-                    matchMedia('(prefers-color-scheme: dark)').matches);
-                const [cr, cg, cb] = useDark ? lighterForChips(raw) : raw;
-                chipStyle += `;--_l3-r:${cr};--_l3-g:${cg};--_l3-b:${cb}`;
-              }
-              return html`
+        ${s.revealed ? nothing : html`
+          <button class="to-words" type="button" @click=${this._showWords}>
+            ${strings.showWords ?? A11Y_STRINGS_EN.showWords}
+          </button>
+        `}
+
+        <div class="chips-zone${s.revealed ? '' : ' empty'}">
+          ${this.hideSubmit && !this.chipsHint ? nothing : html`
+            <div class="chip-header${s.dragging ? ' dragging' : ''}${this.hideSubmit && hasWords ? ' folded' : ''}">
+              ${this.chipsHint ? html`<p class="chips-hint${hasWords ? ' gone' : ''}" part="hint">${this.chipsHint}</p>` : nothing}
+              ${this.hideSubmit ? nothing : html`
                 <button
-                  class="chip${level > 0 ? ` level-${level}` : ''}"
-                  data-name="${emotion.name}"
-                  style="${chipStyle}"
-                  @click=${() => this._cycleChip(emotion.name)}
-                >${emotion.name}</button>
-              `;
-            })}
+                  class="submit-btn${hasWords ? ' visible' : ''}"
+                  @click=${this._onSubmit}
+                >${this.submitLabel}</button>
+              `}
+            </div>
+          `}
+          <div class="chip-list">
+            ${EMOTIONS.map(emotion => html`
+              <affect-kit-chip
+                data-name="${emotion.name}"
+                style="order:${s.order.indexOf(emotion.name)}"
+                .label=${emotion.name}
+                .level=${levelOf(emotion.name)}
+                .colors=${chipColors(emotion)}
+                .theme=${theme}
+                .strings=${strings}
+                @click=${() => this._tap(emotion.name)}
+              ></affect-kit-chip>
+            `)}
           </div>
-          ${this.showVad ? html`
-            <p class="vad-readout">
-              V ${vad.v.toFixed(2)} &middot; A ${vad.a.toFixed(2)} &middot; D ${vad.d.toFixed(2)}
-            </p>
-          ` : nothing}
+          ${this.showVad ? (() => {
+            // Resolved VAD for the debug readout: the words' composite when
+            // chosen, otherwise the face with d = 0.
+            const r = raterRating(s);
+            const vad = r.composite ?? { v: face.v, a: face.a, d: 0 };
+            return html`
+              <p class="vad-readout">
+                V ${vad.v.toFixed(2)} &middot; A ${vad.a.toFixed(2)} &middot; D ${vad.d.toFixed(2)}
+              </p>
+            `;
+          })() : nothing}
         </div>
       </div>
     `;
   }
 
-  private _computeDisplayVAD(labels: Array<{ name: EmotionName; level: number }>) {
-    // Resolved VAD for the debug readout: composite when labels are selected,
-    // otherwise the raw face position with d=0.
-    const rating = buildRating({ face: { v: this._padV, a: this._padA }, labels });
-    return rating.composite ?? { v: rating.face.v, a: rating.face.a, d: 0 };
+  // Per-word colors depend only on the word and the theme, so compute each once.
+  private _wordColorCache = new Map<string, ChipColors>();
+
+  private _wordColors(emotion: { name: string; v: number; a: number }, theme: 'light' | 'dark'): ChipColors {
+    const key = `${theme}:${emotion.name}`;
+    let colors = this._wordColorCache.get(key);
+    if (!colors) {
+      colors = wordChipColors(emotion.v, emotion.a, theme);
+      this._wordColorCache.set(key, colors);
+    }
+    return colors;
   }
 }
 
@@ -893,5 +777,7 @@ declare global {
     change: CustomEvent<Rating>;
     /** Emitted when the user clicks the submit button — the explicit "done" signal. `event.detail` is the final {@link Rating}. */
     commit: CustomEvent<Rating>;
+    /** Emitted once, when the words first show: the face settled, or "Choose words without the face". */
+    reveal: CustomEvent<void>;
   }
 }
