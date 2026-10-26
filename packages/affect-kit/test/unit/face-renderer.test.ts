@@ -3,6 +3,28 @@ import { faceParams, faceGeometry, facePaths, toSvgPath, FACE_PARTS } from '../.
 import { FACE_STEPS } from '../../src/core/a11y';
 
 describe('faceParams', () => {
+  it('only anger draws the inner brow below the outer (no "angry smile" on pleasant faces)', () => {
+    // Over the whole pad, wherever anger has no weight (v >= 0 or a <= 0), the inner end of the brow
+    // is level with or above the outer (smaller y is higher in SVG).
+    for (let i = 0; i <= 40; i++) {
+      for (let j = 0; j <= 40; j++) {
+        const v = -1 + i / 20;
+        const a = -1 + j / 20;
+        const angerW = Math.max(0, -v) * Math.max(0, a);
+        if (angerW > 0) continue;
+        const p = faceParams(v, a);
+        expect(p.browInnerY, `v ${v}, a ${a}`).toBeLessThanOrEqual(p.browOuterY + 0.5);
+      }
+    }
+  });
+
+  it('joy (1, 1): both brow ends lift, the inner a touch higher', () => {
+    const p = faceParams(1, 1);
+    expect(p.browInnerY).toBeLessThan(-32);
+    expect(p.browOuterY).toBeLessThan(-32);
+    expect(p.browInnerY).toBeLessThanOrEqual(p.browOuterY);
+  });
+
   it('neutral (0, 0) returns expected baseline values', () => {
     const p = faceParams(0, 0);
     expect(p.browInnerY).toBeCloseTo(-32);

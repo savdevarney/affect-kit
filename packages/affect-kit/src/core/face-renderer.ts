@@ -84,9 +84,13 @@ export function faceParams(v: number, a: number): FaceParams {
   browOuterY += angerW * 1;
   browInnerY -= sadW   * 9;   // sad:   inner brow raised (AU 1+2)
   browOuterY += sadW   * 5;
-  browInnerY -= joyW   * 3;   // joy:   slight Duchenne raise
-  browOuterY -= joyW   * 7;
-  browOuterY -= aPos   * 1.5; // arousal generally raises brows
+  browInnerY -= joyW   * 3;   // joy:   a gentle lift, the inner end a touch higher (soft, open)
+  browOuterY -= joyW   * 2;
+  browInnerY -= aPos   * 1.5; // arousal raises the whole brow
+  browOuterY -= aPos   * 1.5;
+  // Only anger lowers the inner end below the outer: that V is the anger cue, so a pleasant face
+  // never gets one (a raised outer brow over a smile read as an "angry smile").
+  // Invariant, tested: with angerW === 0, browInnerY <= browOuterY + 0.5.
 
   // ── Eyes ──
   let eyeWidth        = 4 + aPos * 4;
